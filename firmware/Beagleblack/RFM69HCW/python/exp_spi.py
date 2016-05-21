@@ -69,6 +69,7 @@ def SyncTol(errors):
 # RegAfcFei
 AfcAutoOn           = (1 << 2)
 AfcAutoclearOn      = (1 << 3)
+AfcDone             = (1 << 4)
 
 
 #Automodes
@@ -140,9 +141,9 @@ Fstep            = 61.03515625
 def check_register(addr, value):
   vals = RFM_SPI.xfer2([addr, 0x0])
   if vals[1] != value:
-    str = "addr: "+ hex(addr) + " should be: " +hex(value) + " got: " + hex(vals[1])
+    str = "addr: "+ hex(addr) + "(" + inv_sx1231_reg[addr] + ")" + " should be: " + hex(value) + " got: " + hex(vals[1])
     raise CheckError(str)
-  print "Reg{",hex(addr),"}(",inv_sx1231_reg[addr],")=", hex(vals[1])
+  print "Reg{",hex(addr),"}(",inv_sx1231_reg[addr],")\t\t=", hex(vals[1])
 
 
 def PAOutputCfg(PA, Power):
@@ -234,6 +235,7 @@ def RFM69HCW_config_xcvr(OpMode, pa):
 
   # # Set Carrier Frequency
   RFM69HCW_Write_Carrier_Freq(436500000)
+  # RFM69HCW_Write_Carrier_Freq(433000000)
 
   RFM69HCW_Set_Freq_Deviation(2500)
 
@@ -271,38 +273,39 @@ def RFM69HCW_config_xcvr(OpMode, pa):
 
   RFM69HCW_Set_Sync_Value([0xe7, 0xe7, 0xe7, 0xe7])
 
-  RFM69HCW_Write_Register(sx1231_reg[sx1231_reg["RegPacketConfig1"], 0x08)
+  RFM69HCW_Write_Register(sx1231_reg["RegPacketConfig1"], 0x08)
   check_register(sx1231_reg["RegPacketConfig1"], 0x08)
 
   RFM69HCW_Set_Preamble([0x00, 0x10])
 
-"""
-  	Sets the payload length
-
-		The payload length needs to be equal to the buffer of data to be sent
-		when the tx ready signal is produces on fifo_not_empty. If the tx
-		ready signal is received from a fifo threshold reached condition
-		then the payload length needs to be the same as the fifo threshold and
-		the buffer needs to be one larger than the payload size.
-
-		When using auto modes be sure to set the transceiver into standby mode
-		it will wake and do its thing automagically.
-
-"""
+##"""
+#        Sets the payload length
+#
+#                The payload length needs to be equal to the buffer of data to be sent
+#                when the tx ready signal is produces on fifo_not_empty. If the tx
+#                ready signal is received from a fifo threshold reached condition
+#                then the payload length needs to be the same as the fifo threshold and
+#                the buffer needs to be one larger than the payload size.
+#
+#                When using auto modes be sure to set the transceiver into standby mode
+#                it will wake and do its thing automagically.
+#
+#"""
 
   RFM69HCW_Write_Register(sx1231_reg["RegPayloadLength"], 0x05)
   check_register(sx1231_reg["RegPayloadLength"], 0x05)
 
 
-	# To trigger on a fifo threshhold set RegFifoThresh to PACKET_LENGTH
-	# Trigger on fifo not empty 
+  # To trigger on a fifo threshhold set RegFifoThresh to PACKET_LENGTH
+  # Trigger on fifo not empty 
   RFM69HCW_Write_Register(sx1231_reg["RegFifoThresh"], 0x04)
   check_register(sx1231_reg["RegFifoThresh"], 0x04)
 
-  RFM69HCW_Write_Register(sx1231_reg["RegAfcFei"], AfcAutoOn | AfcAutoclearOn)
-  check_register(sx1231_reg["RegAfcFei"], AfcAutoOn | AfcAutoclearOn)
+  RFM69HCW_Write_Register(sx1231_reg["RegAfcFei"], AfcAutoOn | AfcAutoclearOn )
+  # Afc should be done during configure
+  check_register(sx1231_reg["RegAfcFei"], AfcDone | AfcAutoOn | AfcAutoclearOn)
 
-  RFM69HCW_Write_Register(sx1231_reg["RegAfcBw"], 0x08)
+  RFM69HCW_Write_Register(sx1231_reg["RegAfcBw"], 0x8b)
   check_register(sx1231_reg["RegAfcBw"], 0x8b)
 
   RFM69HCW_Write_Register(sx1231_reg["RegOpMode"], OpMode)
@@ -324,8 +327,34 @@ def spi_config():
   RFM_SPI     = SPI(0,0)
   RFM_SPI.msh = 5000000
 
+
+def RFM69HCW_Write_Fifo(bytelist):
+  wbuf = [(sx1231_reg["RegFifo"]|0x80)] + bytelist
+  RFM_SPI.writebytes(wbuf)
+
 def spi_test():
+  kcallsign = [ord('k'), ord('g'), ord('7'), ord('e'), ord('y'), ord('d')]  # K's callsign
+  callsign = kcallsign
+
+  # callsign = None
+  if callsign is None: 
+        raise NoCallSign("FCC Callsign not defined")
+
   RFM69HCW_config_xcvr(MODE_TX, PAOutputCfg(PA0, 0x0))
+
+  count = 0
+  while True:
+    count = count + 5
+    count = count & 0xff
+    RFM69HCW_Write_Fifo([count, count+1, count+2, count+3, count+4])
+    time.sleep(0.25)
+    if count == 250:
+      print "Callsign: ",
+      print map(hex,callsign)
+      print callsign
+      RFM69HCW_Write_Fifo(callsign)
+
+
 
 if __name__ == "__main__":
   try:
