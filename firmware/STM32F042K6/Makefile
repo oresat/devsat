@@ -83,7 +83,7 @@ endif
 #
 
 # Define project name here
-PROJECT = oresat_can
+PROJECT = stm32f042k6
 
 # Imported source files and paths
 CHIBIOS = ../common/ChibiOS
