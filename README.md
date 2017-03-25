@@ -3,7 +3,7 @@ One step down from the flatsat: this cute little development board is for softwa
 
 Here's a block diagram:
 
-[!image blockdiagram-whiteboard.png]
+![DevSat Block Diagram](blockdiagram-whiteboard.png)
 
 And here are some details:
 
