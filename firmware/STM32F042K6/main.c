@@ -37,6 +37,7 @@ static THD_FUNCTION(can_rx, p) {
 
   (void)p;
   chRegSetThreadName("receiver");
+  palSetLineMode(LINE_LED_GREEN, PAL_MODE_OUTPUT_PUSHPULL);
   chEvtRegister(&CAND1.rxfull_event, &el, 0);
   while(!chThdShouldTerminateX()) {
     if (chEvtWaitAnyTimeout(ALL_EVENTS, MS2ST(100)) == 0)
