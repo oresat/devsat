@@ -94,7 +94,7 @@ PROJECT = ch
 CONF_DIR  = conf
 TOOLCHAIN = ../../toolchain
 CHIBIOS   = ../../../ChibiOS-RT
-BOARD     = ST_NUCLEO32_F042K6 
+BOARD     = ST_NUCLEO32_F042K6
 BOARDDIR  = ../boards/$(BOARD)
 
 # Nucleo32 specific files
