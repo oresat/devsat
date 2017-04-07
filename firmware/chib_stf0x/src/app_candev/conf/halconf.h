@@ -25,8 +25,8 @@
  * @{
  */
 
-#ifndef _HALCONF_H_
-#define _HALCONF_H_
+#ifndef HALCONF_H
+#define HALCONF_H
 
 #include "mcuconf.h"
 
@@ -112,6 +112,13 @@
  */
 #if !defined(HAL_USE_PWM) || defined(__DOXYGEN__)
 #define HAL_USE_PWM                 FALSE
+#endif
+
+/**
+ * @brief   Enables the QSPI subsystem.
+ */
+#if !defined(HAL_USE_QSPI) || defined(__DOXYGEN__)
+#define HAL_USE_QSPI                FALSE
 #endif
 
 /**
@@ -376,6 +383,6 @@
 #define USB_USE_WAIT                FALSE
 #endif
 
-#endif /* _HALCONF_H_ */
+#endif /* HALCONF_H */
 
 /** @} */
