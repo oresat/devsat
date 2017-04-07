@@ -1,3 +1,3 @@
 [submodule "firmware/common/ChibiOS"]
-	path = firmware/chib_stf0x/ChibiOS-RT
+	path = firmware/ChibiOS-RT
 	url = https://github.com/ChibiOS/ChibiOS.git
