@@ -66,7 +66,7 @@
 #define GPIOA_ARD_D9                8U
 #define GPIOA_ARD_D1                9U
 #define GPIOA_ARD_D0                10U
-#define GPIOA_CAN_RX               11U
+#define GPIOA_CAN_RX                11U
 #define GPIOA_CAN_TX                12U
 #define GPIOA_SWDIO                 13U
 #define GPIOA_SWCLK                 14U
