@@ -94,7 +94,7 @@ PROJECT = app_candev
 CONF_DIR  = conf
 TOOLCHAIN = ../../toolchain
 CHIBIOS   = ../../../ChibiOS-RT
-BOARD     = CAN_ST_NUCLEO32_F042K6
+BOARD     = CAN_ST_NUCLEO_32_F042K6
 BOARDDIR  = ../boards/$(BOARD)
 
 # Nucleo32 specific files
