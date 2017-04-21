@@ -25,7 +25,6 @@
  *
  * @{
  */
-
 #include <stdbool.h>
 #include "ch.h"
 
@@ -68,7 +67,6 @@ static void app_init(void)
  */
 static void main_app(void)
 {
-
 	app_init();
 	chprintf(DEBUG_CHP, "App start\r\n");
 

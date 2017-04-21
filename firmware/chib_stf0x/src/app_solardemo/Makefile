@@ -98,7 +98,7 @@ BOARD     = SOLAR_V1
 BOARDDIR  = ../boards/$(BOARD)
 
 # Nucleo32 specific files
-include $(TOOLCHAIN)/nucleo32.mk
+include $(TOOLCHAIN)/solarv1.mk
 
 include $(BOARDDIR)/board.mk
 # include ../boards/$(BOARD)/board.mk
