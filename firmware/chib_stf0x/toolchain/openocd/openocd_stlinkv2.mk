@@ -8,7 +8,7 @@ write: $(OPENOCD_HEXFILE) write_stl
 write_base:
 	openocd -s $(OPENOCD_DIR) -f $(OOCD_CFG) -c "program $(OPENOCD_HEXFILE) verify reset exit"
 
-write_stl: OOCD_CFG = stlinkv2-1_stm32.cfg
+write_stl: OOCD_CFG = stlinkv2_stm32.cfg
 write_stl: write_base
 
 gdb: $(GDB_ELF) gdb_ocd

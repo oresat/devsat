@@ -6,6 +6,7 @@
 # Compiler options here.
 ifeq ($(USE_OPT),)
 	# This will make very big object
+	# USE_OPT = -O2 -ggdb -fomit-frame-pointer -falign-functions=16
 	USE_OPT = -O2 -ggdb -fomit-frame-pointer -falign-functions=16
 
 	# This is smaller object
@@ -33,8 +34,10 @@ ifeq ($(USE_LDOPT),)
 endif
 
 # Enable this if you want link time optimizations (LTO)
+USE_LTO = no
 ifeq ($(USE_LTO),)
-	USE_LTO = yes
+	# USE_LTO = yes
+	USE_LTO = no
 endif
 
 # If enabled, this option allows to compile the application in THUMB mode.
@@ -122,8 +125,9 @@ include $(CHIBIOS)/test/rt/test.mk
 LDSCRIPT= $(STARTUPLD)/STM32F042x6.ld
 
 # Add application source directories here
-APP_SRCS = $(wildcard $(NUCLEO32_UTIL)/*.c)
-APP_SRCS += $(wildcard $(NUCLEO32_BOARDS)/*.c)
+APP_SRCS = $(wildcard $(SOLARV1_UTIL)/*.c)
+APP_SRCS += $(wildcard $(SOLARV1_BOARDS)/*.c)
+APP_SRCS += $(wildcard $(SOLARV1_LTC2990)/*.c)
 
 CSRC = $(STARTUPSRC) \
        $(KERNSRC) \
@@ -170,11 +174,12 @@ INCDIR = $(CHIBIOS)/os/license \
 	 $(HALINC) $(PLATFORMINC) $(BOARDINC) $(TESTINC) \
 	 $(CHIBIOS)/os/hal/lib/streams $(CHIBIOS)/os/various \
 	 $(CONF_DIR) \
-	 $(NUCLEO32_UTIL)/include \
-	 $(NUCLEO32_BOARDS)/include \
+	 $(SOLARV1_LTC2990)/include \
+	 $(SOLARV1_UTIL)/include \
+	 $(SOLARV1_BOARDS)/include \
 	 $(CHIBIOS)/os/various
 
-# $(NUCLEO32_SATSHELL)/include \
+# $(SOLARV1_SATSHELL)/include \
 
 #
 # Project, sources and paths
@@ -231,7 +236,7 @@ CPPWARN = -Wall -Wextra -Wundef
 #
 
 # List all user C define here, like -D_DEBUG=1
-UDEFS = -DGIT_COMMIT_VERSION=$(NUCLEO32_VERSION)
+UDEFS = -DGIT_COMMIT_VERSION=$(SOLARV1_VERSION)
 #UDEFS += -DDBG_MSG_ENABLE=1
 
 # Define ASM defines here
@@ -259,5 +264,5 @@ include $(RULESPATH)/rules.mk
 # https://community.arm.com/processors/b/blog/posts/armv6-m-vs-armv7-m---unpacking-the-microcontrollers
 # include $(PORTRULESPATH)/port_v6m.mk
 
-include $(NUCLEO32_RULES)
+include $(SOLARV1_RULES)
 
