@@ -13,13 +13,41 @@ extern "C" {
 #endif
 
 #include <stdint.h>
-
-#define        I2C_WRITEADDR(ADDR) ((ADDR) | 0x1)
-
-#define        LTC2990_I2C_TX_BUFSIZE  4U
-#define        LTC2990_I2C_RX_BUFSIZE  20U
+#include "ch.h"
+#include "hal.h"
 
 extern const uint8_t LTC2990_I2C_ADDR;
+
+typedef struct ltc2990data
+{
+	uint8_t STATUS;   // 0x0
+	uint8_t CONTROL;  // 0x1
+	uint8_t TRIGGER;  // ...
+	uint8_t NA;
+	uint8_t T_INT_MSB;
+	uint8_t T_INT_LSB;
+	uint8_t V1_MSB;
+	uint8_t V1_LSB;
+	uint8_t V2_MSB;
+	uint8_t V2_LSB;
+	uint8_t V3_MSB;
+	uint8_t V3_LSB;
+	uint8_t V4_MSB;
+	uint8_t V4_LSB;  // ...
+	uint8_t VCC_MSB; // 0xe
+	uint8_t VCC_LSB; // 0xf
+} ltc2990_data;
+
+/* HSI Clock selected 8Mhz - see mcuconf.h Wed 03 May 2017 12:54:49 (PDT) */
+/* Ref: 26.4.10 table in Reference Manual for stm32f0 */
+typedef enum
+{
+	I2C_10KHZ_TIMINGR  = 0x1042C3C7,
+	I2C_400KHZ_TIMINGR = 0x00310309,
+} solar_i2c_cfg;
+
+#define        LTC2990_I2C_TX_BUFSIZE  4U
+#define        LTC2990_I2C_RX_BUFSIZE  16U
 
 #define LTC2990_STATUS      0x00U   //  R       Indicates BUSY State, Conversion Sta
 #define LTC2990_CONTROL     0x01U   //  R/W     Controls Mode, Single/Repeat, Celsiu
@@ -37,6 +65,15 @@ extern const uint8_t LTC2990_I2C_ADDR;
 #define LTC2990_V4_LSB      0x0DU   //  R       V4, V3 – V4 or TR2 LSB
 #define LTC2990_VCC_MSB     0x0EU   //  R       VCC MSB
 #define LTC2990_VCC_LSB     0x0FU   //  R       VCC LSB
+
+#define LTC2990_CONTROL_T_FORMAT_KELVIN     (0b1<<7)
+#define LTC2990_CONTROL_ACQ_SINGLE          (0b1<<6)
+#define LTC2990_CONTROL_ALL_MODE_4_3        (0b11<<3)
+#define LTC2990_CONTROL_MODE_1_2_0          (0b001<<0)
+
+uint8_t ltc2990_readreg(uint8_t reg, i2cflags_t * i2c_errors);
+void    ltc2990_writereg(uint8_t reg, uint8_t val, i2cflags_t * i2c_errors);
+void ltc2990_read_all(ltc2990_data * d, i2cflags_t * i2c_errors);
 
 #ifdef __cplusplus
 }

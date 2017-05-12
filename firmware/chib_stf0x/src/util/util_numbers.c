@@ -22,7 +22,7 @@
  */
 signed int sign_extend_12bit(signed int x)
 {
-	signed int r = 0; // resulting sign extended number goes here
+	signed int r = 0;
 	struct
 	{
 		signed int x: 12;

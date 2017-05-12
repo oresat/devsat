@@ -315,13 +315,13 @@
                                      PIN_MODE_INPUT(GPIOB_PIN14) |          \
                                      PIN_MODE_INPUT(GPIOB_PIN15))
 #define VAL_GPIOB_OTYPER            (PIN_OTYPE_OPENDRAIN(GPIOB_PIN0_NC) |     \
-                                     PIN_OTYPE_OPENDRAIN(GPIOB_PIN1_NC) |     \
+                                     PIN_OTYPE_PUSHPULL(GPIOB_PIN1_NC) |     \
                                      PIN_OTYPE_PUSHPULL(GPIOB_PIN2_NA) |       \
                                      PIN_OTYPE_PUSHPULL(GPIOB_TP12) |    \
                                      PIN_OTYPE_PUSHPULL(GPIOB_TP13) |    \
-                                     PIN_OTYPE_OPENDRAIN(GPIOB_PIN5_NC) |    \
-                                     PIN_OTYPE_PUSHPULL(GPIOB_I2C1_SCL) |     \
-                                     PIN_OTYPE_PUSHPULL(GPIOB_I2C1_SDA) |     \
+                                     PIN_OTYPE_PUSHPULL(GPIOB_PIN5_NC) |    \
+                                     PIN_OTYPE_OPENDRAIN(GPIOB_I2C1_SCL) |     \
+                                     PIN_OTYPE_OPENDRAIN(GPIOB_I2C1_SDA) |     \
                                      PIN_OTYPE_PUSHPULL(GPIOB_PIN8_BOOT0) |       \
                                      PIN_OTYPE_PUSHPULL(GPIOB_PIN9) |       \
                                      PIN_OTYPE_PUSHPULL(GPIOB_PIN10) |      \
@@ -352,8 +352,8 @@
                                      PIN_PUPDR_PULLUP(GPIOB_TP12) |    \
                                      PIN_PUPDR_PULLUP(GPIOB_TP13) |      \
                                      PIN_PUPDR_PULLDOWN(GPIOB_PIN5_NC) |      \
-                                     PIN_PUPDR_PULLUP(GPIOB_I2C1_SCL) |       \
-                                     PIN_PUPDR_PULLUP(GPIOB_I2C1_SDA) |       \
+                                     PIN_PUPDR_FLOATING(GPIOB_I2C1_SCL) |       \
+                                     PIN_PUPDR_FLOATING(GPIOB_I2C1_SDA) |       \
                                      PIN_PUPDR_PULLDOWN(GPIOB_PIN8_BOOT0) |         \
                                      PIN_PUPDR_PULLUP(GPIOB_PIN9) |         \
                                      PIN_PUPDR_PULLUP(GPIOB_PIN10) |        \
