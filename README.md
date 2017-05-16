@@ -1,9 +1,9 @@
 # devsat
 One step down from the flatsat: this cute little development board is for software development for OreSat. It's got an M0, M4, BBB, and Semtech radio all tied together via CAN.
 
-Here's a block diagram:
+Here's a block diagram (bet you're gonna be so jelly of our sweet drawing skillz):
 
-![DevSat Block Diagram](images/blockdiagram-whiteboard.png)
+![DevSat Block Diagram](https://github.com/oresat/devsat/blob/master/doc/block_diagram.jpg)
 
 And here are some details:
 
@@ -12,7 +12,7 @@ And here are some details:
     - STM32F046K6 [NUCLEO-F042K6](https://www.digikey.com/products/en?keywords=497-15980-ND) development board: small, cheap, has ST-LINK, CAN, and low power. Also ChibiOS support.
 - M4 board
     - This is our system controller (C3, T&DH, etc). Needs some horsepower, but not tons. Core of OreSat!
-    - STM32F411 [NUCLEO-F411RE](https://www.digikey.com/product-detail/en/stmicroelectronics/NUCLEO-F411RE/497-14711-ND/4866485) development board: *Still* cheap, CAN, lots of MHzand ChibiOS support.
+    - STM32F446 [F446RE](https://www.digikey.com/short/3nvcdz) development board: It's a beast: *Still* cheap, CAN, lots of MHz and ChibiOS support.
 - BeagleBoneBlack
     - This is our flight computer analog. We want to fly the Octavo chip (we think?) but we don't need it right now. We also don't need or want WiFi (we'll use the ATH9K board)
     - Standard [BBB](https://www.digikey.com/product-detail/en/ghi-electronics-llc/BBB01-SC-505/BBB01-SC-505-ND/6210999)
