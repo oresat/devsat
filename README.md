@@ -12,7 +12,7 @@ And here are some details:
     - STM32F046K6 [NUCLEO-F042K6](https://www.digikey.com/products/en?keywords=497-15980-ND) development board: small, cheap, has ST-LINK, CAN, and low power. Also ChibiOS support.
 - M4 board
     - This is our system controller (C3, T&DH, etc). Needs some horsepower, but not tons. Core of OreSat!
-    - STM32F446 [F446RE](https://www.digikey.com/short/3nvcdz) development board: It's a beast: *Still* cheap, CAN, lots of MHz and ChibiOS support.
+    - STM32F446 [NUCLEO-F446RE](https://www.digikey.com/short/3nvcdz) development board: It's a beast: *Still* cheap, CAN, lots of MHz and ChibiOS support.
 - BeagleBoneBlack
     - This is our flight computer analog. We want to fly the Octavo chip (we think?) but we don't need it right now. We also don't need or want WiFi (we'll use the ATH9K board)
     - Standard [BBB](https://www.digikey.com/product-detail/en/ghi-electronics-llc/BBB01-SC-505/BBB01-SC-505-ND/6210999)
