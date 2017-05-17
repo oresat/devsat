@@ -94,7 +94,7 @@ PROJECT = ch
 CONF_DIR  = conf
 TOOLCHAIN = ../../toolchain
 CHIBIOS   = ../../../ChibiOS-RT
-BOARD     = ST_NUCLEO32_F411RE
+BOARD     = ST_NUCLEO64_F446RE
 BOARDDIR  = ../boards/$(BOARD)
 
 # Nucleo32 specific files
@@ -108,7 +108,8 @@ include $(CHIBIOS)/os/hal/hal.mk
 include $(CHIBIOS)/os/hal/ports/STM32/STM32F4xx/platform.mk
 # include $(BOARDDIR)/board.mk
 #include ../boards/ST_NUCLEO32_F042K6/board.mk
-include ../boards/ST_NUCLEO32_F411RE/board.mk
+#include ../boards/ST_NUCLEO32_F411RE/board.mk
+include ../boards/ST_NUCLEO64_F446RE/board.mk
 include $(CHIBIOS)/os/hal/osal/rt/osal.mk
 # RTOS files (optional).
 include $(CHIBIOS)/os/rt/rt.mk
@@ -120,7 +121,8 @@ include $(CHIBIOS)/os/common/ports/ARMCMx/compilers/GCC/mk/port_v7m.mk
 include $(CHIBIOS)/test/rt/test.mk
 
 # Define linker script file here
-LDSCRIPT= $(STARTUPLD)/STM32F411xE.ld
+#LDSCRIPT= $(STARTUPLD)/STM32F411xE.ld
+LDSCRIPT= $(STARTUPLD)/STM32F446xE.ld
 
 # Add application source directories here
 APP_SRCS = $(wildcard $(NUCLEO32_UTIL)/*.c)
