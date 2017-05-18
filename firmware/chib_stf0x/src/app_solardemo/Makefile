@@ -128,6 +128,7 @@ LDSCRIPT= $(STARTUPLD)/STM32F042x6.ld
 APP_SRCS = $(wildcard $(SOLARV1_UTIL)/*.c)
 APP_SRCS += $(wildcard $(SOLARV1_BOARDS)/*.c)
 APP_SRCS += $(wildcard $(SOLARV1_LTC2990)/*.c)
+APP_SRCS += $(wildcard $(SOLARV1_SOLARV1)/*.c)
 
 CSRC = $(STARTUPSRC) \
        $(KERNSRC) \
@@ -175,6 +176,7 @@ INCDIR = $(CHIBIOS)/os/license \
 	 $(CHIBIOS)/os/hal/lib/streams $(CHIBIOS)/os/various \
 	 $(CONF_DIR) \
 	 $(SOLARV1_LTC2990)/include \
+	 $(SOLARV1_SOLARV1)/include \
 	 $(SOLARV1_UTIL)/include \
 	 $(SOLARV1_BOARDS)/include \
 	 $(CHIBIOS)/os/various

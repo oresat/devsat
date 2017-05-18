@@ -37,6 +37,7 @@
 #include "util_numbers.h"
 
 #include "ltc2990.h"
+#include "solar_v1.h"
 
 #define APP_NAME                "solardemo"
 
@@ -53,7 +54,7 @@ static SerialConfig ser_cfg =
 
 static const I2CConfig i2cfg1 =
 {
-	I2C_400KHZ_TIMINGR,
+	I2C_100KHZ_TIMINGR,
 	0,
 	0,
 };
@@ -71,142 +72,97 @@ inline void i2c_report_error(i2cflags_t i2c_errors)
 	}
 }
 
-/* TODO: To be reviewed, too STM32-centric.*/
-/**
- * @name    I2C bus error conditions
- * @{
- */
-// #define I2C_NO_ERROR               0x00    [>*< @brief No error.            <]
-// #define I2C_BUS_ERROR              0x01    [>*< @brief Bus Error.           <]
-// #define I2C_ARBITRATION_LOST       0x02    [>*< @brief Arbitration Lost.    <]
-// #define I2C_ACK_FAILURE            0x04    [>*< @brief Acknowledge Failure. <]
-// #define I2C_OVERRUN                0x08    [>*< @brief Overrun/Underrun.    <]
-// #define I2C_PEC_ERROR              0x10    [>*< @brief PEC Error in
-// reception.                  */
-// #define I2C_TIMEOUT                0x20    [>*< @brief Hardware timeout.    <]
-// #define I2C_SMB_ALERT              0x40    [>*< @brief SMBus Alert.         <]
-
-
-static bool ltc2990_test(void)
+static void demo_measure(void)
 {
-	// bool firsttime = true;
-	i2cflags_t  i2c_errors  = 0x0;
+	i2cflags_t           i2c_errors  = 0x0;
 	volatile uint8_t     regval      = 0xf;
+
+	regval = 0xf;
+
+	/* CONTROL Setup */
+	regval = LTC2990_CONTROL_ACQ_SINGLE
+	         | LTC2990_CONTROL_ALL_MODE_4_3
+	         | LTC2990_CONTROL_MODE_1_2_0;
+	ltc2990_writereg(LTC2990_CONTROL, regval, &i2c_errors);
+	i2c_report_error(i2c_errors);
+
 	while(1)
 	{
+		/* TRIGGER */
 		regval = 0xf;
-		chprintf(DEBUG_CHP, "I2C Read addr:\t\t0x%x\r\n", LTC2990_I2C_ADDR);
-
-		/* CONTROL */
-		regval = LTC2990_CONTROL_ACQ_SINGLE
-		         | LTC2990_CONTROL_ALL_MODE_4_3
-		         | LTC2990_CONTROL_MODE_1_2_0;
-
-		chprintf(DEBUG_CHP, "Constructed regval is 0x%x\r\n", regval);
-		ltc2990_writereg(LTC2990_CONTROL, regval, &i2c_errors);
+		chprintf(DEBUG_CHP, "\t***Trigger***\r\n");
+		ltc2990_writereg(LTC2990_TRIGGER, regval, &i2c_errors);
 		i2c_report_error(i2c_errors);
+		chThdSleepMilliseconds(LTC2990_TRIGGER_WAIT_MS);
 
-		regval = 0xf;
 		regval = ltc2990_readreg(LTC2990_CONTROL, &i2c_errors);
 		i2c_report_error(i2c_errors);
-		if(i2c_errors == 0)
+
+		/* CONTROL check status */
+		if(!ltc2990_conversion_done(regval))
 		{
-			chprintf(DEBUG_CHP, "Control regval is\t0x%x\r\n", regval);
-		}
-
-		/* TRIGGER */
-		regval = 0xf;
-		chprintf(DEBUG_CHP, "\t***Trigger***\r\n");
-		ltc2990_writereg(LTC2990_TRIGGER, regval, &i2c_errors);
-		i2c_report_error(i2c_errors);
-		chThdSleepMilliseconds(500);
-
-		/*
-		 * [> STATUS <]
-		 * regval = 0xf;
-		 * regval = ltc2990_readreg(LTC2990_STATUS, &i2c_errors);
-		 * i2c_report_error(i2c_errors);
-		 * if(i2c_errors == 0)
-		 * {
-		 *     chprintf(DEBUG_CHP, "Status regval is\t0x%x\r\n", regval);
-		 * }
-		 */
-
-		// [> STATUS <]
-		// regval = 0xf;
-		// regval = ltc2990_readreg(LTC2990_STATUS, &i2c_errors);
-		// i2c_report_error(i2c_errors);
-		// if(i2c_errors == 0)
-		// {
-		// chprintf(DEBUG_CHP, "Status regval is\t0x%x\r\n", regval);
-		// }
-
-		uint8_t tint_msb = 0;
-		/* TINT_MSB */
-		tint_msb = ltc2990_readreg(LTC2990_TINT_MSB, &i2c_errors);
-		i2c_report_error(i2c_errors);
-		if(i2c_errors == 0)
-		{
-		chprintf(DEBUG_CHP, "TINT_MSB regval is\t0x%x\r\n", tint_msb);
-		}
-
-		uint8_t tint_lsb = 0;
-		/* TINT_LSB */
-		tint_lsb = ltc2990_readreg(LTC2990_TINT_LSB, &i2c_errors);
-		i2c_report_error(i2c_errors);
-		if(i2c_errors == 0)
-		{
-		chprintf(DEBUG_CHP, "TINT_LSB regval is\t0x%x\r\n", tint_lsb);
-		}
-
-		signed int tint = 0;
-		if((0x80 & tint_msb) != 0)
-		{
-		//clear dv bit
-		tint_msb = ((~(1 << 7)) & tint_msb);
-		tint = sign_extend_12bit((tint_msb << 8) | tint_lsb);
-		chprintf(DEBUG_CHP, "TINT is %iC\r\n", tint / 16);
-		}
-
-		/* TRIGGER */
-		regval = 0xf;
-		chprintf(DEBUG_CHP, "\t***Trigger***\r\n");
-		ltc2990_writereg(LTC2990_TRIGGER, regval, &i2c_errors);
-		i2c_report_error(i2c_errors);
-		chThdSleepMilliseconds(500);
-
-		/* READ ALL */
-		ltc2990_read_all(&monitor_data, &i2c_errors);
-		if(i2c_errors == 0)
-		{
-			chprintf(DEBUG_CHP, "Status regval is\t0x%x\r\n", monitor_data.STATUS);
-			chprintf(DEBUG_CHP, "Control regval is\t0x%x\r\n", monitor_data.CONTROL);
-			chprintf(DEBUG_CHP, "Trigger regval is\t0x%x\r\n", monitor_data.TRIGGER);
-			chprintf(DEBUG_CHP, "NA regval is\t0x%x\r\n", monitor_data.NA);
-			chprintf(DEBUG_CHP, "T_INT_MSB regval is\t0x%x\r\n", monitor_data.T_INT_MSB);
-			chprintf(DEBUG_CHP, "T_INT_LSB regval is\t0x%x\r\n", monitor_data.T_INT_LSB);
-			chprintf(DEBUG_CHP, "V1_MSB regval is\t0x%x\r\n", monitor_data.V1_MSB);
-			chprintf(DEBUG_CHP, "V1_LSB regval is\t0x%x\r\n", monitor_data.V1_LSB);
-			chprintf(DEBUG_CHP, "V2_MSB regval is\t0x%x\r\n", monitor_data.V2_MSB);
-			chprintf(DEBUG_CHP, "V2_LSB regval is\t0x%x\r\n", monitor_data.V2_LSB);
-			chprintf(DEBUG_CHP, "V3_MSB regval is\t0x%x\r\n", monitor_data.V3_MSB);
-			chprintf(DEBUG_CHP, "V3_LSB regval is\t0x%x\r\n", monitor_data.V3_LSB);
-			chprintf(DEBUG_CHP, "V4_MSB regval is\t0x%x\r\n", monitor_data.V4_MSB);
-			chprintf(DEBUG_CHP, "V4_LSB regval is\t0x%x\r\n", monitor_data.V4_LSB);
-			chprintf(DEBUG_CHP, "VCC_MSB regval is\t0x%x\r\n", monitor_data.VCC_MSB);
-			chprintf(DEBUG_CHP, "VCC_LSB regval is\t0x%x\r\n", monitor_data.VCC_LSB);
+			chprintf(DEBUG_CHP, "LTC2990 Error: Conversion not finished\r\n");
 		}
 		else
 		{
-			chprintf(DEBUG_CHP, "*** I2C_ERROR: 0x%x\r\n", i2c_errors);
+			signed int tint = 0;
+			signed int vcc  = 0;
+			/* READ ALL */
+			ltc2990_read_all(&monitor_data, &i2c_errors);
+			i2c_report_error(i2c_errors);
+
+			/* TINT */
+			ltc2990_error derror;
+			tint = ltc2990_calc_tint(&monitor_data, &derror);
+			if(derror == LTC2990_OK)
+			{
+				chprintf(DEBUG_CHP, "TINT is %iC\r\n", tint );
+			}
+			else
+			{
+				chprintf(DEBUG_CHP, "TINT ERROR: %d\r\n", derror);
+			}
+
+			/* VCC */
+			vcc = ltc2990_calc_vcc(&monitor_data, &derror );
+			if(derror == LTC2990_OK)
+			{
+				chprintf(DEBUG_CHP, "VCC is %d mV\r\n", vcc);
+			}
+			else
+			{
+				chprintf(DEBUG_CHP, "VCC ERROR: %d\r\n", derror);
+			}
+
+			/* Current */
+			signed int current = 0;
+			current = solar_v1_calc_current(&monitor_data, &derror);
+			if(derror == LTC2990_OK)
+			{
+				chprintf(DEBUG_CHP, "Current is %d mA\r\n", current);
+			}
+			else
+			{
+				chprintf(DEBUG_CHP, "Current ERROR: %d\r\n", derror);
+			}
+
+			/* External Temp */
+			signed int text = 0;
+			chprintf(DEBUG_CHP, "V3_MSB: 0x%x\r\nV3_LSB: 0x%x\r\n", monitor_data.V3_MSB, monitor_data.V3_LSB);
+			text    = solar_v1_calc_temp(&monitor_data, &derror) ;
+			if(derror == LTC2990_OK)
+			{
+				chprintf(DEBUG_CHP, "External T is %d C\r\n", text);
+			}
+			else
+			{
+				chprintf(DEBUG_CHP, "External T ERROR: %d\r\n", derror);
+			}
 		}
-
-		chprintf(DEBUG_CHP, "*************************\r\n\r\n");
-		chThdSleepMilliseconds(4500);
+		chprintf(DEBUG_CHP, "\r\n**********\r\n");
+		chThdSleepMilliseconds(4000);
 	}
-	return true;
 }
-
 
 /* APP */
 static void app_init(void)
@@ -239,13 +195,13 @@ static void main_app(void)
 {
 	app_init();
 	chprintf(DEBUG_CHP, "app_%s started.\r\n", APP_NAME);
-	ltc2990_test();
+	chprintf(DEBUG_CHP, "\r\n**********\r\n");
+	chprintf(DEBUG_CHP, "Demo\r\n");
+	demo_measure();
 
 	while (true)
 	{
-		// uint32_t ltc_id;
 		chprintf(DEBUG_CHP, ".");
-		// ltc_id = ltc2990_id();
 		chThdSleepMilliseconds(1000);
 	}
 }

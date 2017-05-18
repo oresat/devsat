@@ -42,12 +42,23 @@ typedef struct ltc2990data
 /* Ref: 26.4.10 table in Reference Manual for stm32f0 */
 typedef enum
 {
-	I2C_10KHZ_TIMINGR  = 0x1042C3C7,
-	I2C_400KHZ_TIMINGR = 0x00310309,
+	I2C_100KHZ_TIMINGR  = 0x10420f13,
+	I2C_400KHZ_TIMINGR  = 0x00310309,
 } solar_i2c_cfg;
 
+typedef enum
+{
+	LTC2990_OK           = 0x0,
+	LTC2990_DATA_INVALID = (0b1 << 0),
+	LTC2990_SENSOR_SHORT = (0b1 << 2),
+	LTC2990_SENSOR_OPEN  = (0b1 << 3),
+} ltc2990_error;
+
+
 #define        LTC2990_I2C_TX_BUFSIZE  4U
-#define        LTC2990_I2C_RX_BUFSIZE  16U
+#define        LTC2990_I2C_RX_BUFSIZE  20U
+
+#define        LTC2990_TRIGGER_WAIT_MS 200U
 
 #define LTC2990_STATUS      0x00U   //  R       Indicates BUSY State, Conversion Sta
 #define LTC2990_CONTROL     0x01U   //  R/W     Controls Mode, Single/Repeat, Celsiu
@@ -66,14 +77,18 @@ typedef enum
 #define LTC2990_VCC_MSB     0x0EU   //  R       VCC MSB
 #define LTC2990_VCC_LSB     0x0FU   //  R       VCC LSB
 
-#define LTC2990_CONTROL_T_FORMAT_KELVIN     (0b1<<7)
 #define LTC2990_CONTROL_ACQ_SINGLE          (0b1<<6)
 #define LTC2990_CONTROL_ALL_MODE_4_3        (0b11<<3)
 #define LTC2990_CONTROL_MODE_1_2_0          (0b001<<0)
 
-uint8_t ltc2990_readreg(uint8_t reg, i2cflags_t * i2c_errors);
-void    ltc2990_writereg(uint8_t reg, uint8_t val, i2cflags_t * i2c_errors);
-void ltc2990_read_all(ltc2990_data * d, i2cflags_t * i2c_errors);
+uint8_t    ltc2990_readreg(uint8_t reg, i2cflags_t * i2c_errors);
+
+void       ltc2990_writereg(uint8_t reg, uint8_t val, i2cflags_t * i2c_errors);
+void       ltc2990_read_all(ltc2990_data * d, i2cflags_t * i2c_errors);
+
+bool       ltc2990_conversion_done(uint8_t statusreg);
+signed int ltc2990_calc_tint(ltc2990_data * d, ltc2990_error * error);
+signed int ltc2990_calc_vcc(ltc2990_data * d, ltc2990_error * error);
 
 #ifdef __cplusplus
 }

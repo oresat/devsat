@@ -10,7 +10,18 @@
 extern "C" {
 #endif
 
-signed int sign_extend_12bit(signed int);
+static inline int round_nearest(float f)
+{
+	return((f < 0) ? ((int)(f - 0.5f)) : ((int)(f + 0.5f)));
+	//if(f<0) {
+	//return((int)(f-0.5f));
+	//}
+	//return (int)(f + 0.5f);
+}
+
+
+double incr_rnd(double d, double m) ;
+signed int sign_extend_13bit(signed int);
 
 #ifdef __cplusplus
 }
