@@ -63,6 +63,7 @@ static const I2CConfig i2cfg1 =
 const  uint8_t           LTC2990_I2C_ADDR   =    0x98;
 
 static ltc2990_data      monitor_data;
+static solar_v1_p        params;
 
 inline void i2c_report_error(i2cflags_t i2c_errors)
 {
@@ -105,18 +106,16 @@ static void demo_measure(void)
 		}
 		else
 		{
-			signed int tint = 0;
-			signed int vcc  = 0;
 			/* READ ALL */
 			ltc2990_read_all(&monitor_data, &i2c_errors);
 			i2c_report_error(i2c_errors);
 
 			/* TINT */
 			ltc2990_error derror;
-			tint = ltc2990_calc_tint(&monitor_data, &derror);
+			params.tint = ltc2990_calc_tint(&monitor_data, &derror);
 			if(derror == LTC2990_OK)
 			{
-				chprintf(DEBUG_CHP, "TINT is %iC\r\n", tint );
+				chprintf(DEBUG_CHP, "TINT is %iC\r\n", params.tint );
 			}
 			else
 			{
@@ -124,10 +123,10 @@ static void demo_measure(void)
 			}
 
 			/* VCC */
-			vcc = ltc2990_calc_vcc(&monitor_data, &derror );
+			params.vcc = ltc2990_calc_vcc(&monitor_data, &derror );
 			if(derror == LTC2990_OK)
 			{
-				chprintf(DEBUG_CHP, "VCC is %d mV\r\n", vcc);
+				chprintf(DEBUG_CHP, "VCC is %d mV\r\n", params.vcc);
 			}
 			else
 			{
@@ -135,11 +134,11 @@ static void demo_measure(void)
 			}
 
 			/* Current */
-			signed int current = 0;
-			current = solar_v1_calc_current(&monitor_data, &derror);
+			chprintf(DEBUG_CHP, "V1_MSB: 0x%x\r\nV1_LSB: 0x%x\r\n", monitor_data.V1_MSB, monitor_data.V1_LSB);
+			params.current = solar_v1_calc_current(&monitor_data, &derror);
 			if(derror == LTC2990_OK)
 			{
-				chprintf(DEBUG_CHP, "Current is %d mA\r\n", current);
+				chprintf(DEBUG_CHP, "Current is %d mA\r\n", params.current);
 			}
 			else
 			{
@@ -147,12 +146,11 @@ static void demo_measure(void)
 			}
 
 			/* External Temp */
-			signed int text = 0;
 			chprintf(DEBUG_CHP, "V3_MSB: 0x%x\r\nV3_LSB: 0x%x\r\n", monitor_data.V3_MSB, monitor_data.V3_LSB);
-			text    = solar_v1_calc_temp(&monitor_data, &derror) ;
+			params.temp_ext    = solar_v1_calc_temp(&monitor_data, &derror) ;
 			if(derror == LTC2990_OK)
 			{
-				chprintf(DEBUG_CHP, "External T is %d C\r\n", text);
+				chprintf(DEBUG_CHP, "External T is %d C\r\n", params.temp_ext);
 			}
 			else
 			{
@@ -160,7 +158,7 @@ static void demo_measure(void)
 			}
 		}
 		chprintf(DEBUG_CHP, "\r\n**********\r\n");
-		chThdSleepMilliseconds(4000);
+		chThdSleepMilliseconds(2000);
 	}
 }
 

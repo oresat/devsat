@@ -217,12 +217,13 @@ AOPT =
 TOPT = -mthumb -DTHUMB
 
 # Define C warning options here
-CWARN = -Wall -Wextra -Wundef -Wstrict-prototypes
+# CWARN = -Wall -Wextra -Wundef -Wstrict-prototypes
 
 CWARN = -Wall -Wextra -Wstrict-prototypes  -Wdisabled-optimization \
 	-Wdouble-promotion -Wformat=2 -Wfloat-equal \
 	-Waggressive-loop-optimizations \
-	-Waggregate-return -Wlogical-op
+	-Waggregate-return -Wlogical-op \
+	-Wno-implicit-fallthrough
 
 #-Wmissing-include-dirs
 

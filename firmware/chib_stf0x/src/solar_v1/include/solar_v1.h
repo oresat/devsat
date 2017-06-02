@@ -17,6 +17,14 @@ extern "C" {
 #include "hal.h"
 
 #include "ltc2990.h"
+typedef struct solar_v1_params
+{
+	signed int tint;
+	signed int vcc;
+	signed int current;
+	signed int temp_ext;
+} solar_v1_p;
+
 
 signed int solar_v1_calc_temp(ltc2990_data * d, ltc2990_error * error);
 signed int solar_v1_calc_current(ltc2990_data * d, ltc2990_error * error);

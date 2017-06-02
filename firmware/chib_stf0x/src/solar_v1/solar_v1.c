@@ -58,7 +58,7 @@ signed int solar_v1_calc_temp(ltc2990_data * d, ltc2990_error * error)
 	{
 		*error = LTC2990_SENSOR_SHORT;
 	}
-	else if (((0x1 << 5) & d->V3_LSB) != 0)
+	else if (((0x1 << 5) & d->V3_MSB) != 0)
 	{
 		*error = LTC2990_SENSOR_OPEN;
 	}
