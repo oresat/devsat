@@ -43,7 +43,7 @@
 
 static SerialConfig ser_cfg =
 {
-	115200,
+	9600,
 	0,
 	0,
 	0,
@@ -64,6 +64,12 @@ const  uint8_t           LTC2990_I2C_ADDR   =    0x98;
 
 static ltc2990_data      monitor_data;
 static solar_v1_p        params;
+
+inline static void lcd_clear()
+{
+	streamPut(DEBUG_CHP, 0xfe);
+	streamPut(DEBUG_CHP, 0x1);
+}
 
 inline void i2c_report_error(i2cflags_t i2c_errors)
 {
@@ -91,7 +97,7 @@ static void demo_measure(void)
 	{
 		/* TRIGGER */
 		regval = 0xf;
-		chprintf(DEBUG_CHP, "\t***Trigger***\r\n");
+		lcd_clear();
 		ltc2990_writereg(LTC2990_TRIGGER, regval, &i2c_errors);
 		i2c_report_error(i2c_errors);
 		chThdSleepMilliseconds(LTC2990_TRIGGER_WAIT_MS);
@@ -102,7 +108,9 @@ static void demo_measure(void)
 		/* CONTROL check status */
 		if(!ltc2990_conversion_done(regval))
 		{
-			chprintf(DEBUG_CHP, "LTC2990 Error: Conversion not finished\r\n");
+			lcd_clear();
+			chprintf(DEBUG_CHP, "LTC2990 Error: Conversion not finished");
+			chThdSleepS(S2ST(1));
 		}
 		else
 		{
@@ -113,52 +121,37 @@ static void demo_measure(void)
 			/* TINT */
 			ltc2990_error derror;
 			params.tint = ltc2990_calc_tint(&monitor_data, &derror);
-			if(derror == LTC2990_OK)
-			{
-				chprintf(DEBUG_CHP, "TINT is %iC\r\n", params.tint );
-			}
-			else
+			if(derror != LTC2990_OK)
 			{
 				chprintf(DEBUG_CHP, "TINT ERROR: %d\r\n", derror);
 			}
 
 			/* VCC */
 			params.vcc = ltc2990_calc_vcc(&monitor_data, &derror );
-			if(derror == LTC2990_OK)
-			{
-				chprintf(DEBUG_CHP, "VCC is %d mV\r\n", params.vcc);
-			}
-			else
+			if(derror != LTC2990_OK)
 			{
 				chprintf(DEBUG_CHP, "VCC ERROR: %d\r\n", derror);
 			}
 
 			/* Current */
-			chprintf(DEBUG_CHP, "V1_MSB: 0x%x\r\nV1_LSB: 0x%x\r\n", monitor_data.V1_MSB, monitor_data.V1_LSB);
+			// chprintf(DEBUG_CHP, "V1_MSB: 0x%x\r\nV1_LSB: 0x%x\r\n", monitor_data.V1_MSB, monitor_data.V1_LSB);
 			params.current = solar_v1_calc_current(&monitor_data, &derror);
-			if(derror == LTC2990_OK)
-			{
-				chprintf(DEBUG_CHP, "Current is %d mA\r\n", params.current);
-			}
-			else
+			if(derror != LTC2990_OK)
 			{
 				chprintf(DEBUG_CHP, "Current ERROR: %d\r\n", derror);
 			}
 
 			/* External Temp */
-			chprintf(DEBUG_CHP, "V3_MSB: 0x%x\r\nV3_LSB: 0x%x\r\n", monitor_data.V3_MSB, monitor_data.V3_LSB);
+			// chprintf(DEBUG_CHP, "V3_MSB: 0x%x\r\nV3_LSB: 0x%x\r\n", monitor_data.V3_MSB, monitor_data.V3_LSB);
 			params.temp_ext    = solar_v1_calc_temp(&monitor_data, &derror) ;
-			if(derror == LTC2990_OK)
-			{
-				chprintf(DEBUG_CHP, "External T is %d C\r\n", params.temp_ext);
-			}
-			else
+			if(derror != LTC2990_OK)
 			{
 				chprintf(DEBUG_CHP, "External T ERROR: %d\r\n", derror);
 			}
+			lcd_clear();
+			chprintf(DEBUG_CHP, "%dC        %dmA  %dV      %dC", params.temp_ext, params.current, params.vcc, params.tint);
 		}
-		chprintf(DEBUG_CHP, "\r\n**********\r\n");
-		chThdSleepMilliseconds(2000);
+		chThdSleepMilliseconds(1000);
 	}
 }
 
@@ -168,23 +161,25 @@ static void app_init(void)
 	// start up debug output, chprintf(DEBUG_CHP,...)
 	sdStart(&DEBUG_SERIAL, &ser_cfg);
 
-	chprintf(DEBUG_CHP, "\r\n");
+	lcd_clear();
+
 	i2cInit();
 	i2cStart(&I2CD1, &i2cfg1);
-	chprintf(DEBUG_CHP, "-------\r\n\r\n");
-	chprintf(DEBUG_CHP, "I2C1 Initialized.\r\n");
-
-	chprintf(DEBUG_CHP, "-------\r\n\r\n");
+	chprintf(DEBUG_CHP, "I2C1 Initialized.");
 	set_util_fwversion(&version_info);
 	set_util_hwversion(&version_info);
+	chThdSleepS(S2ST(1));
 
-	chprintf(DEBUG_CHP, "FW HASH: %s\r\n", version_info.firmware);
-	chprintf(DEBUG_CHP, "STF0x UNIQUE HW ID (H,C,L):\r\n0x%x\t0x%x\t0x%x\r\n"
-	         , version_info.hardware.id_high
-	         , version_info.hardware.id_center
-	         , version_info.hardware.id_low
-	        );
-	chprintf(DEBUG_CHP, "-------\r\n\r\n");
+	lcd_clear();
+	chprintf(DEBUG_CHP, "FW HASH: %s", version_info.firmware);
+	chThdSleepS(S2ST(1));
+	lcd_clear();
+	// chprintf(DEBUG_CHP, "STF0x UNIQUE HW ID (H,C,L):\r\n0x%x\t0x%x\t0x%x"
+			 // , version_info.hardware.id_high
+			 // , version_info.hardware.id_center
+			 // , version_info.hardware.id_low
+			// );
+	chThdSleepS(S2ST(1));
 }
 
 /*! \brief main application loop
@@ -192,9 +187,26 @@ static void app_init(void)
 static void main_app(void)
 {
 	app_init();
-	chprintf(DEBUG_CHP, "app_%s started.\r\n", APP_NAME);
-	chprintf(DEBUG_CHP, "\r\n**********\r\n");
-	chprintf(DEBUG_CHP, "Demo\r\n");
+	// chprintf(DEBUG_CHP, "app_%s started.\r\n", APP_NAME);
+	// chprintf(DEBUG_CHP, "\r\n**********\r\n");
+	lcd_clear();
+	// chprintf(DEBUG_CHP, "OrSat Solar Demo");
+	// streamPut(DEBUG_CHP, 0x7c);
+	// streamPut(DEBUG_CHP, 0x0a);
+	// chThdSleepS(S2ST(10));
+	streamPut(DEBUG_CHP, 0x7c);
+	streamPut(DEBUG_CHP, 0x82);
+	chThdSleepS(S2ST(1));
+	chprintf(DEBUG_CHP, "Demo Start");
+	// chprintf(DEBUG_CHP, ".");
+	// while(1) {
+	
+	// chprintf(DEBUG_CHP, "+");
+	// chThdSleepS(S2ST(1));
+	
+	// }
+	chThdSleepS(S2ST(2));
+	lcd_clear();
 	demo_measure();
 
 	while (true)
