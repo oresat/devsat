@@ -65,7 +65,7 @@ const  uint8_t           LTC2990_I2C_ADDR   =    0x98;
 static ltc2990_data      monitor_data;
 static solar_v1_p        params;
 
-inline static void lcd_clear()
+inline static void lcd_clear(void)
 {
 	streamPut(DEBUG_CHP, 0xfe);
 	streamPut(DEBUG_CHP, 0x1);
