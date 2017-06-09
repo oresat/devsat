@@ -149,7 +149,7 @@ static void demo_measure(void)
 				chprintf(DEBUG_CHP, "External T ERROR: %d\r\n", derror);
 			}
 			lcd_clear();
-			chprintf(DEBUG_CHP, "%dC        %dmA  %dV      %dC", params.temp_ext, params.current, params.vcc, params.tint);
+			chprintf(DEBUG_CHP, "%dC        %dmA  %dmV     %dC", params.temp_ext, params.current, params.vcc, params.tint);
 		}
 		chThdSleepMilliseconds(1000);
 	}
