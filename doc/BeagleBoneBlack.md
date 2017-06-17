@@ -19,6 +19,7 @@ On the **BeagleBone**:
 
 ```
 sudo route add default gw 192.168.7.1
+sudo cat "nameserver 8.8.8.8" >> /etc/resolv.conf
 ```
 
 On the **host** use ```ifconfig``` to find the interface that your computer uses to access the network. This is probably something like eth0 or wlan0, but it could be different. Then run the *BBBHostRouting.sh* script in the /devsat/scripts directory, with your interface as an argument. Example:
@@ -33,6 +34,5 @@ Go back to the **BeagleBone** and see if it worked:
 sudo ping 8.8.8.8
 ```
 
-**TODO: add DNS configuration intstructions.**
-
 ## CAN bus configuration
+
