@@ -94,7 +94,7 @@ PROJECT = app_candev
 CONF_DIR  = conf
 TOOLCHAIN = ../../toolchain
 CHIBIOS   = ../../../ChibiOS-RT
-BOARD     = ST_NUCLEO32_F042K6
+BOARD     = ST_NUCLEO_32_F042K6
 BOARDDIR  = ../boards/$(BOARD)
 
 # Nucleo32 specific files
@@ -107,7 +107,7 @@ include $(CHIBIOS)/os/common/startup/ARMCMx/compilers/GCC/mk/startup_stm32f0xx.m
 include $(CHIBIOS)/os/hal/hal.mk
 include $(CHIBIOS)/os/hal/ports/STM32/STM32F0xx/platform.mk
 # include $(BOARDDIR)/board.mk
-include ../boards/ST_NUCLEO32_F042K6/board.mk
+include $(BOARDDIR)/board.mk
 include $(CHIBIOS)/os/hal/osal/rt/osal.mk
 # RTOS files (optional).
 include $(CHIBIOS)/os/rt/rt.mk
