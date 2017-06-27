@@ -194,7 +194,7 @@ static void app_init(void)
     set_util_hwversion(&version_info);
     chThdSleepS(S2ST(2));
 
-    //Print HW and FW information
+    //Print FW/HW information
     chprintf(DEBUG_CHP, "\r\nFirmware Info\r\n");
     chprintf(DEBUG_CHP, "FW HASH: %s\r\n", version_info.firmware);
     chprintf(DEBUG_CHP, "STF0x UNIQUE HW ID (H,C,L):\r\n0x%x\t0x%x\t0x%x\r\n"
@@ -212,7 +212,7 @@ static void app_init(void)
     /*
      * Starting the transmitter and receiver threads.
      */
-    chprint(DEBUG_CHP, "\r\nStarting RX/TX threads...\r\n");
+    chprintf(DEBUG_CHP, "\r\nStarting RX/TX threads...\r\n");
     chThdCreateStatic(can_rx_wa, sizeof(can_rx_wa), NORMALPRIO + 7, can_rx, NULL);
     chThdCreateStatic(can_tx_wa, sizeof(can_tx_wa), NORMALPRIO + 7, can_tx, NULL);
 
