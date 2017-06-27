@@ -23,6 +23,9 @@
 #include "util_general.h"
 #include "util_version.h"
 
+#define DEBUG_SERIAL  SD2
+#define DEBUG_CHP     ((BaseSequentialStream *) &DEBUG_SERIAL)
+
 /*
  * Serial configuration
  */
@@ -34,8 +37,6 @@ static SerialConfig ser_cfg =
     0,          //
 };
 
-#define DEBUG_SERIAL  SD2
-#define DEBUG_CHP     ((BaseSequentialStream *) &DEBUG_SERIAL)
 
 /*
  * CAN Register configuration
@@ -169,19 +170,17 @@ static THD_FUNCTION(can_tx, p)
     while (!chThdShouldTerminateX())
     {
         //Process TSR and ESR
+        chprintf(DEBUG_CHP, "\n\rStatus:\n\r");
         CAN_TSR_break(&CAND1);
         chThdSleepMilliseconds(250);
         CAN_ESR_break(&CAND1);
         chThdSleepMilliseconds(750);
-        chprintf(DEBUG_CHP, "-");
 
         //Transmit message
         msg = canTransmit(&CAND1, CAN_ANY_MAILBOX, &txmsg, MS2ST(100));
-        chprintf(DEBUG_CHP, "$");
-        chprintf(DEBUG_CHP, "msg: %d\n\r", msg);
+        chprintf(DEBUG_CHP, "TX msg: %d\n\r", msg);
 
         txmsg.data32[0] += 0x1;
-        chprintf(DEBUG_CHP, "t\t");
     }
 }
 
@@ -233,10 +232,8 @@ int main(void) {
     /*
      * Begin main loop
      */
-    chprintf(DEBUG_CHP, "App start\r\n");
     while (true)
     {
-        chprintf(DEBUG_CHP, "+");
         chThdSleepMilliseconds(500);
     }
 
