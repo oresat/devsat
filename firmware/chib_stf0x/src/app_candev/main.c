@@ -147,7 +147,7 @@ void CAN_TSR_break(CANDriver *canp) {
  * Transmitter thread.
  */
 #ifndef MY_CAN_ADDRESS
-    #define MY_CAN_ADDRESS 0xCAFE
+#define MY_CAN_ADDRESS 0xCAFE
 #endif
 
 static THD_WORKING_AREA(can_tx_wa, 256);
@@ -168,18 +168,18 @@ static THD_FUNCTION(can_tx, p)
     // Start TX Loop
     while (!chThdShouldTerminateX())
     {
-        // chprintf(DEBUG_CHP, "ESR: 0x%x\n\r", *(&CAND1.can->ESR));
-        // chprintf(DEBUG_CHP, "TSR: 0x%x\n\r", *(&CAND1.can->TSR));
+        //Process TSR and ESR
         CAN_TSR_break(&CAND1);
         chThdSleepMilliseconds(250);
         CAN_ESR_break(&CAND1);
         chThdSleepMilliseconds(750);
         chprintf(DEBUG_CHP, "-");
+
+        //Transmit message
         msg = canTransmit(&CAND1, CAN_ANY_MAILBOX, &txmsg, MS2ST(100));
         chprintf(DEBUG_CHP, "$");
         chprintf(DEBUG_CHP, "msg: %d\n\r", msg);
-        // chprintf(DEBUG_CHP, "ESR: 0x%x\n\r", *((uint32_t)0x40006418));
-        // chprintf(DEBUG_CHP, "TSR: 0x%x\n\r", &CAND1.can->TSR);
+
         txmsg.data32[0] += 0x1;
         chprintf(DEBUG_CHP, "t\t");
     }
@@ -187,31 +187,32 @@ static THD_FUNCTION(can_tx, p)
 
 static void app_init(void)
 {
-    // start up debug output, chprintf(DEBUG_CHP,...)
+    // Start up debug output, chprintf(DEBUG_CHP,...)
     sdStart(&DEBUG_SERIAL, &ser_cfg);
 
     set_util_fwversion(&version_info);
     set_util_hwversion(&version_info);
-
     chThdSleepS(S2ST(2));
+
+    //Print HW and FW information
     chprintf(DEBUG_CHP, "\r\nFirmware Info\r\n");
     chprintf(DEBUG_CHP, "FW HASH: %s\r\n", version_info.firmware);
     chprintf(DEBUG_CHP, "STF0x UNIQUE HW ID (H,C,L):\r\n0x%x\t0x%x\t0x%x\r\n"
-             , version_info.hardware.id_high
-             , version_info.hardware.id_center
-             , version_info.hardware.id_low
+            , version_info.hardware.id_high
+            , version_info.hardware.id_center
+            , version_info.hardware.id_low
             );
 
-    chprintf(DEBUG_CHP, "\r\nStarting CAN threads...\r\n");
-
     /*
-     * Activates the CAN driver 1.
+     * Activates CAN driver 1.
      */
+    chprintf(DEBUG_CHP, "\r\nStarting CAN driver...\r\n");
     canStart(&CAND1, &cancfg);
 
     /*
      * Starting the transmitter and receiver threads.
      */
+    chprint(DEBUG_CHP, "\r\nStarting RX/TX threads...\r\n");
     chThdCreateStatic(can_rx_wa, sizeof(can_rx_wa), NORMALPRIO + 7, can_rx, NULL);
     chThdCreateStatic(can_tx_wa, sizeof(can_tx_wa), NORMALPRIO + 7, can_tx, NULL);
 
@@ -233,7 +234,6 @@ int main(void) {
      * Begin main loop
      */
     chprintf(DEBUG_CHP, "App start\r\n");
-
     while (true)
     {
         chprintf(DEBUG_CHP, "+");
