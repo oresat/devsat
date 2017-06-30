@@ -121,8 +121,8 @@ include $(CHIBIOS)/test/rt/test.mk
 LDSCRIPT= $(STARTUPLD)/STM32F446xE.ld
 
 # Add application source directories here
-APP_SRCS = $(wildcard $(NUCLEO32_UTIL)/*.c)
-APP_SRCS += $(wildcard $(NUCLEO32_BOARDS)/*.c)
+APP_SRCS = $(wildcard $(NUCLEO64_UTIL)/*.c)
+APP_SRCS += $(wildcard $(NUCLEO64_BOARDS)/*.c)
 
 CSRC = $(STARTUPSRC) \
        $(KERNSRC) \
@@ -169,11 +169,11 @@ INCDIR = $(CHIBIOS)/os/license \
 	 $(HALINC) $(PLATFORMINC) $(BOARDINC) $(TESTINC) \
 	 $(CHIBIOS)/os/hal/lib/streams $(CHIBIOS)/os/various \
 	 $(CONF_DIR) \
-	 $(NUCLEO32_UTIL)/include \
-	 $(NUCLEO32_BOARDS)/include \
+	 $(NUCLEO64_UTIL)/include \
+	 $(NUCLEO64_BOARDS)/include \
 	 $(CHIBIOS)/os/various
 
-# $(NUCLEO32_SATSHELL)/include \
+# $(NUCLEO64_SATSHELL)/include \
 
 #
 # Project, sources and paths
@@ -231,7 +231,7 @@ CPPWARN = -Wall -Wextra -Wundef
 #
 
 # List all user C define here, like -D_DEBUG=1
-UDEFS = -DGIT_COMMIT_VERSION=$(NUCLEO32_VERSION)
+UDEFS = -DGIT_COMMIT_VERSION=$(NUCLEO64_VERSION)
 #UDEFS += -DDBG_MSG_ENABLE=1
 
 # Define ASM defines here
@@ -259,5 +259,5 @@ include $(RULESPATH)/rules.mk
 # https://community.arm.com/processors/b/blog/posts/armv6-m-vs-armv7-m---unpacking-the-microcontrollers
 # include $(PORTRULESPATH)/port_v6m.mk
 
-include $(NUCLEO32_RULES)
+include $(NUCLEO64_RULES)
 
