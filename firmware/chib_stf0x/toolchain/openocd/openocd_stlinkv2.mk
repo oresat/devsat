@@ -1,6 +1,6 @@
 OPENOCD_HEXFILE = $(BUILDDIR)/$(PROJECT).hex
 GDB_ELF = $(BUILDDIR)/$(PROJECT).elf
-OOCD_CFG = stlinkv2_stm32_e407.cfg
+OOCD_CFG = stlinkv2_stm32.cfg
 GDB_CFG = $(OPENOCD_DIR)/gdboocd_ocd.cmd
 
 write: $(OPENOCD_HEXFILE) write_stl

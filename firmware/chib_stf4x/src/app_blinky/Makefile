@@ -88,7 +88,7 @@ endif
 #
 
 # Define project name here
-PROJECT = ch
+PROJECT = app_blinky
 
 # Imported source files and paths
 CONF_DIR  = conf
@@ -97,8 +97,10 @@ CHIBIOS   = ../../../ChibiOS-RT
 BOARD     = ST_NUCLEO64_F446RE
 BOARDDIR  = ../boards/$(BOARD)
 
-# Nucleo32 specific files
-include $(TOOLCHAIN)/nucleo32.mk
+# Nucleo64 specific files
+include $(TOOLCHAIN)/nucleo64.mk
+
+include $(BOARDDIR)/board.mk
 
 # Startup files
 include $(CHIBIOS)/os/common/startup/ARMCMx/compilers/GCC/mk/startup_stm32f4xx.mk
@@ -106,22 +108,16 @@ include $(CHIBIOS)/os/common/startup/ARMCMx/compilers/GCC/mk/startup_stm32f4xx.m
 # HAL-OSAL files (optional).
 include $(CHIBIOS)/os/hal/hal.mk
 include $(CHIBIOS)/os/hal/ports/STM32/STM32F4xx/platform.mk
-# include $(BOARDDIR)/board.mk
-#include ../boards/ST_NUCLEO32_F042K6/board.mk
-#include ../boards/ST_NUCLEO32_F411RE/board.mk
-include ../boards/ST_NUCLEO64_F446RE/board.mk
 include $(CHIBIOS)/os/hal/osal/rt/osal.mk
 # RTOS files (optional).
 include $(CHIBIOS)/os/rt/rt.mk
 include $(CHIBIOS)/os/common/ports/ARMCMx/compilers/GCC/mk/port_v7m.mk
-#include $(CHIBIOS)/os/common/ports/ARMCMx/compilers/GCC/mk/port_v6m.mk
 # include $(CHIBIOS)/os/rt/ports/ARMCMx/compilers/GCC/mk/port_v6m.mk
 
 # Other files (optional).
 include $(CHIBIOS)/test/rt/test.mk
 
 # Define linker script file here
-#LDSCRIPT= $(STARTUPLD)/STM32F411xE.ld
 LDSCRIPT= $(STARTUPLD)/STM32F446xE.ld
 
 # Add application source directories here
@@ -213,12 +209,13 @@ AOPT =
 TOPT = -mthumb -DTHUMB
 
 # Define C warning options here
-CWARN = -Wall -Wextra -Wundef -Wstrict-prototypes
+# CWARN = -Wall -Wextra -Wundef -Wstrict-prototypes
 
 CWARN = -Wall -Wextra -Wstrict-prototypes  -Wdisabled-optimization \
 	-Wdouble-promotion -Wformat=2 -Wfloat-equal \
 	-Waggressive-loop-optimizations \
-	-Waggregate-return -Wlogical-op
+	-Waggregate-return -Wlogical-op \
+	-Wno-implicit-fallthrough
 
 #-Wmissing-include-dirs
 
