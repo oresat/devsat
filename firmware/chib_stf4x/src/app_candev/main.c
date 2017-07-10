@@ -53,9 +53,9 @@ static const CANConfig cancfg = {
     // Note: Convert to zero based values here when using the calculator
     // CAN_BTR_LBKM     |     //Loopback Mode (Debug)
     CAN_BTR_SJW(0)    |     //Synchronization Jump Width
-    CAN_BTR_TS1(12)   |     //Time Segment 1
+    CAN_BTR_TS1(14)   |     //Time Segment 1
     CAN_BTR_TS2(1)    |     //Time Segment 2
-    CAN_BTR_BRP(5)          //Bit Rate Prescaler
+    CAN_BTR_BRP(4)          //Bit Rate Prescaler
 };
 
 /*
