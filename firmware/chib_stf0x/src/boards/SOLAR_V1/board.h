@@ -23,7 +23,7 @@
 #define BOARD_H
 
 /*
- * Setup for Oresat Solar V1 stmF042K6 board.
+ * Setup for Oresat Solar V1 STM32F042K6 board.
  * PART: STM32F042K6T6
  * PACKAGE: LQFP32
  */
@@ -50,7 +50,6 @@
 #if !defined(STM32_HSECLK)
 #define STM32_HSECLK                0U
 #endif
-
 
 /*
  * MCU type as defined in the ST header.
@@ -188,6 +187,7 @@
  * PA14 - SWCLK                 (alternate 0).
  * PA15 - NC                    (output pulldown).
  */
+
 #define VAL_GPIOA_MODER             (PIN_MODE_OUTPUT(GPIOA_PIN0_NC) |         \
                                      PIN_MODE_OUTPUT(GPIOA_PIN1_NC) |         \
                                      PIN_MODE_ALTERNATE(GPIOA_USART2_TX) |     \
@@ -199,8 +199,8 @@
                                      PIN_MODE_ALTERNATE(GPIOA_PIN8_NC) |         \
                                      PIN_MODE_OUTPUT(GPIOA_CAN_LSTN) |         \
                                      PIN_MODE_OUTPUT(GPIOA_CAN_EN) |         \
-                                     PIN_MODE_ALTERNATE(GPIOA_CAN_RX) |        \
-                                     PIN_MODE_ALTERNATE(GPIOA_CAN_TX) |         \
+                                     PIN_MODE_ALTERNATE(GPIOA_CAN_RX) |     \
+                                     PIN_MODE_ALTERNATE(GPIOA_CAN_TX) |     \
                                      PIN_MODE_ALTERNATE(GPIOA_SWDIO) |      \
                                      PIN_MODE_ALTERNATE(GPIOA_SWCLK) |      \
                                      PIN_MODE_OUTPUT(GPIOA_PIN15_NC))

@@ -34,10 +34,8 @@ ifeq ($(USE_LDOPT),)
 endif
 
 # Enable this if you want link time optimizations (LTO)
-USE_LTO = no
 ifeq ($(USE_LTO),)
-	# USE_LTO = yes
-	USE_LTO = no
+	USE_LTO = yes
 endif
 
 # If enabled, this option allows to compile the application in THUMB mode.
@@ -91,7 +89,7 @@ endif
 #
 
 # Define project name here
-PROJECT = ch
+PROJECT = app_solardemo
 
 # Imported source files and paths
 CONF_DIR  = conf
@@ -104,8 +102,6 @@ BOARDDIR  = ../boards/$(BOARD)
 include $(TOOLCHAIN)/solarv1.mk
 
 include $(BOARDDIR)/board.mk
-# include ../boards/$(BOARD)/board.mk
-include $(CHIBIOS)/os/hal/osal/rt/osal.mk
 
 # Startup files
 include $(CHIBIOS)/os/common/startup/ARMCMx/compilers/GCC/mk/startup_stm32f0xx.mk
@@ -113,6 +109,7 @@ include $(CHIBIOS)/os/common/startup/ARMCMx/compilers/GCC/mk/startup_stm32f0xx.m
 # HAL-OSAL files (optional).
 include $(CHIBIOS)/os/hal/hal.mk
 include $(CHIBIOS)/os/hal/ports/STM32/STM32F0xx/platform.mk
+include $(CHIBIOS)/os/hal/osal/rt/osal.mk
 # RTOS files (optional).
 include $(CHIBIOS)/os/rt/rt.mk
 include $(CHIBIOS)/os/common/ports/ARMCMx/compilers/GCC/mk/port_v6m.mk

@@ -1,11 +1,10 @@
 /*! \file main.c
  *  app_solardemo
  *
- * Serial terminal setting are in SerialConfig structure.
  */
 
 /*
-    ChibiOS/RT - Copyright (C) 2006-2013 Giovanni Di Sirio
+    ChibiOS - Copyright (C) 2006..2015 Giovanni Di Sirio
 
     Licensed under the Apache License, Version 2.0 (the "License");
     you may not use this file except in compliance with the License.
@@ -21,16 +20,15 @@
 */
 
 /*!
- * \defgroup main app_solar main
+ * \defgroup main app_solardemo main
  *
  * @{
  */
 #include <stdbool.h>
 #include "ch.h"
-
-#include "board.h"
 #include "hal.h"
 #include "chprintf.h"
+#include "board.h"
 
 #include "util_general.h"
 #include "util_version.h"
@@ -39,8 +37,12 @@
 #include "ltc2990.h"
 #include "solar_v1.h"
 
-#define APP_NAME                "solardemo"
+#define DEBUG_SERIAL  SD2
+#define DEBUG_CHP     ((BaseSequentialStream *) &DEBUG_SERIAL)
 
+/*
+ * Serial configuration
+ */
 static SerialConfig ser_cfg =
 {
 	9600,
@@ -49,8 +51,6 @@ static SerialConfig ser_cfg =
 	0,
 };
 
-#define DEBUG_SERIAL  SD2
-#define DEBUG_CHP     ((BaseSequentialStream *) &DEBUG_SERIAL)
 
 static const I2CConfig i2cfg1 =
 {
@@ -187,7 +187,7 @@ static void app_init(void)
 static void main_app(void)
 {
 	app_init();
-	// chprintf(DEBUG_CHP, "app_%s started.\r\n", APP_NAME);
+	// chprintf(DEBUG_CHP, "app_%s started.\r\n", PROJECT);
 	// chprintf(DEBUG_CHP, "\r\n**********\r\n");
 	lcd_clear();
 	// chprintf(DEBUG_CHP, "OrSat Solar Demo");
@@ -200,10 +200,10 @@ static void main_app(void)
 	chprintf(DEBUG_CHP, "Demo Start");
 	// chprintf(DEBUG_CHP, ".");
 	// while(1) {
-	
+
 	// chprintf(DEBUG_CHP, "+");
 	// chThdSleepS(S2ST(1));
-	
+
 	// }
 	chThdSleepS(S2ST(2));
 	lcd_clear();
