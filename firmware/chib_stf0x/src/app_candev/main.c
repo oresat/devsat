@@ -204,6 +204,11 @@ static void app_init(void)
     chprintf(DEBUG_CHP, "\r\nStarting CAN driver...\r\n");
     canStart(&CAND1, &cancfg);
 
+
+}
+
+static void main_app(void)
+{
     /*
      * Starting the transmitter and receiver threads.
      */
@@ -211,10 +216,6 @@ static void app_init(void)
     chThdCreateStatic(can_rx_wa, sizeof(can_rx_wa), NORMALPRIO + 7, can_rx, NULL);
     chThdCreateStatic(can_tx_wa, sizeof(can_tx_wa), NORMALPRIO + 7, can_tx, NULL);
 
-}
-
-static void main_app(void)
-{
     /*
      * Begin main loop
      */
