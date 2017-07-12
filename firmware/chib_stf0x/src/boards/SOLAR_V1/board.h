@@ -196,7 +196,7 @@
                                      PIN_MODE_OUTPUT(GPIOA_TP9) |         \
                                      PIN_MODE_OUTPUT(GPIOA_TP10) |         \
                                      PIN_MODE_OUTPUT(GPIOA_TP11) |         \
-                                     PIN_MODE_ALTERNATE(GPIOA_PIN8_NC) |         \
+                                     PIN_MODE_OUTPUT(GPIOA_PIN8_NC) |         \
                                      PIN_MODE_OUTPUT(GPIOA_CAN_LSTN) |         \
                                      PIN_MODE_OUTPUT(GPIOA_CAN_EN) |         \
                                      PIN_MODE_ALTERNATE(GPIOA_CAN_RX) |     \

@@ -1,3 +1,8 @@
+/*! \file main.c
+ *  app_candev
+ *
+ */
+
 /*
     ChibiOS - Copyright (C) 2006..2015 Giovanni Di Sirio
 
@@ -14,6 +19,11 @@
     limitations under the License.
 */
 
+/*!
+ * \defgroup main app_candev main
+ *
+ * @{
+ */
 #include <stdbool.h>
 #include "ch.h"
 #include "hal.h"
@@ -22,6 +32,10 @@
 
 #include "util_general.h"
 #include "util_version.h"
+#include "util_numbers.h"
+
+#include "ltc2990.h"
+#include "solar_v1.h"
 
 #define DEBUG_SERIAL  SD2
 #define DEBUG_CHP     ((BaseSequentialStream *) &DEBUG_SERIAL)
@@ -242,3 +256,6 @@ int main(void)
 
     return 0;
 }
+
+//! @}
+
