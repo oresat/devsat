@@ -98,7 +98,7 @@ CHIBIOS   = ../../../ChibiOS-RT
 BOARD     = SOLAR_V1
 BOARDDIR  = ../boards/$(BOARD)
 
-# Nucleo32 specific files
+# solarv1 specific files
 include $(TOOLCHAIN)/solarv1.mk
 
 include $(BOARDDIR)/board.mk

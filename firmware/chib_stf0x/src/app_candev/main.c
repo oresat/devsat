@@ -80,7 +80,6 @@ static THD_FUNCTION(can_rx, p)
 {
     event_listener_t        el;
     CANRxFrame              rxmsg;
-    uint32_t                last = 0;
 
     (void)p;
     chRegSetThreadName("receiver");
@@ -104,15 +103,6 @@ static THD_FUNCTION(can_rx, p)
         {
             /* Process message.*/
             palToggleLine(LINE_LED_GREEN);
-            if(rxmsg.data32[0] != (last + 1))
-            {
-                chprintf(DEBUG_CHP, "\r\nSEQ ERR %d not %d\r\n", rxmsg.data32[0], last + 1);
-            }
-            else
-            {
-                chprintf(DEBUG_CHP, "\r\n\t%d from 0x%x\r\n", rxmsg.data32[0], rxmsg.EID);
-            }
-            last = rxmsg.data32[0];
         }
     }
 
@@ -195,8 +185,6 @@ static THD_FUNCTION(can_tx, p)
         //Transmit message
         msg = canTransmit(&CAND1, CAN_ANY_MAILBOX, &txmsg, MS2ST(100));
         chprintf(DEBUG_CHP, "TX msg: %d\n\r", msg);
-
-        txmsg.data32[0] += 0x1;
     }
 }
 

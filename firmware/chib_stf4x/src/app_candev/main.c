@@ -23,6 +23,9 @@
 #include "util_general.h"
 #include "util_version.h"
 
+#include "ltc2990.h"
+#include "solar_v1.h"
+
 #define DEBUG_SERIAL  SD2
 #define DEBUG_CHP     ((BaseSequentialStream *) &DEBUG_SERIAL)
 
@@ -66,7 +69,9 @@ static THD_FUNCTION(can_rx, p)
 {
     event_listener_t        el;
     CANRxFrame              rxmsg;
-    uint32_t                last = 0;
+    ltc2990_data            telemetry;
+    ltc2990_error           derror;
+    solar_v1_p              params;
 
     (void)p;
     chRegSetThreadName("receiver");
@@ -85,20 +90,26 @@ static THD_FUNCTION(can_rx, p)
         {
             continue;
         }
-        chprintf(DEBUG_CHP, "r");
         while (canReceive(&CAND1, CAN_ANY_MAILBOX, &rxmsg, TIME_IMMEDIATE) == MSG_OK)
         {
             /* Process message.*/
             palToggleLine(LINE_LED_GREEN);
-            if(rxmsg.data32[0] != (last + 1))
+            if (0x30 & rxmsg.EID)
             {
-                chprintf(DEBUG_CHP, "\r\nSEQ ERR %d not %d\r\n", rxmsg.data32[0], last + 1);
+                telemetry.T_INT_MSB = rxmsg.data8[0];
+                telemetry.T_INT_LSB = rxmsg.data8[1];
+                telemetry.VCC_MSB = rxmsg.data8[2];
+                telemetry.VCC_LSB = rxmsg.data8[3];
+                telemetry.V1_MSB = rxmsg.data8[4];
+                telemetry.V1_LSB = rxmsg.data8[5];
+                telemetry.V3_MSB = rxmsg.data8[6];
+                telemetry.V3_LSB = rxmsg.data8[7];
+                params.tint = ltc2990_calc_tint(&telemetry, &derror);
+                params.vcc = ltc2990_calc_vcc(&telemetry, &derror);
+                params.current = solar_v1_calc_current(&telemetry, &derror);
+                params.temp_ext = solar_v1_calc_temp(&telemetry, &derror);
+                chprintf(DEBUG_CHP, "\r\n0x%x:\r\nExt Temp: %dC\r\nCurrent: %dmA\r\nVoltage:%dmV\r\nInt Temp:%dC\r\n", rxmsg.EID, params.temp_ext, params.current, params.vcc, params.tint);
             }
-            else
-            {
-                chprintf(DEBUG_CHP, "\r\n\t%d from 0x%x\r\n", rxmsg.data32[0], rxmsg.EID);
-            }
-            last = rxmsg.data32[0];
         }
     }
 
@@ -147,9 +158,6 @@ void CAN_TSR_break(CANDriver *canp) {
 /*
  * Transmitter thread.
  */
-#ifndef MY_CAN_ADDRESS
-#define MY_CAN_ADDRESS 0xCAFE
-#endif
 
 static THD_WORKING_AREA(can_tx_wa, 256);
 static THD_FUNCTION(can_tx, p)
@@ -160,7 +168,7 @@ static THD_FUNCTION(can_tx, p)
     (void)p;
     chRegSetThreadName("transmitter");
     txmsg.IDE = CAN_IDE_EXT;
-    txmsg.EID = MY_CAN_ADDRESS;
+    txmsg.EID = 0x11;
     txmsg.RTR = CAN_RTR_DATA;
     txmsg.DLC = 8;
     txmsg.data32[0] = 0x00000001;
@@ -213,7 +221,7 @@ static void app_init(void)
      */
     chprintf(DEBUG_CHP, "\r\nStarting RX/TX threads...\r\n");
     chThdCreateStatic(can_rx_wa, sizeof(can_rx_wa), NORMALPRIO + 7, can_rx, NULL);
-    chThdCreateStatic(can_tx_wa, sizeof(can_tx_wa), NORMALPRIO + 7, can_tx, NULL);
+    //chThdCreateStatic(can_tx_wa, sizeof(can_tx_wa), NORMALPRIO + 7, can_tx, NULL);
 
 }
 

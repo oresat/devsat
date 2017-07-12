@@ -7,6 +7,8 @@ OPENOCD_DIR            = $(NUCLEO64_TOOLCHAIN)/openocd
 
 # source directories
 NUCLEO64_UTIL          = $(NUCLEO64_TOP)/src/util
+NUCLEO64_LTC2990       = $(NUCLEO64_TOP)/src/ltc2990
+NUCLEO64_SOLARV1       = $(NUCLEO64_TOP)/src/solar_v1
 NUCLEO64_SATSHELL      = $(NUCLEO64_TOP)/src/satshell
 NUCLEO64_BOARDS        = $(NUCLEO64_TOP)/src/boards
 

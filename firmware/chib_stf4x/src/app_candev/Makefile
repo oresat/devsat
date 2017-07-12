@@ -123,6 +123,8 @@ LDSCRIPT= $(STARTUPLD)/STM32F446xE.ld
 # Add application source directories here
 APP_SRCS = $(wildcard $(NUCLEO64_UTIL)/*.c)
 APP_SRCS += $(wildcard $(NUCLEO64_BOARDS)/*.c)
+APP_SRCS += $(wildcard $(NUCLEO64_LTC2990)/*.c)
+APP_SRCS += $(wildcard $(NUCLEO64_SOLARV1)/*.c)
 
 CSRC = $(STARTUPSRC) \
        $(KERNSRC) \
@@ -169,6 +171,8 @@ INCDIR = $(CHIBIOS)/os/license \
 	 $(HALINC) $(PLATFORMINC) $(BOARDINC) $(TESTINC) \
 	 $(CHIBIOS)/os/hal/lib/streams $(CHIBIOS)/os/various \
 	 $(CONF_DIR) \
+	 $(NUCLEO64_LTC2990)/include \
+	 $(NUCLEO64_SOLARV1)/include \
 	 $(NUCLEO64_UTIL)/include \
 	 $(NUCLEO64_BOARDS)/include \
 	 $(CHIBIOS)/os/various
@@ -233,9 +237,6 @@ CPPWARN = -Wall -Wextra -Wundef
 # List all user C define here, like -D_DEBUG=1
 UDEFS = -DGIT_COMMIT_VERSION=$(NUCLEO64_VERSION)
 #UDEFS += -DDBG_MSG_ENABLE=1
-
-ORESAT_CAN_ADDRESS=0xA0
-UDEFS += -DMY_CAN_ADDRESS=$(ORESAT_CAN_ADDRESS)
 
 # Define ASM defines here
 UADEFS =
