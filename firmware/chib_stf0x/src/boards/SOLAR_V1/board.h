@@ -261,8 +261,8 @@
                                      PIN_ODR_HIGH(GPIOA_TP10) |           \
                                      PIN_ODR_HIGH(GPIOA_TP11) |           \
                                      PIN_ODR_HIGH(GPIOA_PIN8_NC) |           \
-                                     PIN_ODR_HIGH(GPIOA_CAN_LSTN) |           \
-                                     PIN_ODR_HIGH(GPIOA_CAN_EN) |           \
+                                     PIN_ODR_LOW(GPIOA_CAN_LSTN) |           \
+                                     PIN_ODR_LOW(GPIOA_CAN_EN) |           \
                                      PIN_ODR_HIGH(GPIOA_CAN_RX) |          \
                                      PIN_ODR_HIGH(GPIOA_CAN_TX) |           \
                                      PIN_ODR_HIGH(GPIOA_SWDIO) |            \

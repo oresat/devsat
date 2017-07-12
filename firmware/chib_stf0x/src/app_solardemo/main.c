@@ -193,7 +193,7 @@ static THD_FUNCTION(demo_measure, p)
             }
             lcd_clear();
             chprintf(DEBUG_CHP, "%dC        %dmA  %dmV     %dC", params.temp_ext, params.current, params.vcc, params.tint);
-            //canTransmit(&CAND1, CAN_ANY_MAILBOX, &txmsg, MS2ST(100));
+            canTransmit(&CAND1, CAN_ANY_MAILBOX, &txmsg, MS2ST(100));
         }
         chThdSleepMilliseconds(1000);
     }
