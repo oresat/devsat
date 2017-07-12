@@ -101,13 +101,31 @@ inline void i2c_report_error(i2cflags_t i2c_errors)
     }
 }
 
+/*
+ * Demo measure thread
+ */
 static THD_WORKING_AREA(demo_measure_wa, 256);
 static THD_FUNCTION(demo_measure, p)
 {
+    CANTxFrame txmsg;
     i2cflags_t           i2c_errors  = 0x0;
     volatile uint8_t     regval      = 0xf;
 
     (void)p;
+    chRegSetThreadName("demo_measure");
+
+    txmsg.IDE = CAN_IDE_EXT;
+    txmsg.EID = 0x31;
+    txmsg.RTR = CAN_RTR_DATA;
+    txmsg.DLC = 8;
+    txmsg.data8[0] = 0x00;
+    txmsg.data8[1] = 0x01;
+    txmsg.data8[2] = 0x02;
+    txmsg.data8[3] = 0x03;
+    txmsg.data8[4] = 0x04;
+    txmsg.data8[5] = 0x05;
+    txmsg.data8[6] = 0x06;
+    txmsg.data8[7] = 0x07;
 
     regval = 0xf;
 
@@ -175,6 +193,7 @@ static THD_FUNCTION(demo_measure, p)
             }
             lcd_clear();
             chprintf(DEBUG_CHP, "%dC        %dmA  %dmV     %dC", params.temp_ext, params.current, params.vcc, params.tint);
+            //canTransmit(&CAND1, CAN_ANY_MAILBOX, &txmsg, MS2ST(100));
         }
         chThdSleepMilliseconds(1000);
     }
