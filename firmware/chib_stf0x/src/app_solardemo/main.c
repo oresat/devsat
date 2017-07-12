@@ -93,7 +93,7 @@ inline static void lcd_clear(void)
     streamPut(DEBUG_CHP, 0x1);
 }
 
-inline void i2c_report_error(i2cflags_t i2c_errors)
+inline static void i2c_report_error(i2cflags_t i2c_errors)
 {
     if(i2c_errors != 0)
     {

@@ -7,7 +7,7 @@
 ifeq ($(USE_OPT),)
 	# This will make very big object
 	# USE_OPT = -O2 -ggdb -fomit-frame-pointer -falign-functions=16
-	USE_OPT = -O2 -ggdb -fomit-frame-pointer -falign-functions=16
+	USE_OPT = -ggdb -fomit-frame-pointer -falign-functions=16
 
 	# This is smaller object
 	# USE_OPT = -Os -fomit-frame-pointer -falign-functions=16
