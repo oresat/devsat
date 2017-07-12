@@ -147,10 +147,6 @@ void CAN_TSR_break(CANDriver *canp) {
 /*
  * Transmitter thread.
  */
-#ifndef MY_CAN_ADDRESS
-#define MY_CAN_ADDRESS 0xCAFE
-#endif
-
 static THD_WORKING_AREA(can_tx_wa, 256);
 static THD_FUNCTION(can_tx, p)
 {
@@ -160,7 +156,7 @@ static THD_FUNCTION(can_tx, p)
     (void)p;
     chRegSetThreadName("transmitter");
     txmsg.IDE = CAN_IDE_EXT;
-    txmsg.EID = MY_CAN_ADDRESS;
+    txmsg.EID = 0x31;
     txmsg.RTR = CAN_RTR_DATA;
     txmsg.DLC = 8;
     txmsg.data32[0] = 0x00000001;
@@ -191,7 +187,7 @@ static void app_init(void)
 
     set_util_fwversion(&version_info);
     set_util_hwversion(&version_info);
-    chThdSleepS(S2ST(2));
+    chThdSleepS(S2ST(1));
 
     //Print FW/HW information
     chprintf(DEBUG_CHP, "\r\nFirmware Info\r\n");
@@ -217,7 +213,19 @@ static void app_init(void)
 
 }
 
-int main(void) {
+static void main_app(void)
+{
+    /*
+     * Begin main loop
+     */
+    while (true)
+    {
+        chThdSleepMilliseconds(1000);
+    }
+}
+
+int main(void)
+{
     /*
      * System initializations.
      * - HAL initialization, this also initializes the configured device drivers
@@ -229,13 +237,7 @@ int main(void) {
     chSysInit();
     app_init();
 
-    /*
-     * Begin main loop
-     */
-    while (true)
-    {
-        chThdSleepMilliseconds(500);
-    }
+    main_app();
 
     return 0;
 }
