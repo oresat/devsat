@@ -119,13 +119,13 @@ static THD_FUNCTION(demo_measure, p)
     txmsg.RTR = CAN_RTR_DATA;
     txmsg.DLC = 8;
     txmsg.data8[0] = 0x00;
-    txmsg.data8[1] = 0x01;
-    txmsg.data8[2] = 0x02;
-    txmsg.data8[3] = 0x03;
-    txmsg.data8[4] = 0x04;
-    txmsg.data8[5] = 0x05;
-    txmsg.data8[6] = 0x06;
-    txmsg.data8[7] = 0x07;
+    txmsg.data8[1] = 0x00;
+    txmsg.data8[2] = 0x00;
+    txmsg.data8[3] = 0x00;
+    txmsg.data8[4] = 0x00;
+    txmsg.data8[5] = 0x00;
+    txmsg.data8[6] = 0x00;
+    txmsg.data8[7] = 0x00;
 
     regval = 0xf;
 
@@ -168,6 +168,8 @@ static THD_FUNCTION(demo_measure, p)
             {
                 chprintf(DEBUG_CHP, "TINT ERROR: %d\r\n", derror);
             }
+            txmsg.data8[0] = monitor_data.T_INT_MSB;
+            txmsg.data8[1] = monitor_data.T_INT_LSB;
 
             /* VCC */
             params.vcc = ltc2990_calc_vcc(&monitor_data, &derror );
@@ -175,6 +177,8 @@ static THD_FUNCTION(demo_measure, p)
             {
                 chprintf(DEBUG_CHP, "VCC ERROR: %d\r\n", derror);
             }
+            txmsg.data8[2] = monitor_data.VCC_MSB;
+            txmsg.data8[3] = monitor_data.VCC_LSB;
 
             /* Current */
             // chprintf(DEBUG_CHP, "V1_MSB: 0x%x\r\nV1_LSB: 0x%x\r\n", monitor_data.V1_MSB, monitor_data.V1_LSB);
@@ -183,6 +187,8 @@ static THD_FUNCTION(demo_measure, p)
             {
                 chprintf(DEBUG_CHP, "Current ERROR: %d\r\n", derror);
             }
+            txmsg.data8[4] = monitor_data.V1_MSB;
+            txmsg.data8[5] = monitor_data.V1_LSB;
 
             /* External Temp */
             // chprintf(DEBUG_CHP, "V3_MSB: 0x%x\r\nV3_LSB: 0x%x\r\n", monitor_data.V3_MSB, monitor_data.V3_LSB);
@@ -191,6 +197,8 @@ static THD_FUNCTION(demo_measure, p)
             {
                 chprintf(DEBUG_CHP, "External T ERROR: %d\r\n", derror);
             }
+            txmsg.data8[6] = monitor_data.V3_MSB;
+            txmsg.data8[7] = monitor_data.V3_LSB;
             lcd_clear();
             chprintf(DEBUG_CHP, "%dC        %dmA  %dmV     %dC", params.temp_ext, params.current, params.vcc, params.tint);
             canTransmit(&CAND1, CAN_ANY_MAILBOX, &txmsg, MS2ST(100));
