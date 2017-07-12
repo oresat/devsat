@@ -40,6 +40,10 @@
 #define DEBUG_SERIAL  SD2
 #define DEBUG_CHP     ((BaseSequentialStream *) &DEBUG_SERIAL)
 
+//Variable declarations
+static ltc2990_data      monitor_data;
+static solar_v1_p        params;
+
 /*
  * Serial configuration
  */
@@ -52,18 +56,36 @@ static SerialConfig ser_cfg =
 };
 
 
+/*
+ * I2C configuration
+ */
 static const I2CConfig i2cfg1 =
 {
     I2C_100KHZ_TIMINGR,
     0,
     0,
 };
-
-/* I2C */
 const  uint8_t           LTC2990_I2C_ADDR   =    0x98;
 
-static ltc2990_data      monitor_data;
-static solar_v1_p        params;
+/*
+ * CAN Register configuration
+ * See section 22.7.7 on the STM32 reference manual.
+ * Timing calculator:
+ * http://www.bittiming.can-wiki.info/
+ */
+static const CANConfig cancfg = {
+    // MCR (Master Control Register)
+    CAN_MCR_ABOM      |     //Automatic Bus-Off Management
+    CAN_MCR_AWUM      |     //Automatic Wakeup Mode
+    CAN_MCR_TXFP      ,     //Transmit FIFO Priority
+    // BTR (Bit Timing Register)
+    // Note: Convert to zero based values here when using the calculator
+    // CAN_BTR_LBKM     |     //Loopback Mode (Debug)
+    CAN_BTR_SJW(0)    |     //Synchronization Jump Width
+    CAN_BTR_TS1(12)   |     //Time Segment 1
+    CAN_BTR_TS2(1)    |     //Time Segment 2
+    CAN_BTR_BRP(5)          //Bit Rate Prescaler
+};
 
 inline static void lcd_clear(void)
 {
@@ -155,10 +177,9 @@ static void demo_measure(void)
     }
 }
 
-/* APP */
 static void app_init(void)
 {
-    // start up debug output, chprintf(DEBUG_CHP,...)
+    // Start up debug output, chprintf(DEBUG_CHP,...)
     sdStart(&DEBUG_SERIAL, &ser_cfg);
 
     lcd_clear();
@@ -180,13 +201,18 @@ static void app_init(void)
              // , version_info.hardware.id_low
             // );
     chThdSleepS(S2ST(1));
+
+    /*
+     * Activates CAN driver 1.
+     */
+    canStart(&CAND1, &cancfg);
+
 }
 
 /*! \brief main application loop
  */
 static void main_app(void)
 {
-    app_init();
     // chprintf(DEBUG_CHP, "app_%s started.\r\n", PROJECT);
     // chprintf(DEBUG_CHP, "\r\n**********\r\n");
     lcd_clear();
@@ -209,21 +235,31 @@ static void main_app(void)
     lcd_clear();
     demo_measure();
 
+    /*
+     * Begin main loop
+     */
     while (true)
     {
-        chprintf(DEBUG_CHP, ".");
         chThdSleepMilliseconds(1000);
     }
 }
 
 int main(void)
 {
+    /*
+     * System initializations.
+     * - HAL initialization, this also initializes the configured device drivers
+     *   and performs the board-specific initializations.
+     * - Kernel initialization, the main() function becomes a thread and the
+     *   RTOS is active.
+     */
     halInit();
     chSysInit();
+    app_init();
 
     main_app();
 
-    return(0);
+    return 0;
 }
 
 //! @}
