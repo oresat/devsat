@@ -18,8 +18,8 @@ gdb_base:
 
 cgdb_base:
 	cgdb -d $(TRGT)gdb -q $(GDB_ELF) -x $(GDB_CFG)
-	
-gdb_ocd: GDB_CFG = $(OPENOCD_DIR)/gdboocd_ocd.cmd
+
+gdb_ocd: GDB_CFG = $(OPENOCD_DIR)/gdboocd_ocd_stlinkv2-1.cmd
 gdb_ocd: gdb_base
 
 gdb_stl: GDB_CFG = $(OPENOCD_DIR)/gdboocd_stl.cmd
