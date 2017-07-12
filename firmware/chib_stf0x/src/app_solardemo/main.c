@@ -101,10 +101,13 @@ inline void i2c_report_error(i2cflags_t i2c_errors)
     }
 }
 
-static void demo_measure(void)
+static THD_WORKING_AREA(demo_measure_wa, 256);
+static THD_FUNCTION(demo_measure, p)
 {
     i2cflags_t           i2c_errors  = 0x0;
     volatile uint8_t     regval      = 0xf;
+
+    (void)p;
 
     regval = 0xf;
 
@@ -115,7 +118,7 @@ static void demo_measure(void)
     ltc2990_writereg(LTC2990_CONTROL, regval, &i2c_errors);
     i2c_report_error(i2c_errors);
 
-    while(1)
+    while (!chThdShouldTerminateX())
     {
         /* TRIGGER */
         regval = 0xf;
@@ -233,7 +236,11 @@ static void main_app(void)
     // }
     chThdSleepS(S2ST(2));
     lcd_clear();
-    demo_measure();
+
+    /*
+     * Start measurement thread
+     */
+    chThdCreateStatic(demo_measure_wa, sizeof(demo_measure_wa), NORMALPRIO + 7, demo_measure, NULL);
 
     /*
      * Begin main loop
