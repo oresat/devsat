@@ -32,10 +32,10 @@
 
 #include "util_general.h"
 #include "util_version.h"
-#include "util_numbers.h"
+//#include "util_numbers.h"
 
-#include "ltc2990.h"
-#include "solar_v1.h"
+//#include "ltc2990.h"
+//#include "solar_v1.h"
 
 #define DEBUG_SERIAL  SD2
 #define DEBUG_CHP     ((BaseSequentialStream *) &DEBUG_SERIAL)
@@ -173,8 +173,14 @@ static THD_FUNCTION(can_tx, p)
     txmsg.EID = 0x31;
     txmsg.RTR = CAN_RTR_DATA;
     txmsg.DLC = 8;
-    txmsg.data32[0] = 0x00000001;
-    txmsg.data32[1] = 0x00FF00FF;
+    txmsg.data8[0] = 0x00;
+    txmsg.data8[1] = 0x01;
+    txmsg.data8[2] = 0x02;
+    txmsg.data8[3] = 0x03;
+    txmsg.data8[4] = 0x04;
+    txmsg.data8[5] = 0x05;
+    txmsg.data8[6] = 0x06;
+    txmsg.data8[7] = 0x07;
 
     // Start TX Loop
     while (!chThdShouldTerminateX())
