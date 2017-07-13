@@ -22,6 +22,7 @@
 
 #include "util_general.h"
 #include "util_version.h"
+#include "util_numbers.h"
 
 #include "ltc2990.h"
 #include "solar_v1.h"
@@ -108,7 +109,7 @@ static THD_FUNCTION(can_rx, p)
                 params.vcc = ltc2990_calc_vcc(&telemetry, &derror);
                 params.current = solar_v1_calc_current(&telemetry, &derror);
                 params.temp_ext = solar_v1_calc_temp(&telemetry, &derror);
-                chprintf(DEBUG_CHP, "\r\n0x%x:\r\nExt Temp: %dC\r\nCurrent: %dmA\r\nVoltage:%dmV\r\nInt Temp:%dC\r\n", rxmsg.EID, params.temp_ext, params.current, params.vcc, params.tint);
+                chprintf(DEBUG_CHP, "\r\n0x%x:\r\nExt Temp: %dC\r\nCurrent: %dmA\r\nVoltage: %dmV\r\nInt Temp: %dC\r\n", rxmsg.EID, params.temp_ext, params.current, params.vcc, params.tint);
             }
         }
     }
@@ -171,8 +172,14 @@ static THD_FUNCTION(can_tx, p)
     txmsg.EID = 0x11;
     txmsg.RTR = CAN_RTR_DATA;
     txmsg.DLC = 8;
-    txmsg.data32[0] = 0x00000001;
-    txmsg.data32[1] = 0x00FF00FF;
+    txmsg.data8[0] = 0x00;
+    txmsg.data8[1] = 0x00;
+    txmsg.data8[2] = 0x00;
+    txmsg.data8[3] = 0x00;
+    txmsg.data8[4] = 0x00;
+    txmsg.data8[5] = 0x00;
+    txmsg.data8[6] = 0x00;
+    txmsg.data8[7] = 0x00;
 
     // Start TX Loop
     while (!chThdShouldTerminateX())

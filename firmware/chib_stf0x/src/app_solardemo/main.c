@@ -163,42 +163,42 @@ static THD_FUNCTION(demo_measure, p)
 
             /* TINT */
             ltc2990_error derror;
+            txmsg.data8[0] = monitor_data.T_INT_MSB;
+            txmsg.data8[1] = monitor_data.T_INT_LSB;
             params.tint = ltc2990_calc_tint(&monitor_data, &derror);
             if(derror != LTC2990_OK)
             {
                 chprintf(DEBUG_CHP, "TINT ERROR: %d\r\n", derror);
             }
-            txmsg.data8[0] = monitor_data.T_INT_MSB;
-            txmsg.data8[1] = monitor_data.T_INT_LSB;
 
             /* VCC */
+            txmsg.data8[2] = monitor_data.VCC_MSB;
+            txmsg.data8[3] = monitor_data.VCC_LSB;
             params.vcc = ltc2990_calc_vcc(&monitor_data, &derror );
             if(derror != LTC2990_OK)
             {
                 chprintf(DEBUG_CHP, "VCC ERROR: %d\r\n", derror);
             }
-            txmsg.data8[2] = monitor_data.VCC_MSB;
-            txmsg.data8[3] = monitor_data.VCC_LSB;
 
             /* Current */
             // chprintf(DEBUG_CHP, "V1_MSB: 0x%x\r\nV1_LSB: 0x%x\r\n", monitor_data.V1_MSB, monitor_data.V1_LSB);
+            txmsg.data8[4] = monitor_data.V1_MSB;
+            txmsg.data8[5] = monitor_data.V1_LSB;
             params.current = solar_v1_calc_current(&monitor_data, &derror);
             if(derror != LTC2990_OK)
             {
                 chprintf(DEBUG_CHP, "Current ERROR: %d\r\n", derror);
             }
-            txmsg.data8[4] = monitor_data.V1_MSB;
-            txmsg.data8[5] = monitor_data.V1_LSB;
 
             /* External Temp */
             // chprintf(DEBUG_CHP, "V3_MSB: 0x%x\r\nV3_LSB: 0x%x\r\n", monitor_data.V3_MSB, monitor_data.V3_LSB);
+            txmsg.data8[6] = monitor_data.V3_MSB;
+            txmsg.data8[7] = monitor_data.V3_LSB;
             params.temp_ext    = solar_v1_calc_temp(&monitor_data, &derror) ;
             if(derror != LTC2990_OK)
             {
                 chprintf(DEBUG_CHP, "External T ERROR: %d\r\n", derror);
             }
-            txmsg.data8[6] = monitor_data.V3_MSB;
-            txmsg.data8[7] = monitor_data.V3_LSB;
             lcd_clear();
             chprintf(DEBUG_CHP, "%dC        %dmA  %dmV     %dC", params.temp_ext, params.current, params.vcc, params.tint);
             canTransmit(&CAND1, CAN_ANY_MAILBOX, &txmsg, MS2ST(100));
