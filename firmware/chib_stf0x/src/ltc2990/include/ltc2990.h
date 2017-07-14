@@ -20,38 +20,38 @@ extern const uint8_t LTC2990_I2C_ADDR;
 
 typedef struct ltc2990data
 {
-	uint8_t STATUS;   // 0x0
-	uint8_t CONTROL;  // 0x1
-	uint8_t TRIGGER;  // ...
-	uint8_t NA;
-	uint8_t T_INT_MSB;
-	uint8_t T_INT_LSB;
-	uint8_t V1_MSB;
-	uint8_t V1_LSB;
-	uint8_t V2_MSB;
-	uint8_t V2_LSB;
-	uint8_t V3_MSB;
-	uint8_t V3_LSB;
-	uint8_t V4_MSB;
-	uint8_t V4_LSB;  // ...
-	uint8_t VCC_MSB; // 0xe
-	uint8_t VCC_LSB; // 0xf
+    uint8_t STATUS;   // 0x0
+    uint8_t CONTROL;  // 0x1
+    uint8_t TRIGGER;  // ...
+    uint8_t NA;
+    uint8_t T_INT_MSB;
+    uint8_t T_INT_LSB;
+    uint8_t V1_MSB;
+    uint8_t V1_LSB;
+    uint8_t V2_MSB;
+    uint8_t V2_LSB;
+    uint8_t V3_MSB;
+    uint8_t V3_LSB;
+    uint8_t V4_MSB;
+    uint8_t V4_LSB;  // ...
+    uint8_t VCC_MSB; // 0xe
+    uint8_t VCC_LSB; // 0xf
 } ltc2990_data;
 
 /* HSI Clock selected 8Mhz - see mcuconf.h Wed 03 May 2017 12:54:49 (PDT) */
 /* Ref: 26.4.10 table in Reference Manual for stm32f0 */
 typedef enum
 {
-	I2C_100KHZ_TIMINGR  = 0x10420f13,
-	I2C_400KHZ_TIMINGR  = 0x00310309,
+    I2C_100KHZ_TIMINGR  = 0x10420f13,
+    I2C_400KHZ_TIMINGR  = 0x00310309,
 } solar_i2c_cfg;
 
 typedef enum
 {
-	LTC2990_OK           = 0x0,
-	LTC2990_DATA_INVALID = (0b1 << 0),
-	LTC2990_SENSOR_SHORT = (0b1 << 2),
-	LTC2990_SENSOR_OPEN  = (0b1 << 3),
+    LTC2990_OK           = 0x0,
+    LTC2990_DATA_INVALID = (0b1 << 0),
+    LTC2990_SENSOR_SHORT = (0b1 << 2),
+    LTC2990_SENSOR_OPEN  = (0b1 << 3),
 } ltc2990_error;
 
 

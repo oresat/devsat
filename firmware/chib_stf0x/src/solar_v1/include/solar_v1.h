@@ -19,10 +19,10 @@ extern "C" {
 #include "ltc2990.h"
 typedef struct solar_v1_params
 {
-	signed int tint;
-	signed int vcc;
-	signed int current;
-	signed int temp_ext;
+    signed int tint;
+    signed int vcc;
+    signed int current;
+    signed int temp_ext;
 } solar_v1_p;
 
 

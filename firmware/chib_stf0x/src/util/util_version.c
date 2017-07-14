@@ -21,7 +21,7 @@ void set_util_fwversion(VERSIONData * ver_data)
 #ifndef GIT_COMMIT_VERSION
 #define GIT_COMMIT_VERSION "Unknown"
 #endif
-	strncpy(ver_data->firmware, GIT_COMMIT_VERSION, MAX_FW_VERSION_LENGTH);
+    strncpy(ver_data->firmware, GIT_COMMIT_VERSION, MAX_FW_VERSION_LENGTH);
 }
 
 /*! \brief  HW Version
@@ -30,9 +30,9 @@ void set_util_fwversion(VERSIONData * ver_data)
  */
 void set_util_hwversion(VERSIONData * ver_data)
 {
-		ver_data->hardware.id_low    = *STM32F0_UNIQUE_ID_LOW;
-		ver_data->hardware.id_center = *STM32F0_UNIQUE_ID_CENTER;
-		ver_data->hardware.id_high   = *STM32F0_UNIQUE_ID_HIGH;
+        ver_data->hardware.id_low    = *STM32F0_UNIQUE_ID_LOW;
+        ver_data->hardware.id_center = *STM32F0_UNIQUE_ID_CENTER;
+        ver_data->hardware.id_high   = *STM32F0_UNIQUE_ID_HIGH;
 }
 
 //! @}

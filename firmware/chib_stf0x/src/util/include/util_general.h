@@ -24,14 +24,14 @@ extern "C" {
 
 typedef enum gen_status
 {
-	GEN_OK = 0,
-	GEN_NOMINAL,
-	GEN_ERROR
+    GEN_OK = 0,
+    GEN_NOMINAL,
+    GEN_ERROR
 } Gen_status;
 
 typedef struct util_status
 {
-	Gen_status     status;
+    Gen_status     status;
 } Util_status;
 
 #ifdef __cplusplus

@@ -294,7 +294,7 @@
  * PB3  - TP12                  (output pullup)
  * PB4  - TP13                  (output pullup).
  * PB5  - NC                    (output pulldown).
- * PB6  - I2C1_SCL				(alternate 1)
+ * PB6  - I2C1_SCL              (alternate 1)
  * PB7  - I2C1_SDA              (alternate 1).
  * PB8  - NC BOOT0              (input pullup).
  */

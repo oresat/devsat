@@ -12,11 +12,11 @@ extern "C" {
 
 static inline int round_nearest(float f)
 {
-	return((f < 0) ? ((int)(f - 0.5f)) : ((int)(f + 0.5f)));
-	//if(f<0) {
-	//return((int)(f-0.5f));
-	//}
-	//return (int)(f + 0.5f);
+    return((f < 0) ? ((int)(f - 0.5f)) : ((int)(f + 0.5f)));
+    //if(f<0) {
+    //return((int)(f-0.5f));
+    //}
+    //return (int)(f + 0.5f);
 }
 
 

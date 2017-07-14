@@ -21,17 +21,17 @@
 double incr_rnd(double d, double m)
 {
 
-	int    q;
-	double y = 0;
-	double z = 0;
+    int    q;
+    double y = 0;
+    double z = 0;
 
-	y = d / m;
+    y = d / m;
 
-	q = round_nearest(y);
+    q = round_nearest(y);
 
-	z = q * m;
+    z = q * m;
 
-	return z;
+    return z;
 
 }
 
@@ -50,15 +50,15 @@ double incr_rnd(double d, double m)
  */
 signed int sign_extend_13bit(signed int x)
 {
-	signed int r = 0;
-	struct
-	{
-		signed int x: 13;
-	} s;
+    signed int r = 0;
+    struct
+    {
+        signed int x: 13;
+    } s;
 
-	r = s.x = x;
+    r = s.x = x;
 
-	return r;
+    return r;
 }
 
 

@@ -348,7 +348,7 @@
  * PB3  - ARD_D13 LED_GREEN         (output pushpull maximum).
  * PB4  - ARD_D12                   (input pullup).
  * PB5  - ARD_D11                   (input pullup).
- * PB6  - I2C1_SCL				(alternate 1)
+ * PB6  - I2C1_SCL              (alternate 1)
  * PB7  - I2C1_SDA              (alternate 1).
  * PB8  - PIN8                      (input pullup).
  * PB9  - PIN9                      (input pullup).
