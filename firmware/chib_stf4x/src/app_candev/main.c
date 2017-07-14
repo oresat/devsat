@@ -185,17 +185,15 @@ static THD_FUNCTION(can_tx, p)
     while (!chThdShouldTerminateX())
     {
         //Process TSR and ESR
-        chprintf(DEBUG_CHP, "\n\rStatus:\n\r");
-        CAN_TSR_break(&CAND1);
+        /*chprintf(DEBUG_CHP, "\n\rStatus:\n\r");*/
+        /*CAN_TSR_break(&CAND1);*/
         chThdSleepMilliseconds(250);
-        CAN_ESR_break(&CAND1);
+        /*CAN_ESR_break(&CAND1);*/
         chThdSleepMilliseconds(750);
 
         //Transmit message
         msg = canTransmit(&CAND1, CAN_ANY_MAILBOX, &txmsg, MS2ST(100));
-        chprintf(DEBUG_CHP, "TX msg: %d\n\r", msg);
-
-        txmsg.data32[0] += 0x1;
+        /*chprintf(DEBUG_CHP, "TX msg: %d\n\r", msg);*/
     }
 }
 
@@ -228,7 +226,7 @@ static void app_init(void)
      */
     chprintf(DEBUG_CHP, "\r\nStarting RX/TX threads...\r\n");
     chThdCreateStatic(can_rx_wa, sizeof(can_rx_wa), NORMALPRIO + 7, can_rx, NULL);
-    //chThdCreateStatic(can_tx_wa, sizeof(can_tx_wa), NORMALPRIO + 7, can_tx, NULL);
+    chThdCreateStatic(can_tx_wa, sizeof(can_tx_wa), NORMALPRIO + 7, can_tx, NULL);
 
 }
 
