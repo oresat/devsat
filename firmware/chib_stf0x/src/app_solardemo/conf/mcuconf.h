@@ -57,7 +57,7 @@
 #define STM32_PLLNODIV                      STM32_PLLNODIV_DIV2
 #define STM32_USBSW                         STM32_USBSW_HSI48
 #define STM32_CECSW                         STM32_CECSW_HSI
-#define STM32_I2C1SW                        STM32_I2C1SW_HSI	
+#define STM32_I2C1SW                        STM32_I2C1SW_HSI
 // #define STM32_I2C1SW                        STM32_I2C1SW_SYSCLK
 // #define STM32_USART1SW                      STM32_USART1SW_PCLK
 #define STM32_USART1SW                      STM32_USART1SW_HSI
@@ -71,6 +71,13 @@
 #define STM32_ADC_ADC1_DMA_PRIORITY         2
 #define STM32_ADC_ADC1_DMA_IRQ_PRIORITY     2
 #define STM32_ADC_ADC1_DMA_STREAM           STM32_DMA_STREAM_ID(1, 1)
+
+/*
+ * CAN driver system settings.
+ */
+#define STM32_HAS_CAN1                      TRUE
+#define STM32_CAN_USE_CAN1                  TRUE
+#define STM32_CAN_CAN1_IRQ_PRIORITY         3
 
 /*
  * EXT driver system settings.
@@ -177,17 +184,6 @@
 #define STM32_UART_USART2_RX_DMA_STREAM     STM32_DMA_STREAM_ID(1, 5)
 #define STM32_UART_USART2_TX_DMA_STREAM     STM32_DMA_STREAM_ID(1, 4)
 #define STM32_UART_DMA_ERROR_HOOK(uartp)    osalSysHalt("DMA failure")
-
-/*
- * CAN driver
- */
-#define STM32_HAS_CAN1                      TRUE
-#define STM32_CAN_USE_CAN1                  TRUE
-#define STM32_CAN_CAN1_IRQ_PRIORITY         11
-
-
-
-
 
 /*
  * WDG driver system settings.
