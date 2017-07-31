@@ -6,7 +6,8 @@
 # Compiler options here.
 ifeq ($(USE_OPT),)
 	# This will make very big object
-	USE_OPT = -O2 -ggdb -fomit-frame-pointer -falign-functions=16
+	# USE_OPT = -O2 -ggdb -fomit-frame-pointer -falign-functions=16
+	USE_OPT = -ggdb -fomit-frame-pointer -falign-functions=16
 
 	# This is smaller object
 	# USE_OPT = -Os -fomit-frame-pointer -falign-functions=16
@@ -100,14 +101,14 @@ BOARDDIR  = ../boards/$(BOARD)
 # Nucleo32 specific files
 include $(TOOLCHAIN)/nucleo32.mk
 
+include $(BOARDDIR)/board.mk
+
 # Startup files
 include $(CHIBIOS)/os/common/startup/ARMCMx/compilers/GCC/mk/startup_stm32f0xx.mk
 # include $(CHIBIOS)/os/common/ports/ARMCMx/compilers/GCC/mk/startup_stm32f0xx.mk
 # HAL-OSAL files (optional).
 include $(CHIBIOS)/os/hal/hal.mk
 include $(CHIBIOS)/os/hal/ports/STM32/STM32F0xx/platform.mk
-# include $(BOARDDIR)/board.mk
-include ../boards/ST_NUCLEO32_F042K6/board.mk
 include $(CHIBIOS)/os/hal/osal/rt/osal.mk
 # RTOS files (optional).
 include $(CHIBIOS)/os/rt/rt.mk
@@ -209,12 +210,13 @@ AOPT =
 TOPT = -mthumb -DTHUMB
 
 # Define C warning options here
-CWARN = -Wall -Wextra -Wundef -Wstrict-prototypes
+# CWARN = -Wall -Wextra -Wundef -Wstrict-prototypes
 
 CWARN = -Wall -Wextra -Wstrict-prototypes  -Wdisabled-optimization \
 	-Wdouble-promotion -Wformat=2 -Wfloat-equal \
 	-Waggressive-loop-optimizations \
-	-Waggregate-return -Wlogical-op
+	-Waggregate-return -Wlogical-op \
+	-Wno-implicit-fallthrough
 
 #-Wmissing-include-dirs
 
@@ -232,6 +234,9 @@ CPPWARN = -Wall -Wextra -Wundef
 # List all user C define here, like -D_DEBUG=1
 UDEFS = -DGIT_COMMIT_VERSION=$(NUCLEO32_VERSION)
 #UDEFS += -DDBG_MSG_ENABLE=1
+
+ORESAT_CAN_ADDRESS=0xA0
+UDEFS += -DMY_CAN_ADDRESS=$(ORESAT_CAN_ADDRESS)
 
 # Define ASM defines here
 UADEFS =

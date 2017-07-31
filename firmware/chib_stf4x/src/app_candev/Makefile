@@ -88,7 +88,7 @@ endif
 #
 
 # Define project name here
-PROJECT = app_blinky
+PROJECT = app_candev
 
 # Imported source files and paths
 CONF_DIR  = conf
@@ -123,6 +123,8 @@ LDSCRIPT= $(STARTUPLD)/STM32F446xE.ld
 # Add application source directories here
 APP_SRCS = $(wildcard $(NUCLEO64_UTIL)/*.c)
 APP_SRCS += $(wildcard $(NUCLEO64_BOARDS)/*.c)
+APP_SRCS += $(wildcard $(NUCLEO64_LTC2990)/*.c)
+APP_SRCS += $(wildcard $(NUCLEO64_SOLARV1)/*.c)
 
 CSRC = $(STARTUPSRC) \
        $(KERNSRC) \
@@ -169,6 +171,8 @@ INCDIR = $(CHIBIOS)/os/license \
 	 $(HALINC) $(PLATFORMINC) $(BOARDINC) $(TESTINC) \
 	 $(CHIBIOS)/os/hal/lib/streams $(CHIBIOS)/os/various \
 	 $(CONF_DIR) \
+	 $(NUCLEO64_LTC2990)/include \
+	 $(NUCLEO64_SOLARV1)/include \
 	 $(NUCLEO64_UTIL)/include \
 	 $(NUCLEO64_BOARDS)/include \
 	 $(CHIBIOS)/os/various

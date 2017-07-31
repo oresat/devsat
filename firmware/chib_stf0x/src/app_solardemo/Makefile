@@ -7,7 +7,7 @@
 ifeq ($(USE_OPT),)
 	# This will make very big object
 	# USE_OPT = -O2 -ggdb -fomit-frame-pointer -falign-functions=16
-	USE_OPT = -O2 -ggdb -fomit-frame-pointer -falign-functions=16
+	USE_OPT = -ggdb -fomit-frame-pointer -falign-functions=16
 
 	# This is smaller object
 	# USE_OPT = -Os -fomit-frame-pointer -falign-functions=16
@@ -34,10 +34,8 @@ ifeq ($(USE_LDOPT),)
 endif
 
 # Enable this if you want link time optimizations (LTO)
-USE_LTO = no
 ifeq ($(USE_LTO),)
-	# USE_LTO = yes
-	USE_LTO = no
+	USE_LTO = yes
 endif
 
 # If enabled, this option allows to compile the application in THUMB mode.
@@ -91,7 +89,7 @@ endif
 #
 
 # Define project name here
-PROJECT = ch
+PROJECT = app_solardemo
 
 # Imported source files and paths
 CONF_DIR  = conf
@@ -100,12 +98,10 @@ CHIBIOS   = ../../../ChibiOS-RT
 BOARD     = SOLAR_V1
 BOARDDIR  = ../boards/$(BOARD)
 
-# Nucleo32 specific files
+# solarv1 specific files
 include $(TOOLCHAIN)/solarv1.mk
 
 include $(BOARDDIR)/board.mk
-# include ../boards/$(BOARD)/board.mk
-include $(CHIBIOS)/os/hal/osal/rt/osal.mk
 
 # Startup files
 include $(CHIBIOS)/os/common/startup/ARMCMx/compilers/GCC/mk/startup_stm32f0xx.mk
@@ -113,6 +109,7 @@ include $(CHIBIOS)/os/common/startup/ARMCMx/compilers/GCC/mk/startup_stm32f0xx.m
 # HAL-OSAL files (optional).
 include $(CHIBIOS)/os/hal/hal.mk
 include $(CHIBIOS)/os/hal/ports/STM32/STM32F0xx/platform.mk
+include $(CHIBIOS)/os/hal/osal/rt/osal.mk
 # RTOS files (optional).
 include $(CHIBIOS)/os/rt/rt.mk
 include $(CHIBIOS)/os/common/ports/ARMCMx/compilers/GCC/mk/port_v6m.mk

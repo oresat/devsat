@@ -1,8 +1,3 @@
-/*! \file main.c
- *  app_candev
- *
- */
-
 /*
     ChibiOS - Copyright (C) 2006..2015 Giovanni Di Sirio
 
@@ -19,11 +14,6 @@
     limitations under the License.
 */
 
-/*!
- * \defgroup main app_candev main
- *
- * @{
- */
 #include <stdbool.h>
 #include "ch.h"
 #include "hal.h"
@@ -32,10 +22,10 @@
 
 #include "util_general.h"
 #include "util_version.h"
-//#include "util_numbers.h"
+#include "util_numbers.h"
 
-//#include "ltc2990.h"
-//#include "solar_v1.h"
+#include "ltc2990.h"
+#include "solar_v1.h"
 
 #define DEBUG_SERIAL  SD2
 #define DEBUG_CHP     ((BaseSequentialStream *) &DEBUG_SERIAL)
@@ -67,9 +57,9 @@ static const CANConfig cancfg = {
     // Note: Convert to zero based values here when using the calculator
     // CAN_BTR_LBKM     |     //Loopback Mode (Debug)
     CAN_BTR_SJW(0)    |     //Synchronization Jump Width
-    CAN_BTR_TS1(12)   |     //Time Segment 1
+    CAN_BTR_TS1(14)   |     //Time Segment 1
     CAN_BTR_TS2(1)    |     //Time Segment 2
-    CAN_BTR_BRP(5)          //Bit Rate Prescaler
+    CAN_BTR_BRP(4)          //Bit Rate Prescaler
 };
 
 /*
@@ -80,6 +70,9 @@ static THD_FUNCTION(can_rx, p)
 {
     event_listener_t        el;
     CANRxFrame              rxmsg;
+    ltc2990_data            telemetry;
+    ltc2990_error           derror;
+    solar_v1_p              params;
 
     (void)p;
     chRegSetThreadName("receiver");
@@ -98,11 +91,26 @@ static THD_FUNCTION(can_rx, p)
         {
             continue;
         }
-        chprintf(DEBUG_CHP, "r");
         while (canReceive(&CAND1, CAN_ANY_MAILBOX, &rxmsg, TIME_IMMEDIATE) == MSG_OK)
         {
             /* Process message.*/
             palToggleLine(LINE_LED_GREEN);
+            if (0x30 & rxmsg.EID)
+            {
+                telemetry.T_INT_MSB = rxmsg.data8[0];
+                telemetry.T_INT_LSB = rxmsg.data8[1];
+                telemetry.VCC_MSB = rxmsg.data8[2];
+                telemetry.VCC_LSB = rxmsg.data8[3];
+                telemetry.V1_MSB = rxmsg.data8[4];
+                telemetry.V1_LSB = rxmsg.data8[5];
+                telemetry.V3_MSB = rxmsg.data8[6];
+                telemetry.V3_LSB = rxmsg.data8[7];
+                params.tint = ltc2990_calc_tint(&telemetry, &derror);
+                params.vcc = ltc2990_calc_vcc(&telemetry, &derror);
+                params.current = solar_v1_calc_current(&telemetry, &derror);
+                params.temp_ext = solar_v1_calc_temp(&telemetry, &derror);
+                chprintf(DEBUG_CHP, "\r\n0x%x:\r\nExt Temp: %dC\r\nCurrent: %dmA\r\nVoltage: %dmV\r\nInt Temp: %dC\r\n", rxmsg.EID, params.temp_ext, params.current, params.vcc, params.tint);
+            }
         }
     }
 
@@ -151,6 +159,7 @@ void CAN_TSR_break(CANDriver *canp) {
 /*
  * Transmitter thread.
  */
+
 static THD_WORKING_AREA(can_tx_wa, 256);
 static THD_FUNCTION(can_tx, p)
 {
@@ -160,31 +169,31 @@ static THD_FUNCTION(can_tx, p)
     (void)p;
     chRegSetThreadName("transmitter");
     txmsg.IDE = CAN_IDE_EXT;
-    txmsg.EID = 0x31;
+    txmsg.EID = 0x11;
     txmsg.RTR = CAN_RTR_DATA;
     txmsg.DLC = 8;
     txmsg.data8[0] = 0x00;
-    txmsg.data8[1] = 0x01;
-    txmsg.data8[2] = 0x02;
-    txmsg.data8[3] = 0x03;
-    txmsg.data8[4] = 0x04;
-    txmsg.data8[5] = 0x05;
-    txmsg.data8[6] = 0x06;
-    txmsg.data8[7] = 0x07;
+    txmsg.data8[1] = 0x00;
+    txmsg.data8[2] = 0x00;
+    txmsg.data8[3] = 0x00;
+    txmsg.data8[4] = 0x00;
+    txmsg.data8[5] = 0x00;
+    txmsg.data8[6] = 0x00;
+    txmsg.data8[7] = 0x00;
 
     // Start TX Loop
     while (!chThdShouldTerminateX())
     {
         //Process TSR and ESR
-        chprintf(DEBUG_CHP, "\n\rStatus:\n\r");
-        CAN_TSR_break(&CAND1);
+        /*chprintf(DEBUG_CHP, "\n\rStatus:\n\r");*/
+        /*CAN_TSR_break(&CAND1);*/
         chThdSleepMilliseconds(250);
-        CAN_ESR_break(&CAND1);
+        /*CAN_ESR_break(&CAND1);*/
         chThdSleepMilliseconds(750);
 
         //Transmit message
         msg = canTransmit(&CAND1, CAN_ANY_MAILBOX, &txmsg, MS2ST(100));
-        chprintf(DEBUG_CHP, "TX msg: %d\n\r", msg);
+        /*chprintf(DEBUG_CHP, "TX msg: %d\n\r", msg);*/
     }
 }
 
@@ -195,7 +204,7 @@ static void app_init(void)
 
     set_util_fwversion(&version_info);
     set_util_hwversion(&version_info);
-    chThdSleepS(S2ST(1));
+    chThdSleepS(S2ST(2));
 
     //Print FW/HW information
     chprintf(DEBUG_CHP, "\r\nFirmware Info\r\n");
@@ -212,11 +221,6 @@ static void app_init(void)
     chprintf(DEBUG_CHP, "\r\nStarting CAN driver...\r\n");
     canStart(&CAND1, &cancfg);
 
-
-}
-
-static void main_app(void)
-{
     /*
      * Starting the transmitter and receiver threads.
      */
@@ -224,17 +228,9 @@ static void main_app(void)
     chThdCreateStatic(can_rx_wa, sizeof(can_rx_wa), NORMALPRIO + 7, can_rx, NULL);
     chThdCreateStatic(can_tx_wa, sizeof(can_tx_wa), NORMALPRIO + 7, can_tx, NULL);
 
-    /*
-     * Begin main loop
-     */
-    while (true)
-    {
-        chThdSleepMilliseconds(1000);
-    }
 }
 
-int main(void)
-{
+int main(void) {
     /*
      * System initializations.
      * - HAL initialization, this also initializes the configured device drivers
@@ -246,10 +242,13 @@ int main(void)
     chSysInit();
     app_init();
 
-    main_app();
+    /*
+     * Begin main loop
+     */
+    while (true)
+    {
+        chThdSleepMilliseconds(500);
+    }
 
     return 0;
 }
-
-//! @}
-
