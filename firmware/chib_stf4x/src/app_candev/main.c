@@ -77,10 +77,6 @@ static THD_FUNCTION(can_rx, p)
     (void)p;
     chRegSetThreadName("receiver");
 
-    // Configure Status LED (Green)
-    palSetLineMode(LINE_LED_GREEN, PAL_MODE_OUTPUT_PUSHPULL);
-    palClearLine(LINE_LED_GREEN);
-
     // Register RX event
     chEvtRegister(&CAND1.rxfull_event, &el, 0);
 
@@ -94,7 +90,6 @@ static THD_FUNCTION(can_rx, p)
         while (canReceive(&CAND1, CAN_ANY_MAILBOX, &rxmsg, TIME_IMMEDIATE) == MSG_OK)
         {
             /* Process message.*/
-            palToggleLine(LINE_LED_GREEN);
             if (0x30 & rxmsg.EID)
             {
                 telemetry.T_INT_MSB = rxmsg.data8[0];
