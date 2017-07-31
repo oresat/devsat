@@ -321,8 +321,8 @@
                                      PIN_MODE_ALTERNATE(GPIOA_ARD_D0) |     \
                                      PIN_MODE_INPUT(GPIOA_ARD_A2) |         \
                                      PIN_MODE_ALTERNATE(GPIOA_SPI1_SCK) |   \
-                                     PIN_MODE_INPUT(GPIOA_SPI1_MISO) |      \
-                                     PIN_MODE_INPUT(GPIOA_SPI1_MOSI) |      \
+                                     PIN_MODE_ALTERNATE(GPIOA_SPI1_MISO) |      \
+                                     PIN_MODE_ALTERNATE(GPIOA_SPI1_MOSI) |      \
                                      PIN_MODE_INPUT(GPIOA_ARD_D7) |         \
                                      PIN_MODE_INPUT(GPIOA_ARD_D8) |         \
                                      PIN_MODE_INPUT(GPIOA_ARD_D2) |         \

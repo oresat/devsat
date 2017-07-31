@@ -36,3 +36,6 @@ sudo ping 8.8.8.8
 
 ## CAN bus configuration
 
+### First Time Setup
+
+The CAN transceiver's TX pin is connected to pin 24 on header P9, and RX is just below that on pin 26. These are also known as GPIO0_12 and GPIO0_13, respectively. The instructions below are adapted from Thomas Wedemeyer, posted on his webpage [here](http://www.thomas-wedemeyer.de/beaglebone-canbus-python.html). 
