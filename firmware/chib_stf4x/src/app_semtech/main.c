@@ -227,24 +227,12 @@ static void app_init(void)
             );
 
     /*
-     * Activates CAN driver 1.
+     * Initialize all drivers
      */
-    chprintf(DEBUG_CHP, "\r\nStarting CAN driver...\r\n");
+    // CAN Driver 1
     canStart(&CAND1, &cancfg);
-
-    /*
-    * Activates SPI Driver 1
-    */
+    // SPI Driver 1
     spiStart(&SPID1, &spicfg);
-
-/* Disabled for now
-    *
-     * Starting the transmitter and receiver threads.
-    /
-    chprintf(DEBUG_CHP, "\r\nStarting RX/TX threads...\r\n");
-    chThdCreateStatic(can_rx_wa, sizeof(can_rx_wa), NORMALPRIO + 7, can_rx, NULL);
-    chThdCreateStatic(can_tx_wa, sizeof(can_tx_wa), NORMALPRIO + 7, can_tx, NULL);
-*/
 
 }
 
@@ -260,6 +248,14 @@ int main(void) {
     chSysInit();
     app_init();
 
+/* Disabled for now
+    *
+     * Starting the working threads.
+    /
+    chprintf(DEBUG_CHP, "\r\nStarting threads...\r\n");
+    chThdCreateStatic(can_rx_wa, sizeof(can_rx_wa), NORMALPRIO + 7, can_rx, NULL);
+    chThdCreateStatic(can_tx_wa, sizeof(can_tx_wa), NORMALPRIO + 7, can_tx, NULL);
+*/
 
     //Test SPI connectivity
     semtech_test_read(&SPID1);
