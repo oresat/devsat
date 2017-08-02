@@ -88,7 +88,7 @@ endif
 #
 
 # Define project name here
-PROJECT = app_candev
+PROJECT = app_semtech
 
 # Imported source files and paths
 CONF_DIR  = conf

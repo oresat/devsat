@@ -93,10 +93,6 @@ static THD_FUNCTION(can_rx, p)
     (void)p;
     chRegSetThreadName("receiver");
 
-    // Configure Status LED (Green)
-    palSetLineMode(LINE_LED_GREEN, PAL_MODE_OUTPUT_PUSHPULL);
-    palClearLine(LINE_LED_GREEN);
-
     // Register RX event
     chEvtRegister(&CAND1.rxfull_event, &el, 0);
 
@@ -110,7 +106,6 @@ static THD_FUNCTION(can_rx, p)
         while (canReceive(&CAND1, CAN_ANY_MAILBOX, &rxmsg, TIME_IMMEDIATE) == MSG_OK)
         {
             /* Process message.*/
-            palToggleLine(LINE_LED_GREEN);
             if (0x30 & rxmsg.EID)
             {
                 telemetry.T_INT_MSB = rxmsg.data8[0];
@@ -237,6 +232,11 @@ static void app_init(void)
     chprintf(DEBUG_CHP, "\r\nStarting CAN driver...\r\n");
     canStart(&CAND1, &cancfg);
 
+    /*
+    * Activates SPI Driver 1
+    */
+    spiStart(&SPID1, &spicfg);
+
 /* Disabled for now
     *
      * Starting the transmitter and receiver threads.
@@ -245,11 +245,6 @@ static void app_init(void)
     chThdCreateStatic(can_rx_wa, sizeof(can_rx_wa), NORMALPRIO + 7, can_rx, NULL);
     chThdCreateStatic(can_tx_wa, sizeof(can_tx_wa), NORMALPRIO + 7, can_tx, NULL);
 */
-
-    /*
-    * Activates SPI Driver 1
-    */
-    spiStart(&SPID1, &spicfg);
 
 }
 
