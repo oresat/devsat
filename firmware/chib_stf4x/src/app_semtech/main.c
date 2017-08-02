@@ -26,6 +26,7 @@
 
 #include "ltc2990.h"
 #include "solar_v1.h"
+#include "semtech.c"
 
 #define DEBUG_SERIAL  SD2
 #define DEBUG_CHP     ((BaseSequentialStream *) &DEBUG_SERIAL)
@@ -72,7 +73,8 @@ static const SPIConfig spicfg = {
     // SPI cr1 data (see 446 ref man.)
     SPI_CR1_SPE     |// SPI enable
     SPI_CR1_MSTR    |// Master
-    SPI_CR1_BR(3)   // SPI baudrate
+    SPI_CR1_BR_0    |
+    SPI_CR1_BR_1   // SPI baudrate
 
 };
 
@@ -263,6 +265,9 @@ int main(void) {
     chSysInit();
     app_init();
 
+
+    //Test SPI connectivity
+    semtech_test_read(&SPID1);
     /*
      * Begin main loop
      */
