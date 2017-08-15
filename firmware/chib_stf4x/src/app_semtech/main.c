@@ -75,8 +75,9 @@ static const SPIConfig spicfg = {
     SPI_CR1_MSTR    |// Master
     SPI_CR1_BR_2    |
     SPI_CR1_BR_1    |
-    SPI_CR1_BR_0,    // SPI baudrate
-    SPI_CR2_SSOE     // Set SSOE in cr2
+    SPI_CR1_BR_0    |
+    SPI_CR1_SSM,    // SPI baudrate
+    0//SPI_CR2_SSOE     // Set SSOE in cr2
 
 };
 
