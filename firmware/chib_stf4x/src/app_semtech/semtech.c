@@ -21,16 +21,19 @@ void semtech_test_read(SPIDriver * spip)
 	//Will request the values of some registers, and write the output to serial.
 	chprintf(DEBUG_CHP, "\r\nTesting SPI Connection...\r\n");
 
+
+	//Read one byte using single access mode
+	uint8_t txData[2] = {0x03, 0x00};     //Address for RegBitrateMsb 0x02 in read mode (MSB is 0)
 	while(1)
 	{
 		
-		//Read one byte using single access mode
-		uint8_t txData[2] = {0x03, 0x00};     //Address for RegBitrateMsb 0x02 in read mode (MSB is 0)
+		
 		uint8_t rxData[2] = {0x0, 0x00};     //Received data buffer
-
+		
+		chprintf(DEBUG_CHP, "\r\n%d: Transmitting %x followed by %x\r\n", i++, txData[0], txData[1]);
 		spiSelect(spip);
 
-		chprintf(DEBUG_CHP, "\r\n%d: Transmitting %x followed by %x\r\n", i++, txData[0], txData[1]);
+		
 		spiStartExchange(spip, 2, &txData, &rxData);
 
 		//spiStartSend(spip, 1, &txData);
@@ -44,13 +47,15 @@ void semtech_test_read(SPIDriver * spip)
 
 		//Wait for exchange to complete
 		//while((*spip).state != SPI_READY){
-		//    chprintf(DEBUG_CHP, "\r\n SPI State is: %x", spip->state);
+		    //chprintf(DEBUG_CHP, "\r\n SPI State is: %x", spip->state);
+
 		//}
 
 		spiUnselect(spip);
 		chprintf(DEBUG_CHP, "\r\nValue in RegBitrateMsb is 0x%x\r\n", rxData[1]);
 		chprintf(DEBUG_CHP, "\r\nDefault value is 0x1a\r\n");
         chThdSleepMilliseconds(750);
+		//txData[0]++;
 	}
 
 

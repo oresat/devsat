@@ -400,7 +400,7 @@
                                      PIN_AFIO_AF(GPIOA_ARD_A1, 0U) |        \
                                      PIN_AFIO_AF(GPIOA_ARD_D1, 7U) |        \
                                      PIN_AFIO_AF(GPIOA_ARD_D0, 7U) |        \
-                                     PIN_AFIO_AF(GPIOA_SPI1_NSS, 0U) |        \
+                                     PIN_AFIO_AF(GPIOA_SPI1_NSS, 5U) |        \
                                      PIN_AFIO_AF(GPIOA_SPI1_SCK, 5U) |      \
                                      PIN_AFIO_AF(GPIOA_SPI1_MISO, 5U) |     \
                                      PIN_AFIO_AF(GPIOA_SPI1_MOSI, 5U))

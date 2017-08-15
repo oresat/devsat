@@ -73,8 +73,10 @@ static const SPIConfig spicfg = {
     // SPI cr1 data (see 446 ref man.)
     SPI_CR1_SPE     |// SPI enable
     SPI_CR1_MSTR    |// Master
-    SPI_CR1_BR_0    |
-    SPI_CR1_BR_1   // SPI baudrate
+    SPI_CR1_BR_2    |
+    SPI_CR1_BR_1    |
+    SPI_CR1_BR_0,    // SPI baudrate
+    SPI_CR2_SSOE     // Set SSOE in cr2
 
 };
 
@@ -120,6 +122,7 @@ int main(void) {
     chSysInit();
     app_init();
 
+    chprintf(DEBUG_CHP, "\r\ncr2: %x\r\n", SPID1.config->cr2);
 /* Disabled for now
     *
      * Starting the working threads.
