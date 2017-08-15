@@ -47,7 +47,7 @@ void semtech_test_read(SPIDriver * spip)
 
 		//Wait for exchange to complete
 		while((*spip).state != SPI_READY){
-		    chprintf(DEBUG_CHP, "\r\n SPI State is: %x", spip->state);
+		//    chprintf(DEBUG_CHP, "\r\n SPI State is: %x", spip->state);
 
 		}
 
