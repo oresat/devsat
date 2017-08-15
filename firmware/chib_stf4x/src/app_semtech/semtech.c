@@ -46,10 +46,10 @@ void semtech_test_read(SPIDriver * spip)
 		//spiStartReceive(spip, 1, &rxData);
 
 		//Wait for exchange to complete
-		//while((*spip).state != SPI_READY){
-		    //chprintf(DEBUG_CHP, "\r\n SPI State is: %x", spip->state);
+		while((*spip).state != SPI_READY){
+		    chprintf(DEBUG_CHP, "\r\n SPI State is: %x", spip->state);
 
-		//}
+		}
 
 		spiUnselect(spip);
 		chprintf(DEBUG_CHP, "\r\nValue in RegBitrateMsb is 0x%x\r\n", rxData[1]);

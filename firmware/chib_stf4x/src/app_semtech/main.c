@@ -73,7 +73,7 @@ static const SPIConfig spicfg = {
     // SPI cr1 data (see 446 ref man.)
     SPI_CR1_SPE     |// SPI enable
     SPI_CR1_MSTR    |// Master
-    SPI_CR1_BR_2    |
+    //SPI_CR1_BR_2    |
     SPI_CR1_BR_1    |
     SPI_CR1_BR_0    |
     SPI_CR1_SSM,    // SPI baudrate
