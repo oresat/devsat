@@ -10,6 +10,9 @@ RegFifo          = 0x00
 RegOpMode        = 0x01
 RegDataModul     = 0x02
 RegBitrateMsb    = 0x03
+RegFrfMsb        = 0x07
+RegFrfMid        = 0x08
+RegFrfLsb        = 0x09
 RegAfcBw         = 0x1a
 
 
@@ -65,24 +68,49 @@ def RFM69HCW_Read_Register(reg):
     regval = RFM_SPI.xfer2([reg, 0x0])
     print "current_regval is:\t", hex(reg), "\t",  hex(regval[1])
     return regval[1]
+
+# Fxosc = 32Mhz
+# Fstep = 32e6/2^9  =  61.03515625
+# Frf   = int(carrier_hz/Fstep)
+def RFM69HCW_Write_Carrier_Freq(carrier_hz):
+    Fstep    = 61.03515625
+
+    frf      = int(carrier_hz / Fstep) 
     
+    # vals = RFM_SPI.xfer2([RegFrfMsb, 0x0, 0x0, 0x0])
+    # print "Pre: vals=\t", hex(vals[0]), "\t", hex(vals[1]), "\t", hex(vals[2]), "\t", hex(vals[3])
+    
+    frfmsb = (frf>>16) & 0xff
+    frfmid = (frf>>8)  & 0xff
+    frflsb = frf       & 0xff
+    
+    wbuf      = [(RegFrfMsb|0x80), int(frfmsb), int(frfmid), int(frflsb)]
+    RFM_SPI.writebytes(wbuf)
+    
+    vals = RFM_SPI.xfer2([RegFrfMsb, 0x0, 0x0, 0x0])
+    print "Post: vals=\t", hex(vals[0]), "\t", hex(vals[1]), "\t", hex(vals[2]), "\t", hex(vals[3])
+
+
 def RFM69HCW_config_xcvr():
-    readit = RFM69HCW_Read_Register(RegAfcBw)
-    readit = RFM69HCW_Read_Register(RegOpMode)
+    # Check register values 
+    # readit = RFM69HCW_Read_Register(RegAfcBw)
+    # readit = RFM69HCW_Read_Register(RegOpMode)
+
+    # RegOpMode 
+    #    set mode FS - Frequency Synthesizer mode
+    RFM69HCW_Write_Register(RegOpMode, FS_MODE<<2)  
+    time.sleep(0.05)
+
+    # Set Carrier Frequency
+    RFM69HCW_Write_Carrier_Freq(436500000)
+
+
+
+
+
     RFM69HCW_Write_Register(RegAfcBw, 0x8b)  
     time.sleep(0.05)
-    readit = RFM69HCW_Read_Register(RegAfcBw)
-    print "END: current_regval is: ", hex(readit)
-    time.sleep(1.0)
-    RFM69HCW_Write_Register(RegOpMode, 0b010<<2)  
-    time.sleep(0.05)
-    readit = RFM69HCW_Read_Register(RegOpMode)
-    print "END: current_regval is: ", hex(readit)
-    time.sleep(1.0)
-
- # RegOpMode 
- #    set mode FS - Frequency Synthesizer mode
-
+ 
 def spi_config():
     global RFM_SPI
     GPIO.output(MODULE_EN,GPIO.HIGH)
