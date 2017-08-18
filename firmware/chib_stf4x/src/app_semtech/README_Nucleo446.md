@@ -23,6 +23,8 @@ wget  http://www.st.com/resource/en/schematic_pack/nucleo_64pins_sch.zip
 
 ### Solder Bridges Protect Boson Habitat
 
+#### PA4: SPI1\_CS  (CN7:32)
+
 #### PA5: SPI1\_SCK  (CN10:11)
 * Alternate Function 5
 * In the schematic SB21 (**Solder Bridge 21**) is connected to the LD2-green. 
