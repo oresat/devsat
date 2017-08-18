@@ -23,7 +23,7 @@ void semtech_test_read(SPIDriver * spip)
 
 
 	//Read one byte using single access mode
-	uint8_t txData[2] = {0x03, 0x00};     //Address for RegBitrateMsb 0x02 in read mode (MSB is 0)
+	uint8_t txData[2] = {0x00, 0x00};     //Address for RegBitrateMsb 0x02 in read mode (MSB is 0)
 	while(1)
 	{
 		
@@ -33,29 +33,25 @@ void semtech_test_read(SPIDriver * spip)
 		chprintf(DEBUG_CHP, "\r\n%d: Transmitting %x followed by %x\r\n", i++, txData[0], txData[1]);
 		spiSelect(spip);
 
-		
+		//We can either use Exchange or Send an Receive
 		spiStartExchange(spip, 2, &txData, &rxData);
 
 		//spiStartSend(spip, 1, &txData);
 
 		//Wait for exchange to complete
-		//while((*spip).state != SPI_READY){}
-		//chprintf(DEBUG_CHP, "\r\n SPI State is: %x", spip->state);
-		//}
+		while((*spip).state != SPI_READY){}
+		
 
 		//spiStartReceive(spip, 1, &rxData);
 
 		//Wait for exchange to complete
-		while((*spip).state != SPI_READY){
-		//    chprintf(DEBUG_CHP, "\r\n SPI State is: %x", spip->state);
-
-		}
+		//while((*spip).state != SPI_READY){}
 
 		spiUnselect(spip);
-		chprintf(DEBUG_CHP, "\r\nValue in RegBitrateMsb is 0x%x\r\n", rxData[1]);
-		chprintf(DEBUG_CHP, "\r\nDefault value is 0x1a\r\n");
+		chprintf(DEBUG_CHP, "\r\nValue in register is 0x%x 0x%x\r\n", rxData[0], rxData[1]);
+		//chprintf(DEBUG_CHP, "\r\nDefault value is 0x1a\r\n");
         chThdSleepMilliseconds(750);
-		//txData[0]++;
+		txData[0]++;
 	}
 
 
@@ -70,9 +66,15 @@ void semtech_burst_write(SPIDriver * spip, uint8_t addr, uint8_t * data)
 
 
 	//TODO: insert addrsend to beginning of data array. OR use spiSend() twice, if that is possible
-	spiSelect(spip);
-	spiStartSend(spip, sizeof(data), &data);
 
+	spiSelect(spip);
+
+	//Send the address, and then send the data
+	spiStartSend(spip, 1, &addrSend);
+	//Block until send complete
+	while((*spip).state != SPI_READY) {}
+	
+	spiStartSend(spip, sizeof(data), &data);
 	//Block until send complete
 	while((*spip).state != SPI_READY) {}
 
@@ -80,21 +82,25 @@ void semtech_burst_write(SPIDriver * spip, uint8_t addr, uint8_t * data)
 
 }
 
-uint8_t semtech_single_read(SPIDriver * spip, uint8_t addr)
+void semtech_burst_read(SPIDriver * spip, uint8_t addr, uint8_t * datrcv)
 {
-	//Reads a single register from the semtech
-	uint8_t datrcv;
+	//Reads a series of registers from the semtech
 
 	spiSelect(spip);
-	spiStartExchange(spip, 1, &addr,
-	                 &datrcv); //TODO: Do we use Exchange(), or do we use Write(), immediately followed by Read() without Unselecting?
 
-	//Wait for exchange to complete
+	//spiStartExchange(spip, 1, &addr,
+	//                 &datrcv); //TODO: Do we use Exchange(), or do we use Write(), immediately followed by Read() without Unselecting?
+
+	spiStartSend(spip, 1, &addr);
+	//Wait for send to complete
 	while((*spip).state != SPI_READY) { }
 
+	
+	spiStartReceive(spip, sizeof(datrcv), datrcv);
+	while((*spip).state != SPI_READY) { }
+	
 	spiUnselect(spip);
 
-	return(datrcv);
 }
 
 void semtech_transmit_data(SPIDriver * spip, uint8_t * data)
