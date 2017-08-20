@@ -23,35 +23,41 @@ void semtech_test_read(SPIDriver * spip)
 
 
 	//Read one byte using single access mode
-	uint8_t txData[2] = {0x00, 0x00};     //Address for RegBitrateMsb 0x02 in read mode (MSB is 0)
+	uint8_t txData[2] = {0x01, 0x00};     //Address for RegBitrateMsb 0x02 in read mode (MSB is 0)
 	while(1)
 	{
 		
 		
 		uint8_t rxData[2] = {0x0, 0x00};     //Received data buffer
 		
-		chprintf(DEBUG_CHP, "\r\n%d: Transmitting %x followed by %x\r\n", i++, txData[0], txData[1]);
+		//chprintf(DEBUG_CHP, "\r\n%d: Transmitting %x followed by %x\r\n", i++, txData[0], txData[1]);
 		spiSelect(spip);
 
 		//We can either use Exchange or Send an Receive
-		spiStartExchange(spip, 2, &txData, &rxData);
+		//spiStartExchange(spip, 2, &txData, &rxData);
 
-		//spiStartSend(spip, 1, &txData);
+		spiStartSend(spip, 1, &txData);
 
 		//Wait for exchange to complete
 		while((*spip).state != SPI_READY){}
 		
 
-		//spiStartReceive(spip, 1, &rxData);
+		spiStartReceive(spip, 1, &rxData);
 
 		//Wait for exchange to complete
-		//while((*spip).state != SPI_READY){}
+		while((*spip).state != SPI_READY){}
 
 		spiUnselect(spip);
-		chprintf(DEBUG_CHP, "\r\nValue in register is 0x%x 0x%x\r\n", rxData[0], rxData[1]);
-		//chprintf(DEBUG_CHP, "\r\nDefault value is 0x1a\r\n");
-        chThdSleepMilliseconds(750);
+		//chprintf(DEBUG_CHP, "\r\nValue in register 0x%2.x is 0x%2.x\r\n", txData[0], rxData[0]);
+		
+        //chThdSleepMilliseconds(750);
 		txData[0]++;
+
+		if (txData[0] > 0x70){
+			//Pause at the 'beginning' so that I can see the start of the loop on the Salae
+			chThdSleepMilliseconds(10000);
+			txData[0] = 0x01;
+		}
 	}
 
 
