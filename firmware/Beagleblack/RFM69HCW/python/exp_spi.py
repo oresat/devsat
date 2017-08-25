@@ -35,16 +35,41 @@ sx1231_reg = {
     "RegFrfMsb"        : 0x07,
     "RegFrfMid"        : 0x08,
     "RegFrfLsb"        : 0x09,
-    "RegPaLevel"       : 0x09,
+    "RegPaLevel"       : 0x11,
     "RegLna"           : 0x18,
     "RegRxBw"          : 0x19,
-    "RegRssiThresh"    : 0x29,
     "RegAfcBw"         : 0x1a,
+    "RegAfcFei"        : 0x1e,
+    "RegRssiThresh"    : 0x29,
+    "RegPreambleMsb"   : 0x2c,
+    "RegSyncConfig"    : 0x2e,
+    "RegSyncValue1"    : 0x2f,
+    "RegPacketConfig1" : 0x37,
+    "RegPayloadLength" : 0x38,
     "RegAutoModes"     : 0x3b,
+    "RegFifoThresh"    : 0x3c,
     "RegTestPllBW"     : 0x5f,
     }
 
+# inverse dictionary for register name lookup
 inv_sx1231_reg = {v: k for k, v in sx1231_reg.items()}
+
+# RegSyncConfig
+SyncOn              =  (1 << 7)
+FifoFillSyncAddress =  (0 << 6)
+FifoFillCondition   =  (1 << 6)
+
+def SyncSize(bytes):
+  return ((((bytes) - 1) & 0x7) << 3)
+
+def SyncTol(errors):
+  return ((errors) & 0x7)
+
+
+# RegAfcFei
+AfcAutoOn           = (1 << 2)
+AfcAutoclearOn      = (1 << 3)
+
 
 #Automodes
 EnterNone           =   (0b000 << 5)
@@ -153,6 +178,9 @@ def RFM69HCW_Read_Register(reg):
   regval = RFM_SPI.xfer2([reg, 0x0])
   return regval[1]
 
+# TODO: Collapse some of these multibyte register writes into a single def Wed 23 August 2017 17:08:45 (PDT)
+
+
 # Facts:
 #   Fxosc = 32Mhz
 #   Fstep = 32e6/2^9  =  61.03515625
@@ -190,6 +218,14 @@ def RFM69HCW_Set_Bitrate(bitrate_hz):
   RFM_SPI.writebytes(wbuf)
 
 
+def RFM69HCW_Set_Sync_Value(fourbytelist):
+  wbuf    = [(sx1231_reg["RegSyncValue1"]|0x80)] + fourbytelist 
+  RFM_SPI.writebytes(wbuf)
+
+def RFM69HCW_Set_Preamble(twobytelist):
+  wbuf    = [(sx1231_reg["RegPreambleMsb"]|0x80)] + twobytelist 
+  RFM_SPI.writebytes(wbuf)
+
 def RFM69HCW_config_xcvr(OpMode, pa):
   # RegOpMode
   #    set mode FS - Frequency Synthesizer mode
@@ -213,23 +249,67 @@ def RFM69HCW_config_xcvr(OpMode, pa):
 
   # # PA Output Power
   RFM69HCW_Write_Register(sx1231_reg["RegPaLevel"], pa )
-  check_register(sx1231_reg["RegPaLevel"], pa)
 
-  # # Op Mode
-  # if OpMode == MODE_TX:
-    # autoModes = EnterFifoNotEmpty | InterTX | ExitPacketSent
-  # else: 
-    # raise ModeError("MODE_TX only at this time")
+  # Op Mode
+  if OpMode == MODE_TX:
+    autoModes = EnterFifoNotEmpty | InterTX | ExitPacketSent
+  else: 
+    raise ModeError("MODE_TX only at this time")
 
-  # RFM69HCW_Write_Register(RegAutoModes, autoModes )
+  RFM69HCW_Write_Register(sx1231_reg["RegAutoModes"], autoModes )
+  check_register(sx1231_reg["RegAutoModes"], autoModes)
 
-  # RFM69HCW_Write_Register(RegRxBw, 0x55 )
+  RFM69HCW_Write_Register(sx1231_reg["RegRxBw"], 0x55 )
+  check_register(sx1231_reg["RegRxBw"], 0x55)
 
-  # RFM69HCW_Write_Register(RegRssiThresh, 0x70 )  # VERY Sensitive?
+  RFM69HCW_Write_Register(sx1231_reg["RegRssiThresh"], 0x70 )  # VERY Sensitive?
+  check_register(sx1231_reg["RegRssiThresh"], 0x70)
 
-  # RFM69HCW_Write_Register(RegAfcBw, 0x8b)
+  SyncConfig = SyncOn | FifoFillSyncAddress | SyncSize(1) | SyncTol(0)
+  RFM69HCW_Write_Register(sx1231_reg["RegSyncConfig"], SyncConfig)
+  check_register(sx1231_reg["RegSyncConfig"], SyncConfig)
 
-  # time.sleep(0.05)
+  RFM69HCW_Set_Sync_Value([0xe7, 0xe7, 0xe7, 0xe7])
+
+  RFM69HCW_Write_Register(sx1231_reg[sx1231_reg["RegPacketConfig1"], 0x08)
+  check_register(sx1231_reg["RegPacketConfig1"], 0x08)
+
+  RFM69HCW_Set_Preamble([0x00, 0x10])
+
+"""
+  	Sets the payload length
+
+		The payload length needs to be equal to the buffer of data to be sent
+		when the tx ready signal is produces on fifo_not_empty. If the tx
+		ready signal is received from a fifo threshold reached condition
+		then the payload length needs to be the same as the fifo threshold and
+		the buffer needs to be one larger than the payload size.
+
+		When using auto modes be sure to set the transceiver into standby mode
+		it will wake and do its thing automagically.
+
+"""
+
+  RFM69HCW_Write_Register(sx1231_reg["RegPayloadLength"], 0x05)
+  check_register(sx1231_reg["RegPayloadLength"], 0x05)
+
+
+	# To trigger on a fifo threshhold set RegFifoThresh to PACKET_LENGTH
+	# Trigger on fifo not empty 
+  RFM69HCW_Write_Register(sx1231_reg["RegFifoThresh"], 0x04)
+  check_register(sx1231_reg["RegFifoThresh"], 0x04)
+
+  RFM69HCW_Write_Register(sx1231_reg["RegAfcFei"], AfcAutoOn | AfcAutoclearOn)
+  check_register(sx1231_reg["RegAfcFei"], AfcAutoOn | AfcAutoclearOn)
+
+  RFM69HCW_Write_Register(sx1231_reg["RegAfcBw"], 0x08)
+  check_register(sx1231_reg["RegAfcBw"], 0x8b)
+
+  RFM69HCW_Write_Register(sx1231_reg["RegOpMode"], OpMode)
+  check_register(sx1231_reg["RegOpMode"], OpMode )
+
+
+  time.sleep(0.05)
 
 def spi_config():
   global RFM_SPI
