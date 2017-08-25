@@ -123,7 +123,6 @@ int main(void) {
     chSysInit();
     app_init();
 
-    chprintf(DEBUG_CHP, "\r\ncr2: %x\r\n", SPID1.config->cr2);
 /* Disabled for now
     *
      * Starting the working threads.
@@ -132,8 +131,20 @@ int main(void) {
     chThdCreateStatic(can_rx_wa, sizeof(can_rx_wa), NORMALPRIO + 7, can_rx, NULL);
     chThdCreateStatic(can_tx_wa, sizeof(can_tx_wa), NORMALPRIO + 7, can_tx, NULL);
 */
-    semtech_test_read(&SPID1);
+    //semtech_test_read(&SPID1);
     
+    uint8_t rcvData[12];
+    uint8_t address = 0x03;
+    uint8_t i;
+    semtech_burst_read(&SPID1, address, &rcvData);
+
+    chprintf(DEBUG_CHP, "\r\n Reg values: \r\n" );
+    for (i = 0; i<12; i++){
+       
+        chprintf(DEBUG_CHP, "\r\n %x %x\r\n ",i + address, rcvData[i]);
+    };
+
+
     /*
      * Begin main loop
      */
