@@ -99,7 +99,7 @@ struct SX1236 {
 };
 
 /* allow for external access to struct */
-extern struct TRANSCEIVER transceiver;
+extern struct SX1236 transceiver;
 
 #define Mode_RX (1 << 4)
 #define Mode_TX (3 << 2)

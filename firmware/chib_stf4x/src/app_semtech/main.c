@@ -24,9 +24,10 @@
 #include "util_version.h"
 #include "util_numbers.h"
 
-#include "ltc2990.h"
-#include "solar_v1.h"
+//#include "ltc2990.h"
+//#include "solar_v1.h"
 #include "semtech.c"
+#include "sx1236.h"
 
 #define DEBUG_SERIAL  SD2
 #define DEBUG_CHP     ((BaseSequentialStream *) &DEBUG_SERIAL)
@@ -133,18 +134,11 @@ int main(void) {
 */
     //semtech_test_read(&SPID1);
     
-    uint8_t rcvData[12];
-    uint8_t address = 0x03;
-    uint8_t i;
-    semtech_burst_read(&SPID1, address, &rcvData);
+    uint8_t address = 0x3;
 
-    chprintf(DEBUG_CHP, "\r\n Reg values: \r\n" );
-    for (i = 0; i<12; i++){
-       
-        chprintf(DEBUG_CHP, "\r\n %x %x\r\n ",i + address, rcvData[i]);
-    };
+    semtech_burst_write(&SPID1, address,  0x1a, 1);
 
-
+    semtech_test_read(&SPID1, 0x3);
     /*
      * Begin main loop
      */

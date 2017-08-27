@@ -13,10 +13,7 @@
 #include "transceiver.h"
 #include "spi.h"
 #include <string.h>
-
-
-
-
+#include "sx1236.h"
 
 
 /* assign the addresses to struct for registers in transceiver block */
