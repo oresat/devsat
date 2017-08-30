@@ -4,22 +4,23 @@
 
 #### uEnv.txt
 
-* There is something wrong with cape_universal and SPI on BBB
-* Disable it
+* There is something wrong with cape_universal on BBB
+* Disable it by commenting out the following line in /boot/uEnv.txt
 
 ```
-#cmdline=coherent_pool=1M net.ifnames=0 quiet cape_universal=enable
-cmdline=coherent_pool=1M net.ifnames=0 quiet
+#enable_uboot_cape_universal=1
 
 ```
 
-* See /boot/uEnv.txt
-  * Enable the SPI dts
-  * then remove cape manager universal from the command line.
-  * Example in uEnv.txt
+* Next, enable the SPIDEV0 and CAN1 pins on the BBB by uncommenting the following line and adding to the end of it the desired overlays
 
-* Also change file in 
-  * /sys/devices/platform/bone_capemgr
+```
+cape_enable=bone_capemgr.enable_partno=BB-CAN1,BB-SPIDEV0
+
+```
+
+* The uEnv.txt in this directory serves as an example. A simple diff should show the relevent changes between the stock image uEnv.txt and the desired configuration (excluding possible kernel version differences)
+
 
 ### Reference
 
@@ -30,31 +31,28 @@ cmdline=coherent_pool=1M net.ifnames=0 quiet
 * see /lib/firmware
 
 ```
-root@beaglebone:/opt/source# find . -name \*dts -print | grep SPI
-./adafruit-beaglebone-io-python/overlays/ADAFRUIT-SPI0-00A0.dts
-./adafruit-beaglebone-io-python/overlays/ADAFRUIT-SPI1-00A0.dts
-./bb.org-overlays/src/arm/BB-SPIDEV1A1-00A0.dts
-./bb.org-overlays/src/arm/BB-SPIDEV0-00A0.dts
-./bb.org-overlays/src/arm/BB-SPIDEV1-00A0.dts
-./bb.org-overlays/src/arm/BB-SPI0-MCP3008-00A0.dts
-./Userspace-Arduino/overlay/BB-SPI0-01-00A0.dts
-root@beaglebone:/opt/source# 
+debian@beaglebone:/lib/firmware$ find . -iname \*SPI\*.dtbo -print            
+./BB-SPI0-ADS8688-0A00.dtbo
+./BB-SPI0-MCP3008-00A0.dtbo
+./ADAFRUIT-SPI0-00A0.dtbo
+./BB-SPIDEV1-00A0.dtbo
+./BB-SPIDEV0-00A0.dtbo
+./BB-SPIDEV1A1-00A0.dtbo
+./ADAFRUIT-SPI1-00A0.dtbo
+debian@beaglebone:/lib/firmware$
 ```
 
 
-#### Change file 'slots' to enable the SPIDEV0
+#### Enabled Overlays are shown via cat of bone_capemgr slots file
+
 
 ```
-root@beaglebone:/sys/devices/platform/bone_capemgr# ls
-baseboard  driver  driver_override  modalias  of_node  power  slot-4  slots  subsystem	uevent
-root@beaglebone:/sys/devices/platform/bone_capemgr# cat slot
-cat: slot: No such file or directory
-root@beaglebone:/sys/devices/platform/bone_capemgr# cat slots 
+debian@beaglebone:/lib/firmware$ cat /sys/devices/platform/bone_capemgr/slots 
  0: PF----  -1 
  1: PF----  -1 
  2: PF----  -1 
  3: PF----  -1 
- 4: P-O-L-   0 Override Board Name,00A0,Override Manuf,BB-SPIDEV0
-root@beaglebone:/sys/devices/platform/bone_capemgr# 
-
+ 4: P-O-L-   0 Override Board Name,00A0,Override Manuf,BB-CAN1
+ 5: P-O-L-   1 Override Board Name,00A0,Override Manuf,BB-SPIDEV0
+debian@beaglebone:/lib/firmware$
 ```
