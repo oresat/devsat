@@ -26,6 +26,7 @@
 
 #include "ltc2990.h"
 #include "solar_v1.h"
+#include "semtech.c"
 
 #define DEBUG_SERIAL  SD2
 #define DEBUG_CHP     ((BaseSequentialStream *) &DEBUG_SERIAL)
@@ -230,6 +231,8 @@ static void app_init(void)
      */
     // CAN Driver 1
     canStart(&CAND1, &cancfg);
+    // SPI Driver 1
+    spiStart(&SPID1, &spicfg);
 
 }
 
@@ -245,12 +248,14 @@ int main(void) {
     chSysInit();
     app_init();
 
-    /*
+/* Disabled for now
+    *
      * Starting the working threads.
-     */
+    /
     chprintf(DEBUG_CHP, "\r\nStarting threads...\r\n");
     chThdCreateStatic(can_rx_wa, sizeof(can_rx_wa), NORMALPRIO + 7, can_rx, NULL);
     chThdCreateStatic(can_tx_wa, sizeof(can_tx_wa), NORMALPRIO + 7, can_tx, NULL);
+*/
 
     //Test SPI connectivity
     semtech_test_read(&SPID1);
