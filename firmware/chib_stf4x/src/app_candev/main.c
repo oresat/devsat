@@ -63,6 +63,21 @@ static const CANConfig cancfg = {
 };
 
 /*
+ * SPI Configuration
+ */
+static const SPIConfig spicfg = {
+    NULL, // Operation complete callback
+    GPIOA,     // Slave select port
+    GPIOA_SPI1_NSS,     // Slave select pad
+    // SPI cr1 data (see 446 ref man.)
+    SPI_CR1_SPE     |// SPI enable
+    SPI_CR1_MSTR    |// Master
+    SPI_CR1_BR_0    |
+    SPI_CR1_BR_1   // SPI baudrate
+
+};
+
+/*
  * Receiver thread.
  */
 static THD_WORKING_AREA(can_rx_wa, 256);
@@ -211,17 +226,10 @@ static void app_init(void)
             );
 
     /*
-     * Activates CAN driver 1.
+     * Initialize all drivers
      */
-    chprintf(DEBUG_CHP, "\r\nStarting CAN driver...\r\n");
+    // CAN Driver 1
     canStart(&CAND1, &cancfg);
-
-    /*
-     * Starting the transmitter and receiver threads.
-     */
-    chprintf(DEBUG_CHP, "\r\nStarting RX/TX threads...\r\n");
-    chThdCreateStatic(can_rx_wa, sizeof(can_rx_wa), NORMALPRIO + 7, can_rx, NULL);
-    chThdCreateStatic(can_tx_wa, sizeof(can_tx_wa), NORMALPRIO + 7, can_tx, NULL);
 
 }
 
@@ -237,6 +245,15 @@ int main(void) {
     chSysInit();
     app_init();
 
+    /*
+     * Starting the working threads.
+     */
+    chprintf(DEBUG_CHP, "\r\nStarting threads...\r\n");
+    chThdCreateStatic(can_rx_wa, sizeof(can_rx_wa), NORMALPRIO + 7, can_rx, NULL);
+    chThdCreateStatic(can_tx_wa, sizeof(can_tx_wa), NORMALPRIO + 7, can_tx, NULL);
+
+    //Test SPI connectivity
+    semtech_test_read(&SPID1);
     /*
      * Begin main loop
      */
