@@ -33,7 +33,6 @@
 
 uint8_t       sx_txbuff[MAX_SX_BUFF];
 uint8_t       sx_rxbuff[MAX_SX_BUFF];
-
 /* assign the addresses to struct for registers in transceiver block */
 struct SX1236 regaddrs =
 {

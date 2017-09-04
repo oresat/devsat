@@ -26,8 +26,101 @@
 
 #include "sx1236.h"
 
-#define DEBUG_SERIAL  SD2
-#define DEBUG_CHP     ((BaseSequentialStream *) &DEBUG_SERIAL)
+#define     DEBUG_SERIAL        SD2
+#define     DEBUG_CHP           ((BaseSequentialStream *) &DEBUG_SERIAL)
+
+#define     F_XOSC              (32000000U)
+#define     F_STEP              ((double)(61.03515625)) //  (Fxosc/2^9)
+#define     APP_CARRIER_FREQ    436500000U
+#define     APP_FREQ_DEV        2500U
+#define     APP_BITRATE         2400U
+
+// #define  F_STEP  (Fxosc/2^9)
+
+struct CONFIG_SX1236_RX config_rx =
+{
+	.Fxosc              = F_XOSC,
+	.Fstep              = F_STEP,
+	.carrier_freq       = APP_CARRIER_FREQ,
+	.freq_dev_hz        = APP_FREQ_DEV,
+	.bitrate         = APP_BITRATE,
+
+	.RegOpMode          = SX1236_FS_MODE,
+
+	// .RegFifo;
+};
+
+void sx1236_write_carrier_freq(SPIDriver * spip, uint32_t carrier_hz, double fstep)
+{
+	uint32_t frf      = 0.0;
+	uint8_t  frf_msb  = 0;
+	uint8_t  frf_mid  = 0;
+	uint8_t  frf_lsb  = 0;
+
+	frf          = (uint32_t)incr_rnd((carrier_hz / fstep), 0.1);
+
+	frf_msb      = (frf >> 16) & 0xff;
+	frf_mid      = (frf >> 8)  & 0xff;
+	frf_lsb      = frf       & 0xff;
+
+	sx_txbuff[0] = frf_msb;
+	sx_txbuff[1] = frf_mid;
+	sx_txbuff[2] = frf_lsb;
+
+	sx1236_write(spip, regaddrs.RegFrfMsb, sx_txbuff, 3);
+}
+
+void sx1236_set_freq_deviation(SPIDriver * spip, uint32_t freq_dev_hz, double fstep )
+{
+	uint32_t    freqdev      = 0;
+
+	uint8_t     freqdev_msb  = 0;
+	uint8_t     freqdev_lsb  = 0;
+
+	freqdev          = (uint32_t)incr_rnd((freq_dev_hz / fstep), 0.1);
+
+	freqdev_msb      = (freqdev >> 8) & 0x3f;
+	freqdev_lsb      = freqdev      & 0xff;
+
+	sx_txbuff[0] = freqdev_msb;
+	sx_txbuff[1] = freqdev_lsb;
+
+	sx1236_write(spip, regaddrs.RegFdevMsb, sx_txbuff, 2);
+	// sx1236_check_reg(spip, regaddrs.RegFdevLsb, freqdev_lsb);
+	// sx1236_check_reg(spip, regaddrs.RegFdevMsb, freqdev_msb);
+}
+
+void sx1236_set_bitrate(SPIDriver * spip, uint32_t fxosc, uint32_t bitrate )
+{
+	uint32_t    rate      = 0;
+
+	uint8_t     bitrate_msb  = 0;
+	uint8_t     bitrate_lsb  = 0;
+
+	rate          = (uint32_t)incr_rnd((fxosc / bitrate), 0.1);
+
+	bitrate_msb      = (rate >> 8) & 0x3f;
+	bitrate_lsb      = rate        & 0xff;
+
+	sx_txbuff[0] 	 = bitrate_msb;
+	sx_txbuff[1] 	 = bitrate_lsb;
+
+	sx1236_write(spip, regaddrs.RegBitrateMsb, sx_txbuff, 2);
+	// sx1236_check_reg(spip, regaddrs.RegBitrateLsb, bitrate_lsb);
+	// sx1236_check_reg(spip, regaddrs.RegBitrateMsb, bitrate_msb);
+}
+
+void sx1236_configure_rx(SPIDriver * spip, struct CONFIG_SX1236_RX * c)
+{
+	sx1236_write_reg(spip, regaddrs.RegOpMode, c->RegOpMode);
+	sx1236_write_carrier_freq(spip, c->carrier_freq, c->Fstep);
+	sx1236_set_freq_deviation(spip, c->freq_dev_hz, c->Fstep );
+	sx1236_set_bitrate(spip, c->Fxosc, c->bitrate); 
+
+
+
+	sx1236_check_reg(spip, regaddrs.RegOpMode, c->RegOpMode);
+}
 
 static SerialConfig ser_cfg =
 {
@@ -81,15 +174,15 @@ static void app_init(void)
 
 void main_loop(void)
 {
-	uint8_t regval = 0;
-
-	regval = sx1236_read_reg(&SPID1, regaddrs.RegVersion);
-	chprintf(DEBUG_CHP, "1:ID, 0x%x:\t0x%x\r\n", regaddrs.RegVersion, regval);
 	sx1236_check_reg(&SPID1, regaddrs.RegVersion, 0x12);
 
-	uint8_t nv = 0x1b;
-	sx1236_write_reg(&SPID1, regaddrs.RegBitrateMsb, nv);
-	sx1236_check_reg(&SPID1, regaddrs.RegBitrateMsb, nv);
+	sx1236_configure_rx(&SPID1, &config_rx);
+
+
+	// chprintf(DEBUG_CHP, "1:ID, 0x%x:\t0x%x\r\n", regaddrs.RegVersion, regval);
+	// uint8_t nv = 0x1b;
+	// sx1236_write_reg(&SPID1, regaddrs.RegBitrateMsb, nv);
+	// sx1236_check_reg(&SPID1, regaddrs.RegBitrateMsb, nv);
 
 	// chThdSleepMilliseconds(1000);
 
@@ -105,8 +198,6 @@ void main_loop(void)
 		chThdSleepMilliseconds(500);
 		palTogglePad(GPIOA, GPIOA_SX_TESTOUT);
 		chprintf(DEBUG_CHP, ".");
-		chThdSleepMilliseconds(500);
-		palTogglePad(GPIOA, GPIOA_SX_TESTOUT);
 	}
 }
 

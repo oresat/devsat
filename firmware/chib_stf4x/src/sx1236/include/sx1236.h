@@ -14,6 +14,31 @@
 
 #define PACKET_LENGTH 5
 
+/*
+ * sx1231 RegOpMode s
+ * sx1231 Datasheet p 65
+ */
+#define SX1236_SLEEP_MODE        ((uint8_t)(0b000<<2))
+#define SX1236_STANDBY_MODE      ((uint8_t)(0b001<<2))
+#define SX1236_FS_MODE           ((uint8_t)(0b010<<2))
+#define SX1236_TRANSMITTER_MODE  ((uint8_t)(0b011<<2))
+#define SX1236_RECEIVER_MODE     ((uint8_t)(0b100<<2))
+
+
+struct CONFIG_SX1236_RX
+{
+	// Constants
+	uint32_t 	Fxosc;
+	double 		Fstep;
+	uint32_t    carrier_freq;
+	uint32_t    freq_dev_hz;
+	uint32_t    bitrate;
+	// Registers
+	uint8_t 	RegFifo;
+	uint8_t     RegOpMode;
+};
+
+
 /* struct to hold transceiver register addresses*/
 struct SX1236
 {
@@ -96,6 +121,7 @@ struct SX1236
 
 extern struct SX1236 regaddrs;
 extern struct SX1236 regdefaults;
+extern struct CONFIG_SX1236_RX config_rx;
 
 #define     MAX_SX_BUFF            2056
 
