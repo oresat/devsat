@@ -286,9 +286,9 @@ def RFM69HCW_config_xcvr(OpMode, pa):
   RFM69HCW_Set_Sync_Value([0xe7, 0xe7, 0xe7, 0xe7])
 
   RFM69HCW_Write_Register(sx1231_reg["RegPacketConfig1"], 0x08)
-  check_register(sx1231_reg["RegPacketConfig1"], 0x08)
+  check_register(sx1231_reg["RegPacketConfig1"], 0x00)
 
-  RFM69HCW_Set_Preamble([0x00, 0x10])
+  # RFM69HCW_Set_Preamble([0x00, 0x10])
 
 ##"""
 #        Sets the payload length
@@ -317,8 +317,8 @@ def RFM69HCW_config_xcvr(OpMode, pa):
   # Afc should be done during configure
   check_register(sx1231_reg["RegAfcFei"], AfcDone | AfcAutoOn | AfcAutoclearOn)
 
-  RFM69HCW_Write_Register(sx1231_reg["RegAfcBw"], 0x8b)
-  check_register(sx1231_reg["RegAfcBw"], 0x8b)
+  # RFM69HCW_Write_Register(sx1231_reg["RegAfcBw"], 0x8b)
+  # check_register(sx1231_reg["RegAfcBw"], 0x8b)
 
   # RFM69HCW_Write_Register(sx1231_reg["RegOpMode"], OpMode)
   # check_register(sx1231_reg["RegOpMode"], OpMode )
