@@ -27,7 +27,8 @@
 //#include "ltc2990.h"
 //#include "solar_v1.h"
 #include "semtech.c"
-#include "sx1236.h"
+//#include "sx1236.h"
+//#include "semtech-dev-board-registers.h"
 
 #define DEBUG_SERIAL  SD2
 #define DEBUG_CHP     ((BaseSequentialStream *) &DEBUG_SERIAL)
@@ -110,6 +111,8 @@ static void app_init(void)
     // SPI Driver 1
     spiStart(&SPID1, &spicfg);
 
+    semtech_reset();
+
 }
 
 int main(void) {
@@ -142,10 +145,15 @@ int main(void) {
     /*
      * Begin main loop
      */
+    semtech_write(&SPID1, transceiver.RegOpMode, 0x0d, 1);
+
+    //semtech_print_regs(&SPID1);
+
     while (true)
     {
         chThdSleepMilliseconds(500);
         //Test SPI connectivity
+        semtech_read_temp(&SPID1, true);
     }
 
     return 0;

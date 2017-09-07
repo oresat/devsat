@@ -10,92 +10,16 @@
 #include "chprintf.h"
 #include "board.h"
 #include "hal.h"
-#include "sx1236.h"
+#include "semtech-dev-board-registers.h"
 
 
 #define DEBUG_SERIAL  SD2
 #define DEBUG_CHP     ((BaseSequentialStream *) &DEBUG_SERIAL)
 
-
-/* assign the addresses to struct for registers in transceiver block */
-struct SX1236 transceiver = {
-	.RegFifo 			= 0x00,
-	.RegOpMode 			= 0x01,	
-	.RegBitrateMsb 		= 0x02,
-	.RegBitrateLsb 		= 0x03,
-	.RegFdevMsb 		= 0x04,
-	.RegFdevLsb 		= 0x05,
-	.RegFrfMsb 			= 0x06,
-	.RegFrfMid 			= 0x07,
-	.RegFrfLsb 			= 0x08,
-	.RegPaConfig 		= 0x09,
-	.RegPaRamp 			= 0x0A,
-	.RegOcp 			= 0x0B,
-	.RegLna 			= 0x0C,
-	.RegRxConfig 		= 0x0D,
-	.RegRssiConfig 		= 0x0E,
-	.RegRssiCollision 	= 0x0F,
-	.RegRssiThresh 		= 0x10,
-	.RegRssiValue 		= 0x11,
-	.RegRxBw 			= 0x12,
-	.RegAfcBw 			= 0x13,
-	.RegOokPeak 		= 0x14,
-	.RegOokFix 			= 0x15,
-	.RegOokAvg 			= 0x16,
-	.RegAfcFei 			= 0x1A,
-	.RegAfcMsb 			= 0x1B,
-	.RegAfcLsb 			= 0x1C,
-	.RegFeiMsb 			= 0x1D,
-	.RegFeiLsb 			= 0x1E,
-	.RegPreambleDetect 	= 0x1F,
-	.RegRxTimeout1 		= 0x20,
-	.RegRxTimeout2 		= 0x21,
-	.RegRxTimeout3 		= 0x22,
-	.RegRxDelay 		= 0x23,
-	.RegOsc 			= 0x24,
-	.RegPreambleMsb 	= 0x25,
-	.RegPreambleLsb 	= 0x26,
-	.RegSyncConfig 		= 0x27,
-	.RegSyncValue1 		= 0x28,
-	.RegSyncValue2 		= 0x29,
-	.RegSyncValue3 		= 0x2A,
-	.RegSyncValue4 		= 0x2B,
-	.RegSyncValue5 		= 0x2C,
-	.RegSyncValue6 		= 0x2D,
-	.RegSyncValue7 		= 0x2E,
-	.RegSyncValue8 		= 0x2F,
-	.RegPacketConfig1 	= 0x30,
-	.RegPacketConfig2 	= 0x31,
-	.RegPayloadLength 	= 0x32,
-	.RegNodeAdrs 		= 0x33,
-	.RegBroadcastAdrs 	= 0x34,
-	.RegFifoThresh 		= 0x35,
-	.RegSeqConfig1 		= 0x36,
-	.RegSeqConfig2 		= 0x37,
-	.RegTimerResol 		= 0x38,
-	.RegTimer1Coef		= 0x39,
-	.RegTimer2Coef		= 0x3A,
-	.RegImageCal 		= 0x3B,
-	.RegTemp 			= 0x3C,
-	.RegLowBat 			= 0x3D,
-	.RegIrqFlags1 		= 0x3E,
-	.RegIrqFlags2 		= 0x3F,
-	.RegDioMapping1 	= 0x40,
-	.RegDioMapping2		= 0x41,
-	.RegVersion 		= 0x42,
-	.RegPllHop 			= 0x44,
-	.RegTcxo 			= 0x4B,
-	.RegPaDac 			= 0x4D,
-	.RegFormerTemp 		= 0x5B,
-	.RegBitRateFrac 	= 0x5D,
-	.RegAgcRef 			= 0x61,
-	.RegAgcThresh1 		= 0x62,
-	.RegAgcThresh2 		= 0x63,
-	.RegAgcThresh3 		= 0x64,
-	.RegPll 			= 0x70,
-
-};
-
+#define FXOSC (32000000) //32MHz
+#define Fstep (FXOSC/(1<<19))
+#define FstepMul ((uint64_t)(1 << 8))
+#define FstepDiv ((uint64_t)(15625))
 
 
 void semtech_burst_write(SPIDriver * spip, uint8_t addr, uint8_t * data, uint8_t bufSize)
@@ -120,7 +44,7 @@ void semtech_burst_write(SPIDriver * spip, uint8_t addr, uint8_t * data, uint8_t
 
 }
 
-void semtech_write(SPIDriver * spip, uint8_t addr, uint8_t val)
+void semtech_write(SPIDriver * spip, uint8_t addr, uint8_t val, uint8_t bufSize)
 {
 	//Will send the array of data over the SPI bus, programming each register
 	//Starting from addr, and incrementing.
@@ -141,10 +65,28 @@ void semtech_write(SPIDriver * spip, uint8_t addr, uint8_t val)
 	spiUnselect(spip);
 
 }
+
+uint8_t semtech_read(SPIDriver * spip, uint8_t addr){
+	uint8_t val = 0;
+	
+	spiSelect(spip);
+
+	spiStartSend(spip, 1, &addr);
+	//Wait for send to complete
+	while((*spip).state != SPI_READY) { }
+
+	
+	spiStartReceive(spip, 1, &val);
+	while((*spip).state != SPI_READY) { }
+	
+	spiUnselect(spip);
+
+	return(val);
+
+}
 void semtech_burst_read(SPIDriver * spip, uint8_t addr, uint8_t * datrcvptr, uint8_t bufLength)
 {
-	//Reads a series of registers from the semtech
-	
+	//Reads a series of registers from the semtech	
 	spiSelect(spip);
 
 	spiStartSend(spip, 1, &addr);
@@ -159,7 +101,9 @@ void semtech_burst_read(SPIDriver * spip, uint8_t addr, uint8_t * datrcvptr, uin
 
 }
 
-void semtech_test_read(SPIDriver * spip,uint8_t baseAddr)
+
+
+void semtech_test_read(SPIDriver * spip, uint8_t baseAddr)
 {
 	
 	//Will request the values of some registers, and write the output to serial.
@@ -181,7 +125,32 @@ void semtech_test_read(SPIDriver * spip,uint8_t baseAddr)
 void semtech_test_rcv(SPIDriver * spip){
 	//Configures receive parameters
 
-	semtech_write(spip, transceiver.RegRxBw, 0x100);
+	semtech_reset();
+
+	//Set frequency (taken from Will's function)
+	uint32_t carrierHz = 4365000000; 
+	uint64_t frf = ((uint64_t)carrierHz * FstepMul) / FstepDiv;
+	uint8_t RegFrf[3] = {(frf >> 16) & 0xff, (frf >> 8) & 0xff, frf & 0xff};
+	semtech_write(spip, transceiver.RegFrfMsb, RegFrf, 3);
+
+	//Set deviation (also taken from Will's function)
+	uint8_t deviationHz = 2500;
+	uint64_t fdev = ((uint64_t)deviationHz * FstepMul) / FstepDiv;
+	uint8_t RegFdev[2] = {(fdev >> 8) & 0x3F, fdev & 0xFF};
+	semtech_write(spip, transceiver.RegFdevMsb, RegFdev, 2);
+
+	//Set bitrate (also Will)
+	uint16_t bitrateHz = 2400;
+	uint16_t rate = FXOSC/bitrateHz;
+	uint8_t RegBitrate[2] = {(rate >> 8) & 0xff, rate & 0xff};
+	semtech_write(spip, transceiver.RegBitrateMsb, RegBitrate, 2);
+
+	//Set PLL BW to 75kHz (RegPLL[7,8] = 00)
+	semtech_write(spip, transceiver.RegPll, 0b00011100, 1);
+
+	//semtech_write(spip, R);
+
+	semtech_write(spip, transceiver.RegRxBw, 0x100, 1);
 
 }
 void semtech_transmit_data(SPIDriver * spip, uint8_t * data)
@@ -199,4 +168,31 @@ void semtech_transmit_data(SPIDriver * spip, uint8_t * data)
 
 }
 
+void semtech_reset(){
+	
+    palClearPort(GPIOA, 8);
+    chThdSleep(100);
+    palSetPort(GPIOA, 8);
+}
 
+uint8_t semtech_read_temp(SPIDriver * spip, bool term){
+	uint8_t temp;
+	semtech_burst_read(spip, 0x3C, &temp, 1);
+
+	if (term){
+		chprintf(DEBUG_CHP, "\r\n Temp value: %x \r\n", temp );
+	}
+
+	return temp;
+
+}
+
+void semtech_print_regs(SPIDriver * spip){
+	#define X(SXreg) printf("%s = %x\n", #SXreg, 0x3);// semtech_read(spip, transceiver.SXreg));
+	SEMTECH_REGISTERS
+	#undef X
+}
+
+void semtech_config(SPIDriver * spip){
+	//semtech_write(spip, transceiver.RegAfcBw, intended_setup.RegAfcBw, 1);
+}
