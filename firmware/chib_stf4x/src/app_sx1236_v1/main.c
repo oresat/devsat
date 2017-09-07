@@ -15,45 +15,64 @@
 */
 
 #include <stdbool.h>
+
 #include "ch.h"
 #include "hal.h"
 #include "chprintf.h"
-#include "board.h"
 
-#include "util_general.h"
+// #include "util_general.h"
 #include "util_version.h"
 #include "util_numbers.h"
+#include "board.h"
 
 #include "sx1236.h"
 
-#define     DEBUG_SERIAL        SD2
-#define     DEBUG_CHP           ((BaseSequentialStream *) &DEBUG_SERIAL)
+#define     DEBUG_SERIAL                    SD2
+#define     DEBUG_CHP                       ((BaseSequentialStream *) &DEBUG_SERIAL)
 
-#define     F_XOSC              (32000000U)
-#define     F_STEP              ((double)(61.03515625)) //  (Fxosc/2^9)
-#define     APP_CARRIER_FREQ    (436500000U)
-#define     APP_FREQ_DEV        (2500U)
-#define     APP_BITRATE         (2400U)
+#define     F_XOSC                          (32000000U)
+#define     F_STEP                          ((double)(61.03515625)) //  (Fxosc/2^9)
+#define     APP_CARRIER_FREQ                (436500000U)
+#define     APP_FREQ_DEV                    (2500U)
+
+// #define     APP_BITRATE                     (2400U)
+#define     APP_BITRATE                     (38400U)
 
 // RSSI Thresh
-#define     RSSI_THRESH         ((uint8_t)(0x70U))
+#define     RSSI_THRESH                     ((uint8_t)(0x70U))
 
+// SeqConfig1
+#define     FromTransmit_RX        			((uint8_t)(0b1<<0))
+#define     FromIdle_RX            			((uint8_t)(0b1<<1))
+#define     LowPowerSelect_IDLE    			((uint8_t)(0b1<<2))
+#define     FromStart_TO_LP        			((uint8_t)(0b00<<3))
+#define     FromStart_TO_RX        			((uint8_t)(0b01<<3))
+#define     FromStart_TO_TX        			((uint8_t)(0b10<<3))
+#define     FromStart_TO_TX_FIFOINT         ((uint8_t)(0b11<<3))
+#define     Idle_TO_STANDBY                 ((uint8_t)(0b00<<5))
+#define     Seq_STOP                        ((uint8_t)(0b1<<6))
+#define     Seq_START                       ((uint8_t)(0b1<<7))
+
+// SeqConfig1
+#define     FromRX_PKT_RX_PLD_RDY           ((uint8_t)(0b001<<5))
+#define     FromRX_PKT_RX_CRC_OK            ((uint8_t)(0b011<<5))
+#define     FromRX_Timeout_TO_RX_ST         ((uint8_t)(0b00<<3))
+#define     FromPKT_RXD_TO_RX               ((uint8_t)(0b100<<0))
+#define     FromPKT_RXD_TO_LP_SELECT        ((uint8_t)(0b010<<0))
 
 // Sync bytes
-#define     SX1236_SYNCVALUE1   ((uint8_t) (0xe7U))
-#define     SX1236_SYNCVALUE2   ((uint8_t) (0xe7U))
-#define     SX1236_SYNCVALUE3   ((uint8_t) (0xe7U))
-#define     SX1236_SYNCVALUE4   ((uint8_t) (0xe7U))
-#define     SX1236_SYNCVALUE5   ((uint8_t) (0xe7U))
-#define     SX1236_SYNCVALUE6   ((uint8_t) (0xe7U))
-#define     SX1236_SYNCVALUE7   ((uint8_t) (0xe7U))
-#define     SX1236_SYNCVALUE8   ((uint8_t) (0xe7U))
+#define     SX1236_SYNCVALUE1   		    ((uint8_t) (0xe7U))
+#define     SX1236_SYNCVALUE2   		    ((uint8_t) (0xe7U))
+#define     SX1236_SYNCVALUE3   		    ((uint8_t) (0xe7U))
+#define     SX1236_SYNCVALUE4   		    ((uint8_t) (0xe7U))
+#define     SX1236_SYNCVALUE5   		    ((uint8_t) (0xe7U))
+#define     SX1236_SYNCVALUE6   		    ((uint8_t) (0xe7U))
+#define     SX1236_SYNCVALUE7   		    ((uint8_t) (0xe7U))
+#define     SX1236_SYNCVALUE8   		    ((uint8_t) (0xe7U))
 
 // Payload length
-#define     PAYLOAD_LENGTH      ((uint8_t) (0x05))
-#define     FIFO_THRESH         ((uint8_t) (0x05))
-
-// #define  F_STEP  (Fxosc/2^9)
+#define     PAYLOAD_LENGTH                  ((uint8_t) (0x05))
+#define     FIFO_THRESH                     ((uint8_t) (0x05))
 
 struct CONFIG_SX1236_RX config_rx =
 {
@@ -78,7 +97,8 @@ struct CONFIG_SX1236_RX config_rx =
 	.RegSyncValue6      = SX1236_SYNCVALUE6,
 	.RegSyncValue7      = SX1236_SYNCVALUE7,
 	.RegSyncValue8      = SX1236_SYNCVALUE8,
-
+	.RegSeqConfig1      = FromTransmit_RX | FromIdle_RX | LowPowerSelect_IDLE | FromStart_TO_RX | Idle_TO_STANDBY,
+	.RegSeqConfig2      = FromRX_PKT_RX_PLD_RDY | FromRX_Timeout_TO_RX_ST | FromPKT_RXD_TO_RX,  
 	.RegPayloadLength   = PAYLOAD_LENGTH,
 	.RegFifoThresh      = FIFO_THRESH,
 	.RegRxConfig        = SX1236_AFC_AUTO_ON,

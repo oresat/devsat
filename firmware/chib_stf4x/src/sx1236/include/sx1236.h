@@ -81,6 +81,9 @@ struct CONFIG_SX1236_RX
 	uint8_t     RegSyncValue7;
 	uint8_t     RegSyncValue8;
 
+	uint8_t     RegSeqConfig1;
+	uint8_t     RegSeqConfig2;
+
 	uint8_t     RegPayloadLength;
 	uint8_t     RegFifoThresh;
 	uint8_t     RegRxConfig;

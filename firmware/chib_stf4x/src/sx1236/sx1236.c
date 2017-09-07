@@ -29,6 +29,9 @@
 
 #include "sx1236.h"
 
+#define DEBUG_SERIAL  SD2
+#define DEBUG_CHP     ((BaseSequentialStream *) &DEBUG_SERIAL)
+
 #define SPI_MAKE_WRITE_ADDR(a) (a|0x80U)
 
 uint8_t       sx_txbuff[MAX_SX_BUFF];
@@ -251,8 +254,6 @@ void sx1236_write_reg(SPIDriver * spip, uint8_t address, uint8_t newval)
 }
 
 
-#define DEBUG_SERIAL  SD2
-#define DEBUG_CHP     ((BaseSequentialStream *) &DEBUG_SERIAL)
 void sx1236_check_reg(SPIDriver * spip, uint8_t address, uint8_t checkval)
 {
 	sx1236_read(spip, address, sx_rxbuff, 1);
@@ -260,6 +261,7 @@ void sx1236_check_reg(SPIDriver * spip, uint8_t address, uint8_t checkval)
 	{
 		chprintf(DEBUG_CHP, "%s:%d\tReg:\t0x%x\tGot:\t0x%x not 0x%x\r\n",  __FILE__, __LINE__, address,  sx_rxbuff[0], checkval);
 	}
+	chprintf(DEBUG_CHP, "Reg:\t0x%x set to:\t0x%x\r\n",  address,  sx_rxbuff[0]);
 }
 
 void sx1236_write_carrier_freq(SPIDriver * spip, uint32_t carrier_hz, double fstep)
@@ -273,7 +275,7 @@ void sx1236_write_carrier_freq(SPIDriver * spip, uint32_t carrier_hz, double fst
 
 	frf_msb      = (frf >> 16) & 0xff;
 	frf_mid      = (frf >> 8)  & 0xff;
-	frf_lsb      = frf       & 0xff;
+	frf_lsb      = frf         & 0xff;
 
 	sx_txbuff[0] = frf_msb;
 	sx_txbuff[1] = frf_mid;
@@ -312,7 +314,9 @@ void sx1236_set_bitrate(SPIDriver * spip, uint32_t fxosc, uint32_t bitrate )
 	rate             = (uint32_t)incr_rnd((fxosc / bitrate), 0.1);
 
 	bitrate_msb      = (rate >> 8) & 0x3f;
+	chprintf(DEBUG_CHP, "bitrate_msb: 0x%x\r\n", bitrate_msb);
 	bitrate_lsb      = rate        & 0xff;
+	chprintf(DEBUG_CHP, "bitrate_lsb: 0x%x\r\n", bitrate_lsb);
 
 	sx_txbuff[0]     = bitrate_msb;
 	sx_txbuff[1]     = bitrate_lsb;
@@ -345,6 +349,9 @@ void sx1236_configure_rx(SPIDriver * spip, struct CONFIG_SX1236_RX * c)
 	sx1236_write_reg(spip, regaddrs.RegSyncValue7,      c->RegSyncValue7);
 	sx1236_write_reg(spip, regaddrs.RegSyncValue8,      c->RegSyncValue8);
 
+	sx1236_write_reg(spip, regaddrs.RegSeqConfig1,      c->RegSeqConfig1);
+	sx1236_write_reg(spip, regaddrs.RegSeqConfig2,      c->RegSeqConfig2);
+
 	sx1236_write_reg(spip, regaddrs.RegPayloadLength,   c->RegPayloadLength);
 	sx1236_write_reg(spip, regaddrs.RegFifoThresh,      c->RegFifoThresh);
 	sx1236_write_reg(spip, regaddrs.RegRxConfig,        c->RegRxConfig);
@@ -369,6 +376,8 @@ void sx1236_configure_rx(SPIDriver * spip, struct CONFIG_SX1236_RX * c)
 	sx1236_check_reg(spip, regaddrs.RegSyncValue6,      c->RegSyncValue6);
 	sx1236_check_reg(spip, regaddrs.RegSyncValue7,      c->RegSyncValue7);
 	sx1236_check_reg(spip, regaddrs.RegSyncValue8,      c->RegSyncValue8);
+	sx1236_check_reg(spip, regaddrs.RegSeqConfig1,      c->RegSeqConfig1);
+	sx1236_check_reg(spip, regaddrs.RegSeqConfig2,      c->RegSeqConfig2);
 
 	sx1236_check_reg(spip, regaddrs.RegPayloadLength,   c->RegPayloadLength);
 	sx1236_check_reg(spip, regaddrs.RegFifoThresh,      c->RegFifoThresh);

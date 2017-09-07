@@ -135,6 +135,7 @@ CSRC = $(STARTUPSRC) \
        $(CHIBIOS)/os/hal/lib/streams/memstreams.c \
        $(CHIBIOS)/os/hal/lib/streams/chprintf.c \
        $(APP_SRCS) \
+       dio_ext.c \
        main.c
 
 # C++ sources that can be compiled in ARM or THUMB mode depending on the global
@@ -173,7 +174,8 @@ INCDIR = $(CHIBIOS)/os/license \
 	 $(NUCLEO64_SX1236)/include \
 	 $(NUCLEO64_UTIL)/include \
 	 $(NUCLEO64_BOARDS)/include \
-	 $(CHIBIOS)/os/various
+	 $(CHIBIOS)/os/various \
+	 ./include
 
 # $(NUCLEO64_SATSHELL)/include \
 
