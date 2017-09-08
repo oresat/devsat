@@ -147,11 +147,11 @@ int main(void) {
      */
     semtech_write(&SPID1, transceiver.RegOpMode, 0x0d, 1);
 
-    //semtech_print_regs(&SPID1);
+    semtech_print_regs(&SPID1);
 
     while (true)
     {
-        chThdSleepMilliseconds(500);
+        chThdSleepMilliseconds(5000);
         //Test SPI connectivity
         semtech_read_temp(&SPID1, true);
     }

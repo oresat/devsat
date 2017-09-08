@@ -188,7 +188,10 @@ uint8_t semtech_read_temp(SPIDriver * spip, bool term){
 }
 
 void semtech_print_regs(SPIDriver * spip){
-	#define X(SXreg) printf("%s = %x\n", #SXreg, 0x3);// semtech_read(spip, transceiver.SXreg));
+	chprintf(DEBUG_CHP, "RegVals:");
+
+	#define X(SXreg) chprintf(DEBUG_CHP, "%s: \t\t\t %x\t Default:\t %x \r\n",\
+	 #SXreg, semtech_read(spip, transceiver.SXreg), defaults.SXreg);
 	SEMTECH_REGISTERS
 	#undef X
 }
