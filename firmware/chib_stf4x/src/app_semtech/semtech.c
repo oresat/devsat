@@ -101,27 +101,6 @@ void semtech_burst_read(SPIDriver * spip, uint8_t addr, uint8_t * datrcvptr, uin
 
 }
 
-
-
-void semtech_test_read(SPIDriver * spip, uint8_t baseAddr)
-{
-	
-	//Will request the values of some registers, and write the output to serial.
-	chprintf(DEBUG_CHP, "\r\nTesting SPI Connection...\r\n");
-	
-	uint8_t rcvData[12];
-    uint8_t i;
-    semtech_burst_read(spip, baseAddr, &rcvData, sizeof(rcvData));
-
-    
-    chprintf(DEBUG_CHP, "\r\n Reg values: \r\n" );
-    for (i = 0; i<12; i++){
-       
-        chprintf(DEBUG_CHP, "\r\n %x %x\r\n ",i + baseAddr, rcvData[i]);
-    };
-	
-}
-
 void semtech_test_rcv(SPIDriver * spip){
 	//Configures receive parameters
 
@@ -188,14 +167,23 @@ uint8_t semtech_read_temp(SPIDriver * spip, bool term){
 }
 
 void semtech_print_regs(SPIDriver * spip){
-	chprintf(DEBUG_CHP, "RegVals:");
+	/* Dumps all registers to serial out */
+	
+	chprintf(DEBUG_CHP, "--------------RegVals:---------------\r\n");
 
 	#define X(SXreg) chprintf(DEBUG_CHP, "%s: \t\t\t %x\t Default:\t %x \r\n",\
 	 #SXreg, semtech_read(spip, transceiver.SXreg), defaults.SXreg);
 	SEMTECH_REGISTERS
 	#undef X
+
+	chprintf(DEBUG_CHP, "\n\n\n");
 }
 
 void semtech_config(SPIDriver * spip){
-	//semtech_write(spip, transceiver.RegAfcBw, intended_setup.RegAfcBw, 1);
+	/* Programs SX1236 as defined in intended_setup
+	*/
+	
+	#define X(SXreg) semtech_write(spip, transceiver.SXreg, intended_setup.SXreg, 1);
+	SEMTECH_REGISTERS
+	#undef X
 }

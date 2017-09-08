@@ -141,12 +141,14 @@ int main(void) {
 
     semtech_burst_write(&SPID1, address,  0x1a, 1);
 
-    semtech_test_read(&SPID1, 0x3);
+
     /*
      * Begin main loop
      */
     semtech_write(&SPID1, transceiver.RegOpMode, 0x0d, 1);
 
+    semtech_print_regs(&SPID1);
+    semtech_config(&SPID1);
     semtech_print_regs(&SPID1);
 
     while (true)
