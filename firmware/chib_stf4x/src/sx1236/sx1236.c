@@ -336,6 +336,9 @@ void sx1236_configure_rx(SPIDriver * spip, struct CONFIG_SX1236_RX * c)
 	sx1236_write_reg(spip, regaddrs.RegPacketConfig1,   c->RegPacketConfig1);
 	sx1236_write_reg(spip, regaddrs.RegPacketConfig2,   c->RegPacketConfig2);
 	sx1236_write_reg(spip, regaddrs.RegPaRamp,          c->RegPaRamp);
+	sx1236_write_reg(spip, regaddrs.RegDioMapping1,     c->RegDioMapping1);
+	sx1236_write_reg(spip, regaddrs.RegDioMapping2,     c->RegDioMapping2);
+	sx1236_write_reg(spip, regaddrs.RegPaRamp,          c->RegPaRamp);
 	sx1236_write_reg(spip, regaddrs.RegPll,             c->RegPllLf);
 	sx1236_write_reg(spip, regaddrs.RegRssiThresh,      c->RegRssiThresh);
 	sx1236_write_reg(spip, regaddrs.RegSyncConfig,      c->RegSyncConfig);
@@ -357,14 +360,13 @@ void sx1236_configure_rx(SPIDriver * spip, struct CONFIG_SX1236_RX * c)
 	sx1236_write_reg(spip, regaddrs.RegRxConfig,        c->RegRxConfig);
 	sx1236_write_reg(spip, regaddrs.RegAfcFei,          c->RegAfcFei);
 
-
-	// Sequencer states 4.1.8.2?
-
 	// Development only: Check register writes
 	sx1236_check_reg(spip, regaddrs.RegOpMode,          c->RegOpMode);
 	sx1236_check_reg(spip, regaddrs.RegPacketConfig1,   c->RegPacketConfig1);
 	sx1236_check_reg(spip, regaddrs.RegPacketConfig2,   c->RegPacketConfig2);
 	sx1236_check_reg(spip, regaddrs.RegPaRamp,          c->RegPaRamp);
+	sx1236_check_reg(spip, regaddrs.RegDioMapping1,     c->RegDioMapping1);
+	sx1236_check_reg(spip, regaddrs.RegDioMapping2,     c->RegDioMapping2);
 	sx1236_check_reg(spip, regaddrs.RegPll,             c->RegPllLf);
 	sx1236_check_reg(spip, regaddrs.RegRssiThresh,      c->RegRssiThresh);
 	sx1236_check_reg(spip, regaddrs.RegSyncConfig,      c->RegSyncConfig);

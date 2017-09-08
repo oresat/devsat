@@ -25,7 +25,15 @@
 #include "util_numbers.h"
 #include "board.h"
 
+#include "dio_ext.h"
 #include "sx1236.h"
+
+EVENTSOURCE_DECL(DIO0_EVT);
+EVENTSOURCE_DECL(DIO1_EVT);
+EVENTSOURCE_DECL(DIO2_EVT);
+EVENTSOURCE_DECL(DIO3_EVT);
+EVENTSOURCE_DECL(DIO4_EVT);
+EVENTSOURCE_DECL(DIO5_EVT);
 
 #define     DEBUG_SERIAL                    SD2
 #define     DEBUG_CHP                       ((BaseSequentialStream *) &DEBUG_SERIAL)
@@ -42,16 +50,16 @@
 #define     RSSI_THRESH                     ((uint8_t)(0x70U))
 
 // SeqConfig1
-#define     FromTransmit_RX        			((uint8_t)(0b1<<0))
-#define     FromIdle_RX            			((uint8_t)(0b1<<1))
-#define     LowPowerSelect_IDLE    			((uint8_t)(0b1<<2))
-#define     FromStart_TO_LP        			((uint8_t)(0b00<<3))
-#define     FromStart_TO_RX        			((uint8_t)(0b01<<3))
-#define     FromStart_TO_TX        			((uint8_t)(0b10<<3))
+#define     FromTransmit_RX                 ((uint8_t)(0b1<<0))
+#define     FromIdle_RX                     ((uint8_t)(0b1<<1))
+#define     LowPowerSelect_IDLE             ((uint8_t)(0b1<<2))
+#define     FromStart_TO_LP                 ((uint8_t)(0b00<<3))
+#define     FromStart_TO_RX                 ((uint8_t)(0b01<<3))
+#define     FromStart_TO_TX                 ((uint8_t)(0b10<<3))
 #define     FromStart_TO_TX_FIFOINT         ((uint8_t)(0b11<<3))
 #define     Idle_TO_STANDBY                 ((uint8_t)(0b00<<5))
-#define     Seq_STOP                        ((uint8_t)(0b1<<6))
-#define     Seq_START                       ((uint8_t)(0b1<<7))
+#define     SEQ_STOP                        ((uint8_t)(0b1<<6))
+#define     SEQ_START                       ((uint8_t)(0b1<<7))
 
 // SeqConfig1
 #define     FromRX_PKT_RX_PLD_RDY           ((uint8_t)(0b001<<5))
@@ -61,18 +69,18 @@
 #define     FromPKT_RXD_TO_LP_SELECT        ((uint8_t)(0b010<<0))
 
 // Sync bytes
-#define     SX1236_SYNCVALUE1   		    ((uint8_t) (0xe7U))
-#define     SX1236_SYNCVALUE2   		    ((uint8_t) (0xe7U))
-#define     SX1236_SYNCVALUE3   		    ((uint8_t) (0xe7U))
-#define     SX1236_SYNCVALUE4   		    ((uint8_t) (0xe7U))
-#define     SX1236_SYNCVALUE5   		    ((uint8_t) (0xe7U))
-#define     SX1236_SYNCVALUE6   		    ((uint8_t) (0xe7U))
-#define     SX1236_SYNCVALUE7   		    ((uint8_t) (0xe7U))
-#define     SX1236_SYNCVALUE8   		    ((uint8_t) (0xe7U))
+#define     SX1236_SYNCVALUE1               ((uint8_t) (0xe7U))
+#define     SX1236_SYNCVALUE2               ((uint8_t) (0xe7U))
+#define     SX1236_SYNCVALUE3               ((uint8_t) (0xe7U))
+#define     SX1236_SYNCVALUE4               ((uint8_t) (0xe7U))
+#define     SX1236_SYNCVALUE5               ((uint8_t) (0xe7U))
+#define     SX1236_SYNCVALUE6               ((uint8_t) (0xe7U))
+#define     SX1236_SYNCVALUE7               ((uint8_t) (0xe7U))
+#define     SX1236_SYNCVALUE8               ((uint8_t) (0xe7U))
 
 // Payload length
-#define     PAYLOAD_LENGTH                  ((uint8_t) (0x05))
-#define     FIFO_THRESH                     ((uint8_t) (0x05))
+#define     PAYLOAD_LENGTH                  ((uint8_t) (0x05U))
+#define     FIFO_THRESH                     ((uint8_t) (0x05U))
 
 struct CONFIG_SX1236_RX config_rx =
 {
@@ -81,9 +89,10 @@ struct CONFIG_SX1236_RX config_rx =
 	.carrier_freq       = APP_CARRIER_FREQ,
 	.freq_dev_hz        = APP_FREQ_DEV,
 	.bitrate            = APP_BITRATE,
-
 	.RegOpMode          = SX1236_LOW_FREQ_MODE | SX1236_FSK_MODE | SX1236_STANDBY_MODE,
 	.RegPaRamp          = SX1236_NO_SHAPING,
+	.RegDioMapping1     = SX1236_DIO0_PAYLOAD_RDY | SX1236_DIO2_RX_RDY,
+	.RegDioMapping2     = SX1236_DIO4_RX_TIMEOUT,
 	.RegPacketConfig1   = SX1236_VARIABLE_PACKET,
 	.RegPacketConfig2   = SX1236_PACKET_MODE,
 	.RegPllLf           = SX1236_PLLBW_75KHZ,
@@ -98,7 +107,7 @@ struct CONFIG_SX1236_RX config_rx =
 	.RegSyncValue7      = SX1236_SYNCVALUE7,
 	.RegSyncValue8      = SX1236_SYNCVALUE8,
 	.RegSeqConfig1      = FromTransmit_RX | FromIdle_RX | LowPowerSelect_IDLE | FromStart_TO_RX | Idle_TO_STANDBY,
-	.RegSeqConfig2      = FromRX_PKT_RX_PLD_RDY | FromRX_Timeout_TO_RX_ST | FromPKT_RXD_TO_RX,  
+	.RegSeqConfig2      = FromRX_PKT_RX_PLD_RDY | FromRX_Timeout_TO_RX_ST | FromPKT_RXD_TO_RX,
 	.RegPayloadLength   = PAYLOAD_LENGTH,
 	.RegFifoThresh      = FIFO_THRESH,
 	.RegRxConfig        = SX1236_AFC_AUTO_ON,
@@ -155,17 +164,97 @@ static void app_init(void)
 	sx1236_reset() ;
 }
 
-void main_loop(void)
+static void dio0_evt_handler(eventid_t id)
 {
-	sx1236_check_reg(&SPID1, regaddrs.RegVersion, 0x12);
+	(void)id;
+	chprintf(DEBUG_CHP, "dio0 event\r\n");
+}
+
+static void dio1_evt_handler(eventid_t id)
+{
+	(void)id;
+	chprintf(DEBUG_CHP, "dio2 event\r\n");
+}
+
+static void dio2_evt_handler(eventid_t id)
+{
+	(void)id;
+	chprintf(DEBUG_CHP, "dio2 event\r\n");
+}
+
+
+static void dio3_evt_handler(eventid_t id)
+{
+	(void)id;
+	chprintf(DEBUG_CHP, "dio3 event\r\n");
+}
+
+static void dio4_evt_handler(eventid_t id)
+{
+	(void)id;
+	chprintf(DEBUG_CHP, "dio4 event\r\n");
+}
+
+static void dio5_evt_handler(eventid_t id)
+{
+	(void)id;
+	chprintf(DEBUG_CHP, "dio5 event\r\n");
+}
+
+static THD_WORKING_AREA(waThread_sx1236_dio, 512);
+static THD_FUNCTION(Thread_sx1236_dio, arg)
+{
+	(void) arg;
+	static const evhandler_t evhndl_sx1236_dio[] =
+	{
+		dio0_evt_handler,
+		dio1_evt_handler,
+		dio2_evt_handler,
+		dio3_evt_handler,
+		dio4_evt_handler,
+		dio5_evt_handler
+	};
+
+	event_listener_t evl_dio0, evl_dio1, evl_dio2, evl_dio3, evl_dio4, evl_dio5;
+
+	chRegSetThreadName("sx1236_dio");
+
+	chEvtRegister(&DIO0_EVT,           &evl_dio0,         0);
+	chEvtRegister(&DIO1_EVT,           &evl_dio1,         1);
+	chEvtRegister(&DIO2_EVT,           &evl_dio2,         2);
+	chEvtRegister(&DIO3_EVT,           &evl_dio3,         3);
+	chEvtRegister(&DIO4_EVT,           &evl_dio4,         4);
+	chEvtRegister(&DIO5_EVT,           &evl_dio5,         5);
+
+	chprintf(DEBUG_CHP, "Thread started: %s\r\n", "sx1236_dio");
+	while (TRUE)
+	{
+		chEvtDispatch(evhndl_sx1236_dio, chEvtWaitOneTimeout(EVENT_MASK(0), MS2ST(50)));
+	}
+}
+
+static void start_threads(void)
+{
+	chThdCreateStatic(waThread_sx1236_dio,      sizeof(waThread_sx1236_dio),   NORMALPRIO, Thread_sx1236_dio, NULL);
+}
+
+
+static void main_loop(void)
+{
+	chThdSleepMilliseconds(500);
+	chprintf(DEBUG_CHP, "\r\n");
+	// sx1236_check_reg(&SPID1, regaddrs.RegVersion, 0x12);
 
 	sx1236_configure_rx(&SPID1, &config_rx);
 
 	while (true)
 	{
 		chThdSleepMilliseconds(500);
-		palTogglePad(GPIOA, GPIOA_SX_TESTOUT);
+		// palTogglePad(GPIOA, GPIOA_SX_TESTOUT);
 		chprintf(DEBUG_CHP, ".");
+		// Start/restart the sequencer
+		sx1236_write_reg(&SPID1, regaddrs.RegSeqConfig1, config_rx.RegSeqConfig1 | SEQ_START);
+		// sx1236_check_reg(&SPID1, regaddrs.RegSeqConfig1, config_rx.RegSeqConfig1 );
 	}
 }
 
@@ -175,6 +264,7 @@ int main(void)
 	chSysInit();
 	app_init();
 
+	start_threads();
 	main_loop();
 	return 0;
 }

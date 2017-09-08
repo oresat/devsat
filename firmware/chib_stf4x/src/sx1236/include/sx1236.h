@@ -31,6 +31,17 @@
 // RegPaRamp
 #define SX1236_NO_SHAPING            ((uint8_t)(0b00<<5))
 
+
+// RegDioMapping1
+#define SX1236_DIO0_PAYLOAD_RDY      ((uint8_t)(0b00<<6))
+#define SX1236_DIO0_CRC_OK           ((uint8_t)(0b01<<6))
+
+#define SX1236_DIO2_RX_RDY           ((uint8_t)(0b01<<2))
+
+// RegDioMapping2
+#define SX1236_DIO4_RX_TIMEOUT       ((uint8_t)(0b10<<6))
+#define SX1236_DIO5_CLKOUT           ((uint8_t)(0b00<<4))
+
 // Packet Config 1
 #define SX1236_FIXED_PACKET          ((uint8_t)(0b0<<7))
 #define SX1236_VARIABLE_PACKET       ((uint8_t)(0b1<<7))
@@ -66,6 +77,8 @@ struct CONFIG_SX1236_RX
 	uint8_t     RegFifo;
 	uint8_t     RegOpMode;
 	uint8_t     RegPaRamp;
+	uint8_t     RegDioMapping1;
+	uint8_t     RegDioMapping2;
 	uint8_t     RegPacketConfig1;
 	uint8_t     RegPacketConfig2;
 	uint8_t     RegPllLf;

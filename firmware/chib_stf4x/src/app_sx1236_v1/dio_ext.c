@@ -68,6 +68,7 @@ void dio0_handler(EXTDriver * extp, expchannel_t channel)
 
 	chSysLockFromISR();
 	chEvtBroadcastI(&dio0_event);
+	palTogglePad(GPIOA, GPIOA_SX_TESTOUT);
 
 	chSysUnlockFromISR();
 
