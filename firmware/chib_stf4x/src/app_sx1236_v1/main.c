@@ -250,7 +250,7 @@ static void main_loop(void)
 	while (true)
 	{
 		chThdSleepMilliseconds(500);
-		// palTogglePad(GPIOA, GPIOA_SX_TESTOUT);
+		palTogglePad(GPIOA, GPIOA_SX_TESTOUT);
 		chprintf(DEBUG_CHP, ".");
 		// Start/restart the sequencer
 		sx1236_write_reg(&SPID1, regaddrs.RegSeqConfig1, config_rx.RegSeqConfig1 | SEQ_START);
