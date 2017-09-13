@@ -101,37 +101,7 @@ void semtech_burst_read(SPIDriver * spip, uint8_t addr, uint8_t * datrcvptr, uin
 
 }
 
-void semtech_test_rcv(SPIDriver * spip){
-	//Configures receive parameters
 
-	semtech_reset();
-
-	//Set frequency (taken from Will's function)
-	uint32_t carrierHz = 4365000000; 
-	uint64_t frf = ((uint64_t)carrierHz * FstepMul) / FstepDiv;
-	uint8_t RegFrf[3] = {(frf >> 16) & 0xff, (frf >> 8) & 0xff, frf & 0xff};
-	semtech_write(spip, transceiver.RegFrfMsb, RegFrf, 3);
-
-	//Set deviation (also taken from Will's function)
-	uint8_t deviationHz = 2500;
-	uint64_t fdev = ((uint64_t)deviationHz * FstepMul) / FstepDiv;
-	uint8_t RegFdev[2] = {(fdev >> 8) & 0x3F, fdev & 0xFF};
-	semtech_write(spip, transceiver.RegFdevMsb, RegFdev, 2);
-
-	//Set bitrate (also Will)
-	uint16_t bitrateHz = 2400;
-	uint16_t rate = FXOSC/bitrateHz;
-	uint8_t RegBitrate[2] = {(rate >> 8) & 0xff, rate & 0xff};
-	semtech_write(spip, transceiver.RegBitrateMsb, RegBitrate, 2);
-
-	//Set PLL BW to 75kHz (RegPLL[7,8] = 00)
-	semtech_write(spip, transceiver.RegPll, 0b00011100, 1);
-
-	//semtech_write(spip, R);
-
-	semtech_write(spip, transceiver.RegRxBw, 0x100, 1);
-
-}
 void semtech_transmit_data(SPIDriver * spip, uint8_t * data)
 {
 	//Sends data to the FIFO for transmission
@@ -154,17 +124,7 @@ void semtech_reset(){
     palSetPort(GPIOA, 8);
 }
 
-uint8_t semtech_read_temp(SPIDriver * spip, bool term){
-	uint8_t temp;
-	semtech_burst_read(spip, 0x3C, &temp, 1);
 
-	if (term){
-		chprintf(DEBUG_CHP, "\r\n Temp value: %x \r\n", temp );
-	}
-
-	return temp;
-
-}
 
 void semtech_print_regs(SPIDriver * spip){
 	/* Dumps all registers to serial out */

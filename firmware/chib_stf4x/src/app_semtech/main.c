@@ -151,6 +151,8 @@ int main(void) {
     semtech_config(&SPID1);
     semtech_print_regs(&SPID1);
 
+    semtech_listen(&SPID1);
+    
     while (true)
     {
         chThdSleepMilliseconds(5000);
