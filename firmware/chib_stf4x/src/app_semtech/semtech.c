@@ -209,5 +209,18 @@ void semtech_listen(SPIDriver * spip) {
 }
 
 void semtech_beacon(SPIDriver * spip, uint8_t payload){
+	//semtech_write(spip, transceiver.RegFifo);
+
+	//Set Beacon Mode
+	semtech_write(spip, transceiver.RegPacketConfig2, 0x48, 1);
+
+	//Config Sequencer
+	semtech_write(spip, transceiver.RegSeqConfig1, 0x04, 1);
+
+	//Start Sequencer
+	semtech_write(spip, transceiver.RegSeqConfig1, 0x84, 1);
+
+
+
 
 }
