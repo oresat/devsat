@@ -187,3 +187,27 @@ void semtech_config(SPIDriver * spip){
 	SEMTECH_REGISTERS
 	#undef X
 }
+
+void semtech_listen(SPIDriver * spip) {
+	/* Test fn to listen for packets, and dump them to uart
+	*/
+	uint8_t OpMode;
+
+	//RMW OpMode
+	OpMode = semtech_read(spip, transceiver.RegOpMode);
+	OpMode = OpMode | 0b00000101;  
+	OpMode = OpMode & 0b11111101;
+	semtech_write(spip, transceiver.RegOpMode, OpMode, 1);
+
+
+	while(1){
+		while( (semtech_read(spip, transceiver.RegIrqFlags2) & 0b00000100) != 1) {}
+
+		chprintf(DEBUG_CHP, "Preamble Detected! \r\n");
+
+	}
+}
+
+void semtech_beacon(SPIDriver * spip, uint8_t payload){
+	
+}
