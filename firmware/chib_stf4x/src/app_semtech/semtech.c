@@ -172,7 +172,7 @@ void semtech_print_regs(SPIDriver * spip){
 	chprintf(DEBUG_CHP, "--------------RegVals:---------------\r\n");
 
 	#define X(SXreg) chprintf(DEBUG_CHP, "%s: \t\t\t %x\t Default:\t %x \r\n",\
-	 #SXreg, semtech_read(spip, transceiver.SXreg), defaults.SXreg);
+	 #SXreg, semtech_read(spip, transceiver.SXreg), POR_defaults.SXreg);
 	SEMTECH_REGISTERS
 	#undef X
 
@@ -183,7 +183,7 @@ void semtech_config(SPIDriver * spip){
 	/* Programs SX1236 as defined in intended_setup
 	*/
 	
-	#define X(SXreg) semtech_write(spip, transceiver.SXreg, intended_setup.SXreg, 1);
+	#define X(SXreg) semtech_write(spip, transceiver.SXreg, defaults.SXreg, 1);
 	SEMTECH_REGISTERS
 	#undef X
 }
@@ -209,5 +209,5 @@ void semtech_listen(SPIDriver * spip) {
 }
 
 void semtech_beacon(SPIDriver * spip, uint8_t payload){
-	
+
 }
