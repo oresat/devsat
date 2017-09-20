@@ -184,3 +184,9 @@ void semtech_beacon(SPIDriver * spip, uint8_t payload){
 
 
 }
+
+void semtech_continuous(SPIDriver * spip){
+	//Puts SX 1236 in continuous mode
+
+	
+}

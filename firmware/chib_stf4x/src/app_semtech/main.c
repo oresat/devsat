@@ -137,27 +137,24 @@ int main(void) {
 */
     //semtech_test_read(&SPID1);
     
-    uint8_t address = 0x3;
-
-    semtech_burst_write(&SPID1, address,  0x1a, 1);
-
-
     /*
      * Begin main loop
      */
-    semtech_write(&SPID1, transceiver.RegOpMode, 0x0d, 1);
+    
 
     semtech_print_regs(&SPID1);
     semtech_config(&SPID1);
+    semtech_write(&SPID1, transceiver.RegOsc, 0x03, 1);
     semtech_print_regs(&SPID1);
 
     semtech_listen(&SPID1);
-    
+
+
     while (true)
     {
         chThdSleepMilliseconds(5000);
         //Test SPI connectivity
-        semtech_read_temp(&SPID1, true);
+        
     }
 
     return 0;
