@@ -144,17 +144,26 @@ int main(void) {
 
     semtech_print_regs(&SPID1);
     semtech_config(&SPID1);
-    semtech_write(&SPID1, transceiver.RegOsc, 0x03, 1);
+    
+    semtech_write(&SPID1, transceiver.RegOpMode, 0x08, 1);
+    chThdSleepMilliseconds(1);
+    semtech_write(&SPID1, transceiver.RegOpMode, 0x9, 1);
+    chThdSleepMilliseconds(1);
+    semtech_write(&SPID1, transceiver.RegOpMode, 0xc,1);
+    chThdSleepMilliseconds(1);
+    semtech_write(&SPID1, transceiver.RegOpMode, 0xd,1);
+
     semtech_print_regs(&SPID1);
 
-    semtech_listen(&SPID1);
+    //semtech_listen(&SPID1);
 
 
     while (true)
     {
-        chThdSleepMilliseconds(5000);
+        chThdSleepMilliseconds(500);
         //Test SPI connectivity
-        
+        chprintf(DEBUG_CHP, "RSSI: %x\r\n", semtech_read(&SPID1, transceiver.RegRssiValue));
+        //chprintf(DEBUG_CHP, "Temp: %x\r\n", semtech_read_temp(&SPID1));
     }
 
     return 0;
