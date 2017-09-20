@@ -148,6 +148,22 @@ void semtech_config(SPIDriver * spip){
 	#undef X
 }
 
+uint8_t semtech_read_temp(SPIDriver * spip){
+	//Reads the Tempenature value from the SX1236
+	semtech_write(&SPID1, transceiver.RegOpMode, 0x08, 1);
+    chThdSleepMilliseconds(1);
+    semtech_write(&SPID1, transceiver.RegOpMode, 0x9, 1);
+    chThdSleepMilliseconds(1);
+    semtech_write(&SPID1, transceiver.RegOpMode, 0xc,1);
+    chThdSleepMilliseconds(1);
+    semtech_write(&SPID1, transceiver.RegImageCal, 0x3,1);
+    chThdSleepMilliseconds(1);
+    semtech_write(&SPID1, transceiver.RegImageCal, 0x2, 1);
+    chThdSleepMilliseconds(1);
+    semtech_write(&SPID1, transceiver.RegOpMode, 0x8, 1);
+
+	return(semtech_read(spip, transceiver.RegTemp));
+}
 void semtech_listen(SPIDriver * spip) {
 	/* Test fn to listen for packets, and dump them to uart
 	*/
@@ -181,12 +197,10 @@ void semtech_beacon(SPIDriver * spip, uint8_t payload){
 	semtech_write(spip, transceiver.RegSeqConfig1, 0x84, 1);
 
 
-
-
 }
 
 void semtech_continuous(SPIDriver * spip){
 	//Puts SX 1236 in continuous mode
 
-	
+
 }
