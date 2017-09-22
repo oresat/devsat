@@ -47,6 +47,7 @@
 #define SX1236_VARIABLE_PACKET       ((uint8_t)(0b1<<7))
 
 // Packet Config 2
+#define SX1236_CONTINUOUS_MODE       ((uint8_t)(0b0<<6))
 #define SX1236_PACKET_MODE           ((uint8_t)(0b1<<6))
 
 // PllLf
@@ -64,47 +65,9 @@
 
 // AfcFei
 #define SX1236_AFC_AUTO_CLEAR_ON     ((uint8_t)(0b1<<0))
-
-struct CONFIG_SX1236_RX
-{
-	// Constants
-	uint32_t    Fxosc;
-	double      Fstep;
-	uint32_t    carrier_freq;
-	uint32_t    freq_dev_hz;
-	uint32_t    bitrate;
-	// Registers
-	uint8_t     RegFifo;
-	uint8_t     RegOpMode;
-	uint8_t     RegPaRamp;
-	uint8_t     RegDioMapping1;
-	uint8_t     RegDioMapping2;
-	uint8_t     RegPacketConfig1;
-	uint8_t     RegPacketConfig2;
-	uint8_t     RegPllLf;
-	uint8_t     RegPaConfig;
-	uint8_t     RegRssiThresh;
-	uint8_t     RegSyncConfig;
-	uint8_t     RegSyncValue1;
-	uint8_t     RegSyncValue2;
-	uint8_t     RegSyncValue3;
-	uint8_t     RegSyncValue4;
-	uint8_t     RegSyncValue5;
-	uint8_t     RegSyncValue6;
-	uint8_t     RegSyncValue7;
-	uint8_t     RegSyncValue8;
-
-	uint8_t     RegSeqConfig1;
-	uint8_t     RegSeqConfig2;
-
-	uint8_t     RegPayloadLength;
-	uint8_t     RegFifoThresh;
-	uint8_t     RegRxConfig;
-	uint8_t     RegAfcFei;
-};
-
-
-/* struct to hold transceiver register addresses*/
+/*
+ * struct to hold transceiver register addresses
+ */
 struct SX1236
 {
 	uint8_t RegFifo;                /* FIFO read/write access */
@@ -130,6 +93,9 @@ struct SX1236
 	uint8_t RegOokPeak;             /* OOK demodulator selection and control in peak mode */
 	uint8_t RegOokFix;              /* Fixed threshold control of the OOK demodulator */
 	uint8_t RegOokAvg;              /* Average threshold control of the OOK demodulator */
+	uint8_t Reserved17;              /* Average threshold control of the OOK demodulator */
+	uint8_t Reserved18;              /* Average threshold control of the OOK demodulator */
+	uint8_t Reserved19;              /* Average threshold control of the OOK demodulator */
 	uint8_t RegAfcFei;              /* AFC and FEI control and status */
 	uint8_t RegAfcMsb;              /* MSB of the frequency correction of the AFC */
 	uint8_t RegAfcLsb;              /* LSB of the frequency correction of the AFC */
@@ -180,13 +146,24 @@ struct SX1236
 	uint8_t RegAgcThresh1;          /************************************/
 	uint8_t RegAgcThresh2;          /************************************/
 	uint8_t RegAgcThresh3;          /************************************/
-	uint8_t RegPll;                 /* Control of the PLL bandwidth */
+	uint8_t RegPllLf;                 /* Control of the PLL bandwidth */
 
 };
 
+typedef struct _CONFIG_SX1236
+{
+	// Constants
+	uint32_t    Fxosc;
+	double      Fstep;
+	uint32_t    carrier_freq;
+	uint32_t    freq_dev_hz;
+	uint32_t    bitrate;
+	struct      SX1236 sx1236_state;
+} config_sx1236;
+
 extern struct SX1236 regaddrs;
-extern struct SX1236 regdefaults;
-extern struct CONFIG_SX1236_RX config_rx;
+extern struct SX1236 POR_defaults;
+extern struct CONFIG_SX1236 config_rx;
 
 #define     MAX_SX_BUFF            2056
 
@@ -221,6 +198,7 @@ extern uint8_t sx_rxbuff[MAX_SX_BUFF];
 #define CrcOk            (1 << 1)
 #define LowBat           (1 << 0)
 
+void sx1236_init_state(struct SX1236 * s) ;
 void sx1236_reset(void) ;
 
 void sx1236_read(SPIDriver * spip, uint8_t address, uint8_t * rx_buf, uint8_t n);
@@ -231,7 +209,7 @@ void sx1236_check_reg(SPIDriver * spip, uint8_t address, uint8_t checkval);
 void sx1236_write_carrier_freq(SPIDriver * spip, uint32_t carrier_hz, double fstep);
 void sx1236_set_freq_deviation(SPIDriver * spip, uint32_t freq_dev_hz, double fstep );
 void sx1236_set_bitrate(SPIDriver * spip, uint32_t fxosc, uint32_t bitrate );
-void sx1236_configure_rx(SPIDriver * spip, struct CONFIG_SX1236_RX * c);
+void sx1236_configure(SPIDriver * spip, config_sx1236 * c);
 
 #endif
 //! @}
