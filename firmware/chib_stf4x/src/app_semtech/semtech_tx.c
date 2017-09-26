@@ -117,7 +117,7 @@ void semtech_transmit_data(SPIDriver * spip, uint8_t * data)
 
 }
 
-void semtech_reset(){
+void semtech_reset(void){
 	
     palClearPort(GPIOA, 8);
     chThdSleep(100);
@@ -171,6 +171,8 @@ void semtech_listen(SPIDriver * spip) {
 void semtech_beacon(SPIDriver * spip, uint8_t payload){
 	//semtech_write(spip, transceiver.RegFifo);
 
+	(void)(payload);
+
 	//Set Beacon Mode
 	semtech_write(spip, transceiver.RegPacketConfig2, 0x48, 1);
 
@@ -188,5 +190,6 @@ void semtech_beacon(SPIDriver * spip, uint8_t payload){
 void semtech_continuous(SPIDriver * spip){
 	//Puts SX 1236 in continuous mode
 
+	(void)(spip);
 	
 }
