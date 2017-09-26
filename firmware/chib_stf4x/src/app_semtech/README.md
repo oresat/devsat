@@ -5,6 +5,12 @@ This app will drive the [development board for the SX1236](https://github.com/or
 ## Building
 
 ```
+ln -s main_rx.c OR main_tx.c to main.c
+ln -s semtech_rx.c OR semtech_tx.c to semtech.c
+```
+
+
+```
 $ make write
 ```
 
