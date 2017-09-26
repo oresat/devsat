@@ -41,10 +41,14 @@ EVENTSOURCE_DECL(DIO5_EVT);
 #define     F_XOSC                          (32000000U)
 #define     F_STEP                          ((double)(61.03515625)) //  (Fxosc/2^9)
 #define     APP_CARRIER_FREQ                (436500000U)
-#define     APP_FREQ_DEV                    (2500U)
+#define     APP_FREQ_DEV                    (20000U)
 
 // #define     APP_BITRATE                     (2400U)
-#define     APP_BITRATE                     (38400U)
+#define     APP_BITRATE                     (19200U)
+
+// RegPaConfig
+#define     PA_MAXPOWER                     ((uint8_t)(0x0))
+#define     PA_OUTPOWER                     ((uint8_t)(0x0))
 
 // RSSI Thresh
 #define     RSSI_THRESH                     ((uint8_t)(0x70U))
@@ -85,74 +89,59 @@ EVENTSOURCE_DECL(DIO5_EVT);
 // Structure to hold configuration for test
 static config_sx1236 dut_config ;
 
-static void init_rx_packet(config_sx1236 * s)
+// static void init_tx_packet(config_sx1236 * s)
+// {
+// }
+static void evan_config(void)
 {
-	s->Fxosc                        	= F_XOSC;
-	s->Fstep                        	= F_STEP;
-	s->carrier_freq                 	= APP_CARRIER_FREQ;
-	s->freq_dev_hz                  	= APP_FREQ_DEV;
-	s->bitrate                      	= APP_BITRATE;
 
-	sx1236_init_state(&s->sx1236_state); 
+// CLKOut = 4MHz
+	uint8_t val = 0x03;
+    sx1236_write(&SPID1, regaddrs.RegOsc, &val, 1);
+// Set power out (0x4F is default)
+//    sx1236_write(&SPID1, transceiver.RegPaConfig, 0x4F, 1);
+	val = 0x0;
+    sx1236_write(&SPID1, regaddrs.RegPaConfig, &val, 1);
+// Continuous mode
+	val = 0x0;
+    sx1236_write(&SPID1, regaddrs.RegPacketConfig2, &val, 1);
+    chThdSleepMilliseconds(50);
 
-	s->sx1236_state.RegOpMode          = SX1236_LOW_FREQ_MODE | SX1236_FSK_MODE | SX1236_STANDBY_MODE;
-	s->sx1236_state.RegPaRamp          = SX1236_NO_SHAPING;
-	s->sx1236_state.RegDioMapping1     = SX1236_DIO0_PAYLOAD_RDY | SX1236_DIO2_RX_RDY;
-	s->sx1236_state.RegDioMapping2     = SX1236_DIO4_RX_TIMEOUT;
-	s->sx1236_state.RegPacketConfig1   = SX1236_VARIABLE_PACKET;
-	s->sx1236_state.RegPacketConfig2   = SX1236_PACKET_MODE;
-	s->sx1236_state.RegPllLf           = SX1236_PLLBW_75KHZ;
-	s->sx1236_state.RegRssiThresh      = RSSI_THRESH;
-	s->sx1236_state.RegSyncConfig      = SX1236_SYNC_ON;
-	s->sx1236_state.RegSyncValue1      = SX1236_SYNCVALUE1;
-	s->sx1236_state.RegSyncValue2      = SX1236_SYNCVALUE2;
-	s->sx1236_state.RegSyncValue3      = SX1236_SYNCVALUE3;
-	s->sx1236_state.RegSyncValue4      = SX1236_SYNCVALUE4;
-	s->sx1236_state.RegSyncValue5      = SX1236_SYNCVALUE5;
-	s->sx1236_state.RegSyncValue6      = SX1236_SYNCVALUE6;
-	s->sx1236_state.RegSyncValue7      = SX1236_SYNCVALUE7;
-	s->sx1236_state.RegSyncValue8      = SX1236_SYNCVALUE8;
-	s->sx1236_state.RegSeqConfig1      = FromTransmit_RX | FromIdle_RX | LowPowerSelect_IDLE | FromStart_TO_RX | Idle_TO_STANDBY;
-	s->sx1236_state.RegSeqConfig2      = FromRX_PKT_RX_PLD_RDY | FromRX_Timeout_TO_RX_ST | FromPKT_RXD_TO_RX;
-	s->sx1236_state.RegPayloadLength   = PAYLOAD_LENGTH;
-	s->sx1236_state.RegFifoThresh      = FIFO_THRESH;
-	s->sx1236_state.RegRxConfig        = SX1236_AFC_AUTO_ON;
-	s->sx1236_state.RegAfcFei          = SX1236_AFC_AUTO_CLEAR_ON;
+// Sleep mode
+	val = 0x08;
+    sx1236_write(&SPID1, regaddrs.RegOpMode, &val, 1);
+    chThdSleepMilliseconds(10);
+
+// Stby mode
+	val = 0x09;
+    sx1236_write(&SPID1, regaddrs.RegOpMode, &val, 1);
+    chThdSleepMilliseconds(10);
+
+// FSTx mode
+	val = 0xa;
+    sx1236_write(&SPID1, regaddrs.RegOpMode, &val, 1);
+    chThdSleepMilliseconds(10);
+
+// regaddrs mode
+	val = 0x0b;
+    sx1236_write(&SPID1, regaddrs.RegOpMode, &val, 1);
+    chThdSleepMilliseconds(10);
+
+
 }
 
 static void init_tx_continuous(config_sx1236 * s)
 {
+
 	s->Fxosc                        	= F_XOSC;
 	s->Fstep                        	= F_STEP;
 	s->carrier_freq                 	= APP_CARRIER_FREQ;
 	s->freq_dev_hz                  	= APP_FREQ_DEV;
 	s->bitrate                      	= APP_BITRATE;
 
-	sx1236_init_state(&s->sx1236_state); 
+	sx1236_init_state(&s->sx1236_state);
 
 	s->sx1236_state.RegOpMode          = SX1236_LOW_FREQ_MODE | SX1236_FSK_MODE | SX1236_STANDBY_MODE;
-	s->sx1236_state.RegPaRamp          = SX1236_NO_SHAPING;
-	s->sx1236_state.RegDioMapping1     = SX1236_DIO0_PAYLOAD_RDY | SX1236_DIO2_RX_RDY;
-	s->sx1236_state.RegDioMapping2     = SX1236_DIO4_RX_TIMEOUT;
-	s->sx1236_state.RegPacketConfig1   = SX1236_VARIABLE_PACKET;
-	s->sx1236_state.RegPacketConfig2   = SX1236_CONTINUOUS_MODE;
-	s->sx1236_state.RegPllLf           = SX1236_PLLBW_75KHZ;
-	s->sx1236_state.RegRssiThresh      = RSSI_THRESH;
-	s->sx1236_state.RegSyncConfig      = SX1236_SYNC_ON;
-	s->sx1236_state.RegSyncValue1      = SX1236_SYNCVALUE1;
-	s->sx1236_state.RegSyncValue2      = SX1236_SYNCVALUE2;
-	s->sx1236_state.RegSyncValue3      = SX1236_SYNCVALUE3;
-	s->sx1236_state.RegSyncValue4      = SX1236_SYNCVALUE4;
-	s->sx1236_state.RegSyncValue5      = SX1236_SYNCVALUE5;
-	s->sx1236_state.RegSyncValue6      = SX1236_SYNCVALUE6;
-	s->sx1236_state.RegSyncValue7      = SX1236_SYNCVALUE7;
-	s->sx1236_state.RegSyncValue8      = SX1236_SYNCVALUE8;
-	s->sx1236_state.RegSeqConfig1      = FromTransmit_RX | FromIdle_RX | LowPowerSelect_IDLE | FromStart_TO_RX | Idle_TO_STANDBY;
-	s->sx1236_state.RegSeqConfig2      = FromRX_PKT_RX_PLD_RDY | FromRX_Timeout_TO_RX_ST | FromPKT_RXD_TO_RX;
-	s->sx1236_state.RegPayloadLength   = PAYLOAD_LENGTH;
-	s->sx1236_state.RegFifoThresh      = FIFO_THRESH;
-	s->sx1236_state.RegRxConfig        = SX1236_AFC_AUTO_ON;
-	s->sx1236_state.RegAfcFei          = SX1236_AFC_AUTO_CLEAR_ON;
 }
 
 static SerialConfig ser_cfg =
@@ -200,9 +189,6 @@ static void app_init(void)
 	        );
 
 	spiStart(&SPID1, &spicfg);
-
-	// RX Packet test
-	init_rx_packet(&dut_config);
 
 	chprintf(DEBUG_CHP, "Reset\r\n");
 	sx1236_reset() ;
@@ -289,17 +275,36 @@ static void main_loop(void)
 	chprintf(DEBUG_CHP, "\r\n");
 	sx1236_check_reg(&SPID1, regaddrs.RegVersion, 0x12);
 
+	// RX Packet test
+	init_tx_continuous(&dut_config);
 	sx1236_configure(&SPID1, &dut_config);
+
+	evan_config();
+
+	// dut_config.sx1236_state.RegPacketConfig2 = 0x0;
+	// sx1236_write_reg(&SPID1, regaddrs.RegPacketConfig2 ,	dut_config.sx1236_state.RegPacketConfig2 );
+	// chThdSleepMilliseconds(10);
+
+	// // Now we are in continuous mode
+
+	// // page 29  sleep-> stdby -> FSTx -> Transmit
+
+	// // Mask out the mode bits with 0xF8
+	// dut_config.sx1236_state.RegOpMode = (dut_config.sx1236_state.RegOpMode & SX1236_MODE_MASK) | SX1236_SLEEP_MODE;
+	// chThdSleepMilliseconds(10);
+	// dut_config.sx1236_state.RegOpMode = (dut_config.sx1236_state.RegOpMode & SX1236_MODE_MASK) | SX1236_STANDBY_MODE;
+
+	// chThdSleepMilliseconds(10);
+	// dut_config.sx1236_state.RegOpMode = (dut_config.sx1236_state.RegOpMode & SX1236_MODE_MASK) | SX1236_FS_MODE_TX;
+
+	// chThdSleepMilliseconds(10);
+	// dut_config.sx1236_state.RegOpMode = (dut_config.sx1236_state.RegOpMode & SX1236_MODE_MASK) | SX1236_TRANSMITTER_MODE;
 
 	while (true)
 	{
 		chThdSleepMilliseconds(500);
 		palTogglePad(GPIOA, GPIOA_SX_TESTOUT);
 		chprintf(DEBUG_CHP, ".");
-		// Start/restart the sequencer
-		sx1236_write_reg(&SPID1, regaddrs.RegSeqConfig1, dut_config.sx1236_state.RegSeqConfig1 | SEQ_START);
-		sx1236_check_reg(&SPID1, regaddrs.RegSeqConfig1, dut_config.sx1236_state.RegSeqConfig1);
-		// sx1236_check_reg(&SPID1, regaddrs.RegSeqConfig1, config_rx.RegSeqConfig1 );
 	}
 }
 

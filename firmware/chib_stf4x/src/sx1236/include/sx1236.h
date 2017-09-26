@@ -18,15 +18,16 @@
  * sx1231 RegOpMode
  * sx1231 Datasheet p 65
  */
+#define SX1236_MODE_MASK              ((uint8_t)(0xF8))
 #define SX1236_FSK_MODE              ((uint8_t)(0b00<<5))
 #define SX1236_LOW_FREQ_MODE         ((uint8_t)(0b01<<3))
 
-#define SX1236_SLEEP_MODE            ((uint8_t)(0b000<<2))
-#define SX1236_STANDBY_MODE          ((uint8_t)(0b001<<2))
-#define SX1236_FS_MODE_TX            ((uint8_t)(0b010<<2))
-#define SX1236_TRANSMITTER_MODE      ((uint8_t)(0b011<<2))
-#define SX1236_FS_MODE_RX            ((uint8_t)(0b100<<2))
-#define SX1236_RECEIVER_MODE         ((uint8_t)(0b101<<2))
+#define SX1236_SLEEP_MODE            ((uint8_t)(0b000<<0))
+#define SX1236_STANDBY_MODE          ((uint8_t)(0b001<<0))
+#define SX1236_FS_MODE_TX            ((uint8_t)(0b010<<0))
+#define SX1236_TRANSMITTER_MODE      ((uint8_t)(0b011<<0))
+#define SX1236_FS_MODE_RX            ((uint8_t)(0b100<<0))
+#define SX1236_RECEIVER_MODE         ((uint8_t)(0b101<<0))
 
 // RegPaRamp
 #define SX1236_NO_SHAPING            ((uint8_t)(0b00<<5))

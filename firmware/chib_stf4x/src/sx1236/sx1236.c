@@ -304,14 +304,14 @@ void sx1236_set_freq_deviation(SPIDriver * spip, uint32_t freq_dev_hz, double fs
 	freqdev          = (uint32_t)incr_rnd((freq_dev_hz / fstep), 0.1);
 
 	freqdev_msb      = (freqdev >> 8) & 0x3f;
-	freqdev_lsb      = freqdev      & 0xff;
+	freqdev_lsb      = freqdev        & 0xff;
 
 	sx_txbuff[0] = freqdev_msb;
 	sx_txbuff[1] = freqdev_lsb;
 
 	sx1236_write(spip, regaddrs.RegFdevMsb, sx_txbuff, 2);
-	// sx1236_check_reg(spip, regaddrs.RegFdevLsb, freqdev_lsb);
-	// sx1236_check_reg(spip, regaddrs.RegFdevMsb, freqdev_msb);
+	sx1236_check_reg(spip, regaddrs.RegFdevLsb, freqdev_lsb);
+	sx1236_check_reg(spip, regaddrs.RegFdevMsb, freqdev_msb);
 }
 
 void sx1236_set_bitrate(SPIDriver * spip, uint32_t fxosc, uint32_t bitrate )
