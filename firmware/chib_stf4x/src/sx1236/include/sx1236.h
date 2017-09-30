@@ -18,7 +18,7 @@
  * sx1231 RegOpMode
  * sx1231 Datasheet p 65
  */
-#define SX1236_MODE_MASK              ((uint8_t)(0xF8))
+#define SX1236_MODE_MASK             ((uint8_t)(0xF8))
 #define SX1236_FSK_MODE              ((uint8_t)(0b00<<5))
 #define SX1236_LOW_FREQ_MODE         ((uint8_t)(0b01<<3))
 
@@ -66,6 +66,12 @@
 
 // AfcFei
 #define SX1236_AFC_AUTO_CLEAR_ON     ((uint8_t)(0b1<<0))
+
+// Osc
+#define SX1236_OSC_DIV_1             ((uint8_t)(0b000<<0))
+#define SX1236_OSC_DIV_8             ((uint8_t)(0b011<<0))
+#define SX1236_OSC_OFF               ((uint8_t)(0b111<<0))
+
 /*
  * struct to hold transceiver register addresses
  */
@@ -151,6 +157,83 @@ struct SX1236
 
 };
 
+#define SEMTECH_REGISTERS\
+	X(RegFifo)\
+	X(RegOpMode)\
+	X(RegBitrateMsb)\
+	X(RegBitrateLsb)\
+	X(RegFdevMsb)\
+	X(RegFdevLsb)\
+	X(RegFrfMsb)\
+	X(RegFrfMid)\
+	X(RegFrfLsb)\
+	X(RegPaConfig)\
+	X(RegPaRamp)\
+	X(RegOcp)\
+	X(RegLna)\
+	X(RegRxConfig)\
+	X(RegRssiConfig)\
+	X(RegRssiCollision)\
+	X(RegRssiThresh)\
+	X(RegRssiValue)\
+	X(RegRxBw)\
+	X(RegAfcBw)\
+	X(RegOokPeak)\
+	X(RegOokFix)\
+	X(RegOokAvg)\
+	X(RegAfcFei)\
+	X(RegAfcMsb)\
+	X(RegAfcLsb)\
+	X(RegPreambleDetect)\
+	X(RegRxTimeout1)\
+	X(RegRxTimeout2)\
+	X(RegRxTimeout3)\
+	X(RegRxDelay)\
+	X(RegOsc)\
+	X(RegPreambleMsb)\
+	X(RegPreambleLsb)\
+	X(RegSyncConfig)\
+	X(RegSyncValue1)\
+	X(RegSyncValue2)\
+	X(RegSyncValue3)\
+	X(RegSyncValue4)\
+	X(RegSyncValue5)\
+	X(RegSyncValue6)\
+	X(RegSyncValue7)\
+	X(RegSyncValue8)\
+	X(RegPacketConfig1)\
+	X(RegPacketConfig2)\
+	X(RegPayloadLength)\
+	X(RegNodeAdrs)\
+	X(RegBroadcastAdrs)\
+	X(RegFifoThresh)\
+	X(RegSeqConfig1)\
+	X(RegSeqConfig2)\
+	X(RegTimerResol)\
+	X(RegTimer1Coef)\
+	X(RegTimer2Coef)\
+	X(RegImageCal)\
+	X(RegTemp)\
+	X(RegLowBat)\
+	X(RegIrqFlags1)\
+	X(RegIrqFlags2)\
+	X(RegDioMapping1)\
+	X(RegDioMapping2)\
+	X(RegVersion)\
+	X(RegPllHop)\
+	X(RegTcxo)\
+	X(RegPaDac)\
+	X(RegFormerTemp)\
+	X(RegBitRateFrac)\
+	X(RegAgcRef)\
+	X(RegAgcThresh1)\
+	X(RegAgcThresh2)\
+	X(RegAgcThresh3)\
+	X(RegPllLf)
+
+
+
+
 typedef struct _CONFIG_SX1236
 {
 	// Constants
@@ -199,6 +282,7 @@ extern uint8_t sx_rxbuff[MAX_SX_BUFF];
 #define CrcOk            (1 << 1)
 #define LowBat           (1 << 0)
 
+void sx1236_print_regs(SPIDriver * spip) ;
 void sx1236_init_state(struct SX1236 * s) ;
 void sx1236_reset(void) ;
 
@@ -207,10 +291,12 @@ uint8_t sx1236_read_reg(SPIDriver * spip, uint8_t address) ;
 void sx1236_write(SPIDriver * spip, uint8_t address, uint8_t * tx_buf, uint8_t n);
 void sx1236_write_reg(SPIDriver * spip, uint8_t address, uint8_t newval);
 void sx1236_check_reg(SPIDriver * spip, uint8_t address, uint8_t checkval);
-void sx1236_write_carrier_freq(SPIDriver * spip, uint32_t carrier_hz, double fstep);
-void sx1236_set_freq_deviation(SPIDriver * spip, uint32_t freq_dev_hz, double fstep );
-void sx1236_set_bitrate(SPIDriver * spip, uint32_t fxosc, uint32_t bitrate );
+
 void sx1236_configure(SPIDriver * spip, config_sx1236 * c);
+
+void sx1236_write_carrier_freq(SPIDriver * spip, config_sx1236 * c);
+void sx1236_set_freq_deviation(SPIDriver * spip, config_sx1236 * c);
+void sx1236_set_bitrate(SPIDriver * spip, config_sx1236 * c);
 
 #endif
 //! @}

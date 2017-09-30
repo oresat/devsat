@@ -39,11 +39,11 @@ EVENTSOURCE_DECL(DIO5_EVT);
 #define     DEBUG_CHP                       ((BaseSequentialStream *) &DEBUG_SERIAL)
 
 #define     F_XOSC                          (32000000U)
-#define     F_STEP                          ((double)(61.03515625)) //  (Fxosc/2^9)
+#define     F_STEP                          ((double)(61.03515625)) //  (Fxosc/2^19)
 #define     APP_CARRIER_FREQ                (436500000U)
 #define     APP_FREQ_DEV                    (20000U)
 
-// #define     APP_BITRATE                     (2400U)
+// #define     APP_BITRATE                     (4800)
 #define     APP_BITRATE                     (19200U)
 
 // RegPaConfig
@@ -89,59 +89,31 @@ EVENTSOURCE_DECL(DIO5_EVT);
 // Structure to hold configuration for test
 static config_sx1236 dut_config ;
 
+// static void init_rx_packet(config_sx1236 * s)
+// {
+// }
+
+// static void init_rx_continuous(config_sx1236 * s)
+// {
+// }
+
 // static void init_tx_packet(config_sx1236 * s)
 // {
 // }
-static void evan_config(void)
-{
-
-// CLKOut = 4MHz
-	uint8_t val = 0x03;
-    sx1236_write(&SPID1, regaddrs.RegOsc, &val, 1);
-// Set power out (0x4F is default)
-//    sx1236_write(&SPID1, transceiver.RegPaConfig, 0x4F, 1);
-	val = 0x0;
-    sx1236_write(&SPID1, regaddrs.RegPaConfig, &val, 1);
-// Continuous mode
-	val = 0x0;
-    sx1236_write(&SPID1, regaddrs.RegPacketConfig2, &val, 1);
-    chThdSleepMilliseconds(50);
-
-// Sleep mode
-	val = 0x08;
-    sx1236_write(&SPID1, regaddrs.RegOpMode, &val, 1);
-    chThdSleepMilliseconds(10);
-
-// Stby mode
-	val = 0x09;
-    sx1236_write(&SPID1, regaddrs.RegOpMode, &val, 1);
-    chThdSleepMilliseconds(10);
-
-// FSTx mode
-	val = 0xa;
-    sx1236_write(&SPID1, regaddrs.RegOpMode, &val, 1);
-    chThdSleepMilliseconds(10);
-
-// regaddrs mode
-	val = 0x0b;
-    sx1236_write(&SPID1, regaddrs.RegOpMode, &val, 1);
-    chThdSleepMilliseconds(10);
-
-
-}
 
 static void init_tx_continuous(config_sx1236 * s)
 {
-
-	s->Fxosc                        	= F_XOSC;
-	s->Fstep                        	= F_STEP;
-	s->carrier_freq                 	= APP_CARRIER_FREQ;
-	s->freq_dev_hz                  	= APP_FREQ_DEV;
-	s->bitrate                      	= APP_BITRATE;
+	s->Fxosc                            = F_XOSC;
+	s->Fstep                            = F_STEP;
+	s->carrier_freq                     = APP_CARRIER_FREQ;
+	s->freq_dev_hz                      = APP_FREQ_DEV;
+	s->bitrate                          = APP_BITRATE;
 
 	sx1236_init_state(&s->sx1236_state);
 
-	s->sx1236_state.RegOpMode          = SX1236_LOW_FREQ_MODE | SX1236_FSK_MODE | SX1236_STANDBY_MODE;
+	s->sx1236_state.RegOpMode          = 0x0 | SX1236_LOW_FREQ_MODE | SX1236_FSK_MODE |  SX1236_TRANSMITTER_MODE ;
+	s->sx1236_state.RegOsc             = 0x0 | SX1236_OSC_DIV_8 ;
+	s->sx1236_state.RegPacketConfig2   = 0x0 | SX1236_CONTINUOUS_MODE ;
 }
 
 static SerialConfig ser_cfg =
@@ -275,30 +247,11 @@ static void main_loop(void)
 	chprintf(DEBUG_CHP, "\r\n");
 	sx1236_check_reg(&SPID1, regaddrs.RegVersion, 0x12);
 
-	// RX Packet test
 	init_tx_continuous(&dut_config);
 	sx1236_configure(&SPID1, &dut_config);
 
-	evan_config();
-
-	// dut_config.sx1236_state.RegPacketConfig2 = 0x0;
-	// sx1236_write_reg(&SPID1, regaddrs.RegPacketConfig2 ,	dut_config.sx1236_state.RegPacketConfig2 );
-	// chThdSleepMilliseconds(10);
-
-	// // Now we are in continuous mode
-
-	// // page 29  sleep-> stdby -> FSTx -> Transmit
-
-	// // Mask out the mode bits with 0xF8
-	// dut_config.sx1236_state.RegOpMode = (dut_config.sx1236_state.RegOpMode & SX1236_MODE_MASK) | SX1236_SLEEP_MODE;
-	// chThdSleepMilliseconds(10);
-	// dut_config.sx1236_state.RegOpMode = (dut_config.sx1236_state.RegOpMode & SX1236_MODE_MASK) | SX1236_STANDBY_MODE;
-
-	// chThdSleepMilliseconds(10);
-	// dut_config.sx1236_state.RegOpMode = (dut_config.sx1236_state.RegOpMode & SX1236_MODE_MASK) | SX1236_FS_MODE_TX;
-
-	// chThdSleepMilliseconds(10);
-	// dut_config.sx1236_state.RegOpMode = (dut_config.sx1236_state.RegOpMode & SX1236_MODE_MASK) | SX1236_TRANSMITTER_MODE;
+	// chprintf(DEBUG_CHP, "**INFO**\r\n");
+	// sx1236_print_regs(&SPID1);
 
 	while (true)
 	{

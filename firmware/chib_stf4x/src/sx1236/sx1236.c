@@ -206,6 +206,19 @@ struct SX1236 POR_defaults =
 	.RegPllLf           = 0xD0
 };
 
+void sx1236_print_regs(SPIDriver * spip)
+{
+	/* Dumps all registers to serial out */
+
+#define X(SXreg) chprintf(DEBUG_CHP, "%s: \t\t\t %x\t Default:\t %x \r\n",\
+                          #SXreg, sx1236_read_reg(spip, regaddrs.SXreg), POR_defaults.SXreg);
+	SEMTECH_REGISTERS
+#undef X
+
+	chprintf(DEBUG_CHP, "\n\n\n");
+}
+
+
 /* sx1236 Manual reset spec
    7.2.2.  Manual Reset
     A manual reset of the SX1236 is possible even for applications in which VDD
@@ -271,241 +284,231 @@ void sx1236_check_reg(SPIDriver * spip, uint8_t address, uint8_t checkval)
 	{
 		chprintf(DEBUG_CHP, "%s:%d\tReg:\t0x%x\tGot:\t0x%x not 0x%x\r\n",  __FILE__, __LINE__, address,  sx_rxbuff[0], checkval);
 	}
-	chprintf(DEBUG_CHP, "Reg:\t0x%x set to:\t0x%x\r\n",  address,  sx_rxbuff[0]);
+	// chprintf(DEBUG_CHP, "Reg:\t0x%x set to:\t0x%x\r\n",  address,  sx_rxbuff[0]);
 }
 
-void sx1236_write_carrier_freq(SPIDriver * spip, uint32_t carrier_hz, double fstep)
+void sx1236_write_carrier_freq(SPIDriver * spip, config_sx1236 * c)
 {
-	uint32_t frf      = 0.0;
-	uint8_t  frf_msb  = 0;
-	uint8_t  frf_mid  = 0;
-	uint8_t  frf_lsb  = 0;
+	uint32_t frf      = 0;
 
-	frf          = (uint32_t)incr_rnd((carrier_hz / fstep), 0.1);
+	frf               = (uint32_t)incr_rnd(((1.0 * c->carrier_freq) / c->Fstep ), 1);
 
-	frf_msb      = (frf >> 16) & 0xff;
-	frf_mid      = (frf >> 8)  & 0xff;
-	frf_lsb      = frf         & 0xff;
+	c->sx1236_state.RegFrfMsb      = (frf >> 16) & 0xff;
+	c->sx1236_state.RegFrfMid      = (frf >> 8)  & 0xff;
+	c->sx1236_state.RegFrfLsb      = frf         & 0xff;
 
-	sx_txbuff[0] = frf_msb;
-	sx_txbuff[1] = frf_mid;
-	sx_txbuff[2] = frf_lsb;
+	sx_txbuff[0]                   = c->sx1236_state.RegFrfMsb;
+	sx_txbuff[1]                   = c->sx1236_state.RegFrfMid;
+	sx_txbuff[2]                   = c->sx1236_state.RegFrfLsb;
 
 	sx1236_write(spip, regaddrs.RegFrfMsb, sx_txbuff, 3);
 }
 
-void sx1236_set_freq_deviation(SPIDriver * spip, uint32_t freq_dev_hz, double fstep )
+void sx1236_set_freq_deviation(SPIDriver * spip, config_sx1236 * c)
 {
 	uint32_t    freqdev      = 0;
 
-	uint8_t     freqdev_msb  = 0;
-	uint8_t     freqdev_lsb  = 0;
+	freqdev          = (uint32_t)incr_rnd((1.0 * c->freq_dev_hz / c->Fstep), 1);
 
-	freqdev          = (uint32_t)incr_rnd((freq_dev_hz / fstep), 0.1);
+	c->sx1236_state.RegFdevMsb      = (freqdev >> 8) & 0x3f;
+	c->sx1236_state.RegFdevLsb      = freqdev        & 0xff;
 
-	freqdev_msb      = (freqdev >> 8) & 0x3f;
-	freqdev_lsb      = freqdev        & 0xff;
+	sx_txbuff[0] = c->sx1236_state.RegFdevMsb;
+	sx_txbuff[1] = c->sx1236_state.RegFdevLsb;
 
-	sx_txbuff[0] = freqdev_msb;
-	sx_txbuff[1] = freqdev_lsb;
-
-	sx1236_write(spip, regaddrs.RegFdevMsb, sx_txbuff, 2);
-	sx1236_check_reg(spip, regaddrs.RegFdevLsb, freqdev_lsb);
-	sx1236_check_reg(spip, regaddrs.RegFdevMsb, freqdev_msb);
+	sx1236_write(    spip, regaddrs.RegFdevMsb, sx_txbuff,   2);
+	sx1236_check_reg(spip, regaddrs.RegFdevMsb, c->sx1236_state.RegFdevMsb);
+	sx1236_check_reg(spip, regaddrs.RegFdevLsb,  c->sx1236_state.RegFdevLsb);
 }
 
-void sx1236_set_bitrate(SPIDriver * spip, uint32_t fxosc, uint32_t bitrate )
+void sx1236_set_bitrate(SPIDriver * spip, config_sx1236 * c)
 {
 	uint32_t    rate         = 0;
 
-	uint8_t     bitrate_msb  = 0;
-	uint8_t     bitrate_lsb  = 0;
+	rate             = (uint32_t)incr_rnd(((1.0 * c->Fxosc) / c->bitrate), 1);
 
-	rate             = (uint32_t)incr_rnd((fxosc / bitrate), 0.1);
+	c->sx1236_state.RegBitrateMsb = (rate >> 8) & 0x3f;
+	c->sx1236_state.RegBitrateLsb = rate        & 0xff;
 
-	bitrate_msb      = (rate >> 8) & 0x3f;
-	chprintf(DEBUG_CHP, "bitrate_msb: 0x%x\r\n", bitrate_msb);
-	bitrate_lsb      = rate        & 0xff;
-	chprintf(DEBUG_CHP, "bitrate_lsb: 0x%x\r\n", bitrate_lsb);
-
-	sx_txbuff[0]     = bitrate_msb;
-	sx_txbuff[1]     = bitrate_lsb;
+	sx_txbuff[0]     = c->sx1236_state.RegBitrateMsb;
+	sx_txbuff[1]     = c->sx1236_state.RegBitrateLsb;
 
 	sx1236_write(spip, regaddrs.RegBitrateMsb, sx_txbuff, 2);
-	// sx1236_check_reg(spip, regaddrs.RegBitrateLsb, bitrate_lsb);
-	// sx1236_check_reg(spip, regaddrs.RegBitrateMsb, bitrate_msb);
+
+	sx1236_check_reg(spip, regaddrs.RegBitrateMsb, c->sx1236_state.RegBitrateMsb);
+	sx1236_check_reg(spip, regaddrs.RegBitrateLsb, c->sx1236_state.RegBitrateLsb);
 }
 
-/* 
+/*
  * Set an SX1236 struct to POR state
  * (This is just a struct deep copy.)
  */
-void sx1236_init_state(struct SX1236 * s) {
+void sx1236_init_state(struct SX1236 * s)
+{
 	s->RegFifo            = POR_defaults.RegFifo;
-    s->RegOpMode          = POR_defaults.RegOpMode;
-    s->RegBitrateMsb      = POR_defaults.RegBitrateMsb;
-    s->RegBitrateLsb      = POR_defaults.RegBitrateLsb;
-    s->RegFdevMsb         = POR_defaults.RegFdevMsb;
-    s->RegFdevLsb         = POR_defaults.RegFdevLsb;
-    s->RegFrfMsb          = POR_defaults.RegFrfMsb;
-    s->RegFrfMid          = POR_defaults.RegFrfMid;
-    s->RegFrfLsb          = POR_defaults.RegFrfLsb;
-    s->RegPaConfig        = POR_defaults.RegPaConfig;
-    s->RegPaRamp          = POR_defaults.RegPaRamp;
-    s->RegOcp             = POR_defaults.RegOcp;
-    s->RegLna             = POR_defaults.RegLna;
-    s->RegRxConfig        = POR_defaults.RegRxConfig;
-    s->RegRssiConfig      = POR_defaults.RegRssiConfig;
-    s->RegRssiCollision   = POR_defaults.RegRssiCollision;
-    s->RegRssiThresh      = POR_defaults.RegRssiThresh;
-    s->RegRssiValue       = POR_defaults.RegRssiValue;
-    s->RegRxBw            = POR_defaults.RegRxBw;
-    s->RegAfcBw           = POR_defaults.RegAfcBw;
-    s->RegOokPeak         = POR_defaults.RegOokPeak;
-    s->RegOokFix          = POR_defaults.RegOokFix;
-    s->RegOokAvg          = POR_defaults.RegOokAvg;
-    s->RegAfcFei          = POR_defaults.RegAfcFei;
-    s->RegAfcMsb          = POR_defaults.RegAfcMsb;
-    s->RegAfcLsb          = POR_defaults.RegAfcLsb;
-    s->RegFeiMsb          = POR_defaults.RegFeiMsb;
-    s->RegFeiLsb          = POR_defaults.RegFeiLsb;
-    s->RegPreambleDetect  = POR_defaults.RegPreambleDetect;
-    s->RegRxTimeout1      = POR_defaults.RegRxTimeout1;
-    s->RegRxTimeout2      = POR_defaults.RegRxTimeout2;
-    s->RegRxTimeout3      = POR_defaults.RegRxTimeout3;
-    s->RegRxDelay         = POR_defaults.RegRxDelay;
-    s->RegOsc             = POR_defaults.RegOsc;
-    s->RegPreambleMsb     = POR_defaults.RegPreambleMsb;
-    s->RegPreambleLsb     = POR_defaults.RegPreambleLsb;
-    s->RegSyncConfig      = POR_defaults.RegSyncConfig;
-    s->RegSyncValue1      = POR_defaults.RegSyncValue1;
-    s->RegSyncValue2      = POR_defaults.RegSyncValue2;
-    s->RegSyncValue3      = POR_defaults.RegSyncValue3;
-    s->RegSyncValue4      = POR_defaults.RegSyncValue4;
-    s->RegSyncValue5      = POR_defaults.RegSyncValue5;
-    s->RegSyncValue6      = POR_defaults.RegSyncValue6;
-    s->RegSyncValue7      = POR_defaults.RegSyncValue7;
-    s->RegSyncValue8      = POR_defaults.RegSyncValue8;
-    s->RegPacketConfig1   = POR_defaults.RegPacketConfig1;
-    s->RegPacketConfig2   = POR_defaults.RegPacketConfig2;
-    s->RegPayloadLength   = POR_defaults.RegPayloadLength;
-    s->RegNodeAdrs        = POR_defaults.RegNodeAdrs;
-    s->RegBroadcastAdrs   = POR_defaults.RegBroadcastAdrs;
-    s->RegFifoThresh      = POR_defaults.RegFifoThresh;
-    s->RegSeqConfig1      = POR_defaults.RegSeqConfig1;
-    s->RegSeqConfig2      = POR_defaults.RegSeqConfig2;
-    s->RegTimerResol      = POR_defaults.RegTimerResol;
-    s->RegTimer1Coef      = POR_defaults.RegTimer1Coef;
-    s->RegTimer2Coef      = POR_defaults.RegTimer2Coef;
-    s->RegImageCal        = POR_defaults.RegImageCal;
-    s->RegTemp            = POR_defaults.RegTemp;
-    s->RegLowBat          = POR_defaults.RegLowBat;
-    s->RegIrqFlags1       = POR_defaults.RegIrqFlags1;
-    s->RegIrqFlags2       = POR_defaults.RegIrqFlags2;
-    s->RegDioMapping1     = POR_defaults.RegDioMapping1;
-    s->RegDioMapping2     = POR_defaults.RegDioMapping2;
-    s->RegVersion         = POR_defaults.RegVersion;
-    s->RegPllHop          = POR_defaults.RegPllHop;
-    s->RegTcxo            = POR_defaults.RegTcxo;
-    s->RegPaDac           = POR_defaults.RegPaDac;
-    s->RegFormerTemp      = POR_defaults.RegFormerTemp;
-    s->RegBitRateFrac     = POR_defaults.RegBitRateFrac;
-    s->RegAgcRef          = POR_defaults.RegAgcRef;
-    s->RegAgcThresh1      = POR_defaults.RegAgcThresh1;
-    s->RegAgcThresh2      = POR_defaults.RegAgcThresh2;
-    s->RegAgcThresh3      = POR_defaults.RegAgcThresh3;
-    s->RegPllLf           = POR_defaults.RegPllLf;
+	s->RegOpMode          = POR_defaults.RegOpMode;
+	s->RegBitrateMsb      = POR_defaults.RegBitrateMsb;
+	s->RegBitrateLsb      = POR_defaults.RegBitrateLsb;
+	s->RegFdevMsb         = POR_defaults.RegFdevMsb;
+	s->RegFdevLsb         = POR_defaults.RegFdevLsb;
+	s->RegFrfMsb          = POR_defaults.RegFrfMsb;
+	s->RegFrfMid          = POR_defaults.RegFrfMid;
+	s->RegFrfLsb          = POR_defaults.RegFrfLsb;
+	s->RegPaConfig        = POR_defaults.RegPaConfig;
+	s->RegPaRamp          = POR_defaults.RegPaRamp;
+	s->RegOcp             = POR_defaults.RegOcp;
+	s->RegLna             = POR_defaults.RegLna;
+	s->RegRxConfig        = POR_defaults.RegRxConfig;
+	s->RegRssiConfig      = POR_defaults.RegRssiConfig;
+	s->RegRssiCollision   = POR_defaults.RegRssiCollision;
+	s->RegRssiThresh      = POR_defaults.RegRssiThresh;
+	s->RegRssiValue       = POR_defaults.RegRssiValue;
+	s->RegRxBw            = POR_defaults.RegRxBw;
+	s->RegAfcBw           = POR_defaults.RegAfcBw;
+	s->RegOokPeak         = POR_defaults.RegOokPeak;
+	s->RegOokFix          = POR_defaults.RegOokFix;
+	s->RegOokAvg          = POR_defaults.RegOokAvg;
+	s->RegAfcFei          = POR_defaults.RegAfcFei;
+	s->RegAfcMsb          = POR_defaults.RegAfcMsb;
+	s->RegAfcLsb          = POR_defaults.RegAfcLsb;
+	s->RegFeiMsb          = POR_defaults.RegFeiMsb;
+	s->RegFeiLsb          = POR_defaults.RegFeiLsb;
+	s->RegPreambleDetect  = POR_defaults.RegPreambleDetect;
+	s->RegRxTimeout1      = POR_defaults.RegRxTimeout1;
+	s->RegRxTimeout2      = POR_defaults.RegRxTimeout2;
+	s->RegRxTimeout3      = POR_defaults.RegRxTimeout3;
+	s->RegRxDelay         = POR_defaults.RegRxDelay;
+	s->RegOsc             = POR_defaults.RegOsc;
+	s->RegPreambleMsb     = POR_defaults.RegPreambleMsb;
+	s->RegPreambleLsb     = POR_defaults.RegPreambleLsb;
+	s->RegSyncConfig      = POR_defaults.RegSyncConfig;
+	s->RegSyncValue1      = POR_defaults.RegSyncValue1;
+	s->RegSyncValue2      = POR_defaults.RegSyncValue2;
+	s->RegSyncValue3      = POR_defaults.RegSyncValue3;
+	s->RegSyncValue4      = POR_defaults.RegSyncValue4;
+	s->RegSyncValue5      = POR_defaults.RegSyncValue5;
+	s->RegSyncValue6      = POR_defaults.RegSyncValue6;
+	s->RegSyncValue7      = POR_defaults.RegSyncValue7;
+	s->RegSyncValue8      = POR_defaults.RegSyncValue8;
+	s->RegPacketConfig1   = POR_defaults.RegPacketConfig1;
+	s->RegPacketConfig2   = POR_defaults.RegPacketConfig2;
+	s->RegPayloadLength   = POR_defaults.RegPayloadLength;
+	s->RegNodeAdrs        = POR_defaults.RegNodeAdrs;
+	s->RegBroadcastAdrs   = POR_defaults.RegBroadcastAdrs;
+	s->RegFifoThresh      = POR_defaults.RegFifoThresh;
+	s->RegSeqConfig1      = POR_defaults.RegSeqConfig1;
+	s->RegSeqConfig2      = POR_defaults.RegSeqConfig2;
+	s->RegTimerResol      = POR_defaults.RegTimerResol;
+	s->RegTimer1Coef      = POR_defaults.RegTimer1Coef;
+	s->RegTimer2Coef      = POR_defaults.RegTimer2Coef;
+	s->RegImageCal        = POR_defaults.RegImageCal;
+	s->RegTemp            = POR_defaults.RegTemp;
+	s->RegLowBat          = POR_defaults.RegLowBat;
+	s->RegIrqFlags1       = POR_defaults.RegIrqFlags1;
+	s->RegIrqFlags2       = POR_defaults.RegIrqFlags2;
+	s->RegDioMapping1     = POR_defaults.RegDioMapping1;
+	s->RegDioMapping2     = POR_defaults.RegDioMapping2;
+	s->RegVersion         = POR_defaults.RegVersion;
+	s->RegPllHop          = POR_defaults.RegPllHop;
+	s->RegTcxo            = POR_defaults.RegTcxo;
+	s->RegPaDac           = POR_defaults.RegPaDac;
+	s->RegFormerTemp      = POR_defaults.RegFormerTemp;
+	s->RegBitRateFrac     = POR_defaults.RegBitRateFrac;
+	s->RegAgcRef          = POR_defaults.RegAgcRef;
+	s->RegAgcThresh1      = POR_defaults.RegAgcThresh1;
+	s->RegAgcThresh2      = POR_defaults.RegAgcThresh2;
+	s->RegAgcThresh3      = POR_defaults.RegAgcThresh3;
+	s->RegPllLf           = POR_defaults.RegPllLf;
 };
 
 /*
  * Configure to a state given in a config_sx1236 structure
- * 
+ *
  * Could have multiple state setups for tx, rx, tx_packet, rx_packet etc...
  */
 void sx1236_configure(SPIDriver * spip, config_sx1236 * c)
 {
-	sx1236_write_reg(spip,          regaddrs.RegOpMode, c->sx1236_state.RegOpMode);
-	sx1236_write_carrier_freq(spip, c->carrier_freq,    c->Fstep);
-	sx1236_set_freq_deviation(spip, c->freq_dev_hz,     c->Fstep );
-	sx1236_set_bitrate(spip,        c->Fxosc,           c->bitrate);
+	sx1236_write_carrier_freq(spip, c);
+	sx1236_set_freq_deviation(spip, c);
+	sx1236_set_bitrate(spip, c);
 
-	sx1236_write_reg(spip, regaddrs.RegFifo          ,	c->sx1236_state.RegFifo          ); 
-	sx1236_write_reg(spip, regaddrs.RegOpMode        ,	c->sx1236_state.RegOpMode        ); 
-	sx1236_write_reg(spip, regaddrs.RegBitrateMsb    ,	c->sx1236_state.RegBitrateMsb    ); 
-	sx1236_write_reg(spip, regaddrs.RegBitrateLsb    ,	c->sx1236_state.RegBitrateLsb    ); 
-	sx1236_write_reg(spip, regaddrs.RegFdevMsb       ,	c->sx1236_state.RegFdevMsb       ); 
-	sx1236_write_reg(spip, regaddrs.RegFdevLsb       ,	c->sx1236_state.RegFdevLsb       ); 
-	sx1236_write_reg(spip, regaddrs.RegFrfMsb        ,	c->sx1236_state.RegFrfMsb        ); 
-	sx1236_write_reg(spip, regaddrs.RegFrfMid        ,	c->sx1236_state.RegFrfMid        ); 
-	sx1236_write_reg(spip, regaddrs.RegFrfLsb        ,	c->sx1236_state.RegFrfLsb        ); 
-	sx1236_write_reg(spip, regaddrs.RegPaConfig      ,	c->sx1236_state.RegPaConfig      ); 
-	sx1236_write_reg(spip, regaddrs.RegPaRamp        ,	c->sx1236_state.RegPaRamp        ); 
-	sx1236_write_reg(spip, regaddrs.RegOcp           ,	c->sx1236_state.RegOcp           ); 
-	sx1236_write_reg(spip, regaddrs.RegLna           ,	c->sx1236_state.RegLna           ); 
-	sx1236_write_reg(spip, regaddrs.RegRxConfig      ,	c->sx1236_state.RegRxConfig      ); 
-	sx1236_write_reg(spip, regaddrs.RegRssiConfig    ,	c->sx1236_state.RegRssiConfig    ); 
-	sx1236_write_reg(spip, regaddrs.RegRssiCollision ,	c->sx1236_state.RegRssiCollision ); 
-	sx1236_write_reg(spip, regaddrs.RegRssiThresh    ,	c->sx1236_state.RegRssiThresh    ); 
-	sx1236_write_reg(spip, regaddrs.RegRssiValue     ,	c->sx1236_state.RegRssiValue     ); 
-	sx1236_write_reg(spip, regaddrs.RegRxBw          ,	c->sx1236_state.RegRxBw          ); 
-	sx1236_write_reg(spip, regaddrs.RegAfcBw         ,	c->sx1236_state.RegAfcBw         ); 
-	sx1236_write_reg(spip, regaddrs.RegOokPeak       ,	c->sx1236_state.RegOokPeak       ); 
-	sx1236_write_reg(spip, regaddrs.RegOokFix        ,	c->sx1236_state.RegOokFix        ); 
-	sx1236_write_reg(spip, regaddrs.RegOokAvg        ,	c->sx1236_state.RegOokAvg        ); 
-	sx1236_write_reg(spip, regaddrs.RegAfcFei        ,	c->sx1236_state.RegAfcFei        ); 
-	sx1236_write_reg(spip, regaddrs.RegAfcMsb        ,	c->sx1236_state.RegAfcMsb        ); 
-	sx1236_write_reg(spip, regaddrs.RegAfcLsb        ,	c->sx1236_state.RegAfcLsb        ); 
-	sx1236_write_reg(spip, regaddrs.RegFeiMsb        ,	c->sx1236_state.RegFeiMsb        ); 
-	sx1236_write_reg(spip, regaddrs.RegFeiLsb        ,	c->sx1236_state.RegFeiLsb        ); 
-	sx1236_write_reg(spip, regaddrs.RegPreambleDetect,	c->sx1236_state.RegPreambleDetect); 
-	sx1236_write_reg(spip, regaddrs.RegRxTimeout1    ,	c->sx1236_state.RegRxTimeout1    ); 
-	sx1236_write_reg(spip, regaddrs.RegRxTimeout2    ,	c->sx1236_state.RegRxTimeout2    ); 
-	sx1236_write_reg(spip, regaddrs.RegRxTimeout3    ,	c->sx1236_state.RegRxTimeout3    ); 
-	sx1236_write_reg(spip, regaddrs.RegRxDelay       ,	c->sx1236_state.RegRxDelay       ); 
-	sx1236_write_reg(spip, regaddrs.RegOsc           ,	c->sx1236_state.RegOsc           ); 
-	sx1236_write_reg(spip, regaddrs.RegPreambleMsb   ,	c->sx1236_state.RegPreambleMsb   ); 
-	sx1236_write_reg(spip, regaddrs.RegPreambleLsb   ,	c->sx1236_state.RegPreambleLsb   ); 
-	sx1236_write_reg(spip, regaddrs.RegSyncConfig    ,	c->sx1236_state.RegSyncConfig    ); 
-	sx1236_write_reg(spip, regaddrs.RegSyncValue1    ,	c->sx1236_state.RegSyncValue1    ); 
-	sx1236_write_reg(spip, regaddrs.RegSyncValue2    ,	c->sx1236_state.RegSyncValue2    ); 
-	sx1236_write_reg(spip, regaddrs.RegSyncValue3    ,	c->sx1236_state.RegSyncValue3    ); 
-	sx1236_write_reg(spip, regaddrs.RegSyncValue4    ,	c->sx1236_state.RegSyncValue4    ); 
-	sx1236_write_reg(spip, regaddrs.RegSyncValue5    ,	c->sx1236_state.RegSyncValue5    ); 
-	sx1236_write_reg(spip, regaddrs.RegSyncValue6    ,	c->sx1236_state.RegSyncValue6    ); 
-	sx1236_write_reg(spip, regaddrs.RegSyncValue7    ,	c->sx1236_state.RegSyncValue7    ); 
-	sx1236_write_reg(spip, regaddrs.RegSyncValue8    ,	c->sx1236_state.RegSyncValue8    ); 
-	sx1236_write_reg(spip, regaddrs.RegPacketConfig1 ,	c->sx1236_state.RegPacketConfig1 ); 
-	sx1236_write_reg(spip, regaddrs.RegPacketConfig2 ,	c->sx1236_state.RegPacketConfig2 ); 
-	sx1236_write_reg(spip, regaddrs.RegPayloadLength ,	c->sx1236_state.RegPayloadLength ); 
-	sx1236_write_reg(spip, regaddrs.RegNodeAdrs      ,	c->sx1236_state.RegNodeAdrs      ); 
-	sx1236_write_reg(spip, regaddrs.RegBroadcastAdrs ,	c->sx1236_state.RegBroadcastAdrs ); 
-	sx1236_write_reg(spip, regaddrs.RegFifoThresh    ,	c->sx1236_state.RegFifoThresh    ); 
-	sx1236_write_reg(spip, regaddrs.RegSeqConfig1    ,	c->sx1236_state.RegSeqConfig1    ); 
-	sx1236_write_reg(spip, regaddrs.RegSeqConfig2    ,	c->sx1236_state.RegSeqConfig2    ); 
-	sx1236_write_reg(spip, regaddrs.RegTimerResol    ,	c->sx1236_state.RegTimerResol    ); 
-	sx1236_write_reg(spip, regaddrs.RegTimer1Coef    ,	c->sx1236_state.RegTimer1Coef    ); 
-	sx1236_write_reg(spip, regaddrs.RegTimer2Coef    ,	c->sx1236_state.RegTimer2Coef    ); 
-	sx1236_write_reg(spip, regaddrs.RegImageCal      ,	c->sx1236_state.RegImageCal      ); 
-	sx1236_write_reg(spip, regaddrs.RegTemp          ,	c->sx1236_state.RegTemp          ); 
-	sx1236_write_reg(spip, regaddrs.RegLowBat        ,	c->sx1236_state.RegLowBat        ); 
-	sx1236_write_reg(spip, regaddrs.RegIrqFlags1     ,	c->sx1236_state.RegIrqFlags1     ); 
-	sx1236_write_reg(spip, regaddrs.RegIrqFlags2     ,	c->sx1236_state.RegIrqFlags2     ); 
-	sx1236_write_reg(spip, regaddrs.RegDioMapping1   ,	c->sx1236_state.RegDioMapping1   ); 
-	sx1236_write_reg(spip, regaddrs.RegDioMapping2   ,	c->sx1236_state.RegDioMapping2   ); 
-	sx1236_write_reg(spip, regaddrs.RegVersion       ,	c->sx1236_state.RegVersion       ); 
-	sx1236_write_reg(spip, regaddrs.RegPllHop        ,	c->sx1236_state.RegPllHop        ); 
-	sx1236_write_reg(spip, regaddrs.RegTcxo          ,	c->sx1236_state.RegTcxo          ); 
-	sx1236_write_reg(spip, regaddrs.RegPaDac         ,	c->sx1236_state.RegPaDac         ); 
-	sx1236_write_reg(spip, regaddrs.RegFormerTemp    ,	c->sx1236_state.RegFormerTemp    ); 
-	sx1236_write_reg(spip, regaddrs.RegBitRateFrac   ,	c->sx1236_state.RegBitRateFrac   ); 
-	sx1236_write_reg(spip, regaddrs.RegAgcRef        ,	c->sx1236_state.RegAgcRef        ); 
-	sx1236_write_reg(spip, regaddrs.RegAgcThresh1    ,	c->sx1236_state.RegAgcThresh1    ); 
-	sx1236_write_reg(spip, regaddrs.RegAgcThresh2    ,	c->sx1236_state.RegAgcThresh2    ); 
-	sx1236_write_reg(spip, regaddrs.RegAgcThresh3    ,	c->sx1236_state.RegAgcThresh3    ); 
-	sx1236_write_reg(spip, regaddrs.RegPllLf         ,	c->sx1236_state.RegPllLf         ); 
+	sx1236_write_reg(spip, regaddrs.RegFifo,  c->sx1236_state.RegFifo          );
+	sx1236_write_reg(spip, regaddrs.RegOpMode,  c->sx1236_state.RegOpMode        );
+	sx1236_write_reg(spip, regaddrs.RegBitrateMsb,  c->sx1236_state.RegBitrateMsb    );
+	sx1236_write_reg(spip, regaddrs.RegBitrateLsb,  c->sx1236_state.RegBitrateLsb    );
+	sx1236_write_reg(spip, regaddrs.RegFdevMsb,  c->sx1236_state.RegFdevMsb       );
+	sx1236_write_reg(spip, regaddrs.RegFdevLsb,  c->sx1236_state.RegFdevLsb       );
+	sx1236_write_reg(spip, regaddrs.RegFrfMsb,  c->sx1236_state.RegFrfMsb        );
+	sx1236_write_reg(spip, regaddrs.RegFrfMid,  c->sx1236_state.RegFrfMid        );
+	sx1236_write_reg(spip, regaddrs.RegFrfLsb,  c->sx1236_state.RegFrfLsb        );
+	sx1236_write_reg(spip, regaddrs.RegPaConfig,  c->sx1236_state.RegPaConfig      );
+	sx1236_write_reg(spip, regaddrs.RegPaRamp,  c->sx1236_state.RegPaRamp        );
+	sx1236_write_reg(spip, regaddrs.RegOcp,  c->sx1236_state.RegOcp           );
+	sx1236_write_reg(spip, regaddrs.RegLna,  c->sx1236_state.RegLna           );
+	sx1236_write_reg(spip, regaddrs.RegRxConfig,  c->sx1236_state.RegRxConfig      );
+	sx1236_write_reg(spip, regaddrs.RegRssiConfig,  c->sx1236_state.RegRssiConfig    );
+	sx1236_write_reg(spip, regaddrs.RegRssiCollision,  c->sx1236_state.RegRssiCollision );
+	sx1236_write_reg(spip, regaddrs.RegRssiThresh,  c->sx1236_state.RegRssiThresh    );
+	sx1236_write_reg(spip, regaddrs.RegRssiValue,  c->sx1236_state.RegRssiValue     );
+	sx1236_write_reg(spip, regaddrs.RegRxBw,  c->sx1236_state.RegRxBw          );
+	sx1236_write_reg(spip, regaddrs.RegAfcBw,  c->sx1236_state.RegAfcBw         );
+	sx1236_write_reg(spip, regaddrs.RegOokPeak,  c->sx1236_state.RegOokPeak       );
+	sx1236_write_reg(spip, regaddrs.RegOokFix,  c->sx1236_state.RegOokFix        );
+	sx1236_write_reg(spip, regaddrs.RegOokAvg,  c->sx1236_state.RegOokAvg        );
+	sx1236_write_reg(spip, regaddrs.RegAfcFei,  c->sx1236_state.RegAfcFei        );
+	sx1236_write_reg(spip, regaddrs.RegAfcMsb,  c->sx1236_state.RegAfcMsb        );
+	sx1236_write_reg(spip, regaddrs.RegAfcLsb,  c->sx1236_state.RegAfcLsb        );
+	sx1236_write_reg(spip, regaddrs.RegFeiMsb,  c->sx1236_state.RegFeiMsb        );
+	sx1236_write_reg(spip, regaddrs.RegFeiLsb,  c->sx1236_state.RegFeiLsb        );
+	sx1236_write_reg(spip, regaddrs.RegPreambleDetect,  c->sx1236_state.RegPreambleDetect);
+	sx1236_write_reg(spip, regaddrs.RegRxTimeout1,  c->sx1236_state.RegRxTimeout1    );
+	sx1236_write_reg(spip, regaddrs.RegRxTimeout2,  c->sx1236_state.RegRxTimeout2    );
+	sx1236_write_reg(spip, regaddrs.RegRxTimeout3,  c->sx1236_state.RegRxTimeout3    );
+	sx1236_write_reg(spip, regaddrs.RegRxDelay,  c->sx1236_state.RegRxDelay       );
+	sx1236_write_reg(spip, regaddrs.RegOsc,  c->sx1236_state.RegOsc           );
+	sx1236_write_reg(spip, regaddrs.RegPreambleMsb,  c->sx1236_state.RegPreambleMsb   );
+	sx1236_write_reg(spip, regaddrs.RegPreambleLsb,  c->sx1236_state.RegPreambleLsb   );
+	sx1236_write_reg(spip, regaddrs.RegSyncConfig,  c->sx1236_state.RegSyncConfig    );
+	sx1236_write_reg(spip, regaddrs.RegSyncValue1,  c->sx1236_state.RegSyncValue1    );
+	sx1236_write_reg(spip, regaddrs.RegSyncValue2,  c->sx1236_state.RegSyncValue2    );
+	sx1236_write_reg(spip, regaddrs.RegSyncValue3,  c->sx1236_state.RegSyncValue3    );
+	sx1236_write_reg(spip, regaddrs.RegSyncValue4,  c->sx1236_state.RegSyncValue4    );
+	sx1236_write_reg(spip, regaddrs.RegSyncValue5,  c->sx1236_state.RegSyncValue5    );
+	sx1236_write_reg(spip, regaddrs.RegSyncValue6,  c->sx1236_state.RegSyncValue6    );
+	sx1236_write_reg(spip, regaddrs.RegSyncValue7,  c->sx1236_state.RegSyncValue7    );
+	sx1236_write_reg(spip, regaddrs.RegSyncValue8,  c->sx1236_state.RegSyncValue8    );
+	sx1236_write_reg(spip, regaddrs.RegPacketConfig1,  c->sx1236_state.RegPacketConfig1 );
+	sx1236_write_reg(spip, regaddrs.RegPacketConfig2,  c->sx1236_state.RegPacketConfig2 );
+	sx1236_write_reg(spip, regaddrs.RegPayloadLength,  c->sx1236_state.RegPayloadLength );
+	sx1236_write_reg(spip, regaddrs.RegNodeAdrs,  c->sx1236_state.RegNodeAdrs      );
+	sx1236_write_reg(spip, regaddrs.RegBroadcastAdrs,  c->sx1236_state.RegBroadcastAdrs );
+	sx1236_write_reg(spip, regaddrs.RegFifoThresh,  c->sx1236_state.RegFifoThresh    );
+	sx1236_write_reg(spip, regaddrs.RegSeqConfig1,  c->sx1236_state.RegSeqConfig1    );
+	sx1236_write_reg(spip, regaddrs.RegSeqConfig2,  c->sx1236_state.RegSeqConfig2    );
+	sx1236_write_reg(spip, regaddrs.RegTimerResol,  c->sx1236_state.RegTimerResol    );
+	sx1236_write_reg(spip, regaddrs.RegTimer1Coef,  c->sx1236_state.RegTimer1Coef    );
+	sx1236_write_reg(spip, regaddrs.RegTimer2Coef,  c->sx1236_state.RegTimer2Coef    );
+	sx1236_write_reg(spip, regaddrs.RegImageCal,  c->sx1236_state.RegImageCal      );
+	sx1236_write_reg(spip, regaddrs.RegTemp,  c->sx1236_state.RegTemp          );
+	sx1236_write_reg(spip, regaddrs.RegLowBat,  c->sx1236_state.RegLowBat        );
+	sx1236_write_reg(spip, regaddrs.RegIrqFlags1,  c->sx1236_state.RegIrqFlags1     );
+	sx1236_write_reg(spip, regaddrs.RegIrqFlags2,  c->sx1236_state.RegIrqFlags2     );
+	sx1236_write_reg(spip, regaddrs.RegDioMapping1,  c->sx1236_state.RegDioMapping1   );
+	sx1236_write_reg(spip, regaddrs.RegDioMapping2,  c->sx1236_state.RegDioMapping2   );
+	sx1236_write_reg(spip, regaddrs.RegVersion,  c->sx1236_state.RegVersion       );
+	sx1236_write_reg(spip, regaddrs.RegPllHop,  c->sx1236_state.RegPllHop        );
+	sx1236_write_reg(spip, regaddrs.RegTcxo,  c->sx1236_state.RegTcxo          );
+	sx1236_write_reg(spip, regaddrs.RegPaDac,  c->sx1236_state.RegPaDac         );
+	sx1236_write_reg(spip, regaddrs.RegFormerTemp,  c->sx1236_state.RegFormerTemp    );
+	sx1236_write_reg(spip, regaddrs.RegBitRateFrac,  c->sx1236_state.RegBitRateFrac   );
+	sx1236_write_reg(spip, regaddrs.RegAgcRef,  c->sx1236_state.RegAgcRef        );
+	sx1236_write_reg(spip, regaddrs.RegAgcThresh1,  c->sx1236_state.RegAgcThresh1    );
+	sx1236_write_reg(spip, regaddrs.RegAgcThresh2,  c->sx1236_state.RegAgcThresh2    );
+	sx1236_write_reg(spip, regaddrs.RegAgcThresh3,  c->sx1236_state.RegAgcThresh3    );
+	sx1236_write_reg(spip, regaddrs.RegPllLf,  c->sx1236_state.RegPllLf         );
 
 	// Development only: Check register writes
-	sx1236_check_reg(spip, regaddrs.RegOpMode,          c->sx1236_state.RegOpMode);
+	// sx1236_check_reg(spip, regaddrs.RegOpMode,          c->sx1236_state.RegOpMode);
 }
 
 // ! @}
