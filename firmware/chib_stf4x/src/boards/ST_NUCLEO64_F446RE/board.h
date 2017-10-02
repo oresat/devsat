@@ -325,7 +325,7 @@
                                      PIN_MODE_ALTERNATE(GPIOA_SPI1_MOSI) |      \
                                      PIN_MODE_INPUT(GPIOA_ARD_D7) |         \
                                      PIN_MODE_OUTPUT(GPIOA_SPI1_NSS) |         \
-                                     PIN_MODE_INPUT(GPIOA_ARD_D2) |         \
+                                     PIN_MODE_OUTPUT(GPIOA_ARD_D2) |         \
                                      PIN_MODE_ALTERNATE(GPIOA_OTG_FS_DM) |  \
                                      PIN_MODE_ALTERNATE(GPIOA_OTG_FS_DP) |  \
                                      PIN_MODE_ALTERNATE(GPIOA_SWDIO) |      \
@@ -389,7 +389,7 @@
                                      PIN_ODR_HIGH(GPIOA_SPI1_MOSI) |        \
                                      PIN_ODR_HIGH(GPIOA_ARD_D7) |           \
                                      PIN_ODR_HIGH(GPIOA_SPI1_NSS) |           \
-                                     PIN_ODR_HIGH(GPIOA_ARD_D2) |           \
+                                     PIN_ODR_LOW(GPIOA_ARD_D2) |           \
                                      PIN_ODR_HIGH(GPIOA_OTG_FS_DM) |        \
                                      PIN_ODR_HIGH(GPIOA_OTG_FS_DP) |        \
                                      PIN_ODR_HIGH(GPIOA_SWDIO) |            \
