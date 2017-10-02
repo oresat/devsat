@@ -70,7 +70,7 @@
 #define GPIOA_USART2_RX             3U
 #define GPIOA_ARD_D10               4U
 #define GPIOA_ADC12_IN4             4U
-#define GPIOA_SPI1_NSS              4U //NSS
+#define GPIOA_SPI1_NSS              4U
 #define GPIOA_SPI1_SCK              5U
 #define GPIOA_SPI1_MISO             6U
 #define GPIOA_SPI1_MOSI             7U
@@ -248,7 +248,7 @@
 #define LINE_ARD_D13                PAL_LINE(GPIOA, 5U)
 #define LINE_ARD_D12                PAL_LINE(GPIOA, 6U)
 #define LINE_ARD_D11                PAL_LINE(GPIOA, 7U)
-#define LINE_SEMTECH_RST                 PAL_LINE(GPIOA, 8U)
+#define LINE_SEMTECH_RST            PAL_LINE(GPIOA, 8U)
 #define LINE_ARD_D8                 PAL_LINE(GPIOA, 9U)
 #define LINE_ARD_D2                 PAL_LINE(GPIOA, 10U)
 #define LINE_OTG_FS_DM              PAL_LINE(GPIOA, 11U)
@@ -311,11 +311,11 @@
  * PA1  - ARD_A1 ADC123_IN1         (input pullup).
  * PA2  - ARD_D1 USART2_TX          (alternate 7).
  * PA3  - ARD_D0 USART2_RX          (alternate 7).
- * PA4  - ARD_A2 ADC12_IN4          (input pullup).
- * PA5  - LED_GREEN ARD_D13         (output pushpull high).
- * PA6  - ARD_D12                   (input pullup).
- * PA7  - ARD_D11                   (input pullup).
- * PA8  - SEMTECH_RST               (output pullup high).
+ * PA4  - SPI1_NSS                  (output pushpull high).
+ * PA5  - SPI1_SCK                  (alternate 5).
+ * PA6  - SPI1_MISO                 (alternate 5).
+ * PA7  - SPI1_MOSI                 (alternate 5).
+ * PA8  - SEMTECH_RST               (output pushpull high).
  * PA9  - ARD_D8                    (input pullup).
  * PA10 - ARD_D2                    (input pullup).
  * PA11 - OTG_FS_DM                 (alternate 10).
