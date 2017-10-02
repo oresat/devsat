@@ -27,9 +27,9 @@ static THD_FUNCTION(Thread1, arg) {
   (void)arg;
   chRegSetThreadName("blinker");
   while (true) {
-    palClearPad(GPIOA, GPIOA_LED_GREEN);
+    palClearPad(GPIOA, GPIOA_ARD_D2);
     chThdSleepMilliseconds(500);
-    palSetPad(GPIOA, GPIOA_LED_GREEN);
+    palSetPad(GPIOA, GPIOA_ARD_D2);
     chThdSleepMilliseconds(500);
   }
 }
@@ -66,9 +66,9 @@ int main(void) {
   while (true) {
       //if (!palReadPad(GPIOC, GPIOC_BUTTON))
         //test_execute((BaseSequentialStream *)&SD2);
-    palClearPad(GPIOA, GPIOA_LED_GREEN);
+    palClearPad(GPIOA, GPIOA_ARD_D2);
     chThdSleepMilliseconds(500);
-    palSetPad(GPIOA, GPIOA_LED_GREEN);
+    palSetPad(GPIOA, GPIOA_ARD_D2);
     chThdSleepMilliseconds(500);
   }
 }
