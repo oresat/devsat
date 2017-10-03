@@ -317,7 +317,7 @@
  * PA7  - SPI1_MOSI                 (alternate 5).
  * PA8  - SEMTECH_RST               (output pushpull high).
  * PA9  - ARD_D8                    (input pullup).
- * PA10 - ARD_D2                    (input pullup).
+ * PA10 - ARD_D2                    (output pushpull low).
  * PA11 - OTG_FS_DM                 (alternate 10).
  * PA12 - OTG_FS_DP                 (alternate 10).
  * PA13 - SWDIO                     (alternate 0).
@@ -333,8 +333,8 @@
                                      PIN_MODE_ALTERNATE(GPIOA_SPI1_MISO) |      \
                                      PIN_MODE_ALTERNATE(GPIOA_SPI1_MOSI) |      \
                                      PIN_MODE_OUTPUT(GPIOA_SEMTECH_RST) |         \
-                                     PIN_MODE_INPUT(GPIOA_SX_TESTIN) |         \
-                                     PIN_MODE_OUTPUT(GPIOA_SX_TESTOUT) |         \
+                                     PIN_MODE_INPUT(GPIOA_ARD_D8) |         \
+                                     PIN_MODE_OUTPUT(GPIOA_ARD_D2) |         \
                                      PIN_MODE_ALTERNATE(GPIOA_OTG_FS_DM) |  \
                                      PIN_MODE_ALTERNATE(GPIOA_OTG_FS_DP) |  \
                                      PIN_MODE_ALTERNATE(GPIOA_SWDIO) |      \
@@ -349,8 +349,8 @@
                                      PIN_OTYPE_PUSHPULL(GPIOA_SPI1_MISO) |  \
                                      PIN_OTYPE_PUSHPULL(GPIOA_SPI1_MOSI) |  \
                                      PIN_OTYPE_PUSHPULL(GPIOA_SEMTECH_RST) |     \
-                                     PIN_OTYPE_PUSHPULL(GPIOA_SX_TESTIN) |     \
-                                     PIN_OTYPE_PUSHPULL(GPIOA_SX_TESTOUT) |     \
+                                     PIN_OTYPE_PUSHPULL(GPIOA_ARD_D8) |     \
+                                     PIN_OTYPE_PUSHPULL(GPIOA_ARD_D2) |     \
                                      PIN_OTYPE_PUSHPULL(GPIOA_OTG_FS_DM) |  \
                                      PIN_OTYPE_PUSHPULL(GPIOA_OTG_FS_DP) |  \
                                      PIN_OTYPE_PUSHPULL(GPIOA_SWDIO) |      \
@@ -365,8 +365,8 @@
                                      PIN_OSPEED_HIGH(GPIOA_SPI1_MISO) |     \
                                      PIN_OSPEED_HIGH(GPIOA_SPI1_MOSI) |     \
                                      PIN_OSPEED_HIGH(GPIOA_SEMTECH_RST) |        \
-                                     PIN_OSPEED_HIGH(GPIOA_SX_TESTIN) |        \
-                                     PIN_OSPEED_HIGH(GPIOA_SX_TESTOUT) |        \
+                                     PIN_OSPEED_HIGH(GPIOA_ARD_D8) |        \
+                                     PIN_OSPEED_HIGH(GPIOA_ARD_D2) |        \
                                      PIN_OSPEED_HIGH(GPIOA_OTG_FS_DM) |     \
                                      PIN_OSPEED_HIGH(GPIOA_OTG_FS_DP) |     \
                                      PIN_OSPEED_HIGH(GPIOA_SWDIO) |         \
@@ -381,8 +381,8 @@
                                      PIN_PUPDR_PULLUP(GPIOA_SPI1_MISO) |    \
                                      PIN_PUPDR_PULLUP(GPIOA_SPI1_MOSI) |    \
                                      PIN_PUPDR_PULLUP(GPIOA_SEMTECH_RST) |       \
-                                     PIN_PUPDR_PULLUP(GPIOA_SX_TESTIN) |       \
-                                     PIN_PUPDR_PULLUP(GPIOA_SX_TESTOUT) |       \
+                                     PIN_PUPDR_PULLUP(GPIOA_ARD_D8) |       \
+                                     PIN_PUPDR_PULLUP(GPIOA_ARD_D2) |       \
                                      PIN_PUPDR_FLOATING(GPIOA_OTG_FS_DM) |  \
                                      PIN_PUPDR_FLOATING(GPIOA_OTG_FS_DP) |  \
                                      PIN_PUPDR_PULLUP(GPIOA_SWDIO) |        \
@@ -397,8 +397,8 @@
                                      PIN_ODR_HIGH(GPIOA_SPI1_MISO) |        \
                                      PIN_ODR_HIGH(GPIOA_SPI1_MOSI) |        \
                                      PIN_ODR_HIGH(GPIOA_SEMTECH_RST) |           \
-                                     PIN_ODR_HIGH(GPIOA_SX_TESTIN) |           \
-                                     PIN_ODR_HIGH(GPIOA_SX_TESTOUT) |           \
+                                     PIN_ODR_HIGH(GPIOA_ARD_D8) |           \
+                                     PIN_ODR_LOW(GPIOA_ARD_D2) |           \
                                      PIN_ODR_HIGH(GPIOA_OTG_FS_DM) |        \
                                      PIN_ODR_HIGH(GPIOA_OTG_FS_DP) |        \
                                      PIN_ODR_HIGH(GPIOA_SWDIO) |            \
@@ -413,8 +413,8 @@
                                      PIN_AFIO_AF(GPIOA_SPI1_MISO, 5U) |     \
                                      PIN_AFIO_AF(GPIOA_SPI1_MOSI, 5U))
 #define VAL_GPIOA_AFRH              (PIN_AFIO_AF(GPIOA_SEMTECH_RST, 0U) |        \
-                                     PIN_AFIO_AF(GPIOA_SX_TESTIN, 0U) |        \
-                                     PIN_AFIO_AF(GPIOA_SX_TESTOUT, 0U) |        \
+                                     PIN_AFIO_AF(GPIOA_ARD_D8, 0U) |        \
+                                     PIN_AFIO_AF(GPIOA_ARD_D2, 0U) |        \
                                      PIN_AFIO_AF(GPIOA_OTG_FS_DM, 10U) |    \
                                      PIN_AFIO_AF(GPIOA_OTG_FS_DP, 10U) |    \
                                      PIN_AFIO_AF(GPIOA_SWDIO, 0U) |         \
@@ -541,12 +541,12 @@
 /*
  * GPIOC setup:
  *
- * PC0  - ARD_A5 ADC123_IN10        (input pullup).
- * PC1  - ARD_A4 ADC123_IN11        (input pullup).
- * PC2  - PIN2                      (input pullup).
- * PC3  - PIN3                      (input pullup).
- * PC4  - PIN4                      (input pullup).
- * PC5  - PIN5                      (input pullup).
+ * PC0  - SX_DIO0                   (input pullup).
+ * PC1  - SX_DIO1                   (input pullup).
+ * PC2  - SX_DIO2                   (input pullup).
+ * PC3  - SX_DIO3                   (input pullup).
+ * PC4  - SX_DIO4                   (input pullup).
+ * PC5  - SX_DIO5                   (input pullup).
  * PC6  - PIN6                      (input pullup).
  * PC7  - ARD_D9                    (input pullup).
  * PC8  - PIN8                      (input pullup).
