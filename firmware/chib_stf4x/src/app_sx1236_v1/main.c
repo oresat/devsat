@@ -28,13 +28,6 @@
 #include "dio_ext.h"
 #include "sx1236.h"
 
-EVENTSOURCE_DECL(DIO0_EVT);
-EVENTSOURCE_DECL(DIO1_EVT);
-EVENTSOURCE_DECL(DIO2_EVT);
-EVENTSOURCE_DECL(DIO3_EVT);
-EVENTSOURCE_DECL(DIO4_EVT);
-EVENTSOURCE_DECL(DIO5_EVT);
-
 #define     DEBUG_SERIAL                    SD2
 #define     DEBUG_CHP                       ((BaseSequentialStream *) &DEBUG_SERIAL)
 
@@ -103,25 +96,25 @@ static config_sx1236 dut_config ;
 
 static void init_tx_continuous(config_sx1236 * s)
 {
-	s->Fxosc                            = F_XOSC;
-	s->Fstep                            = F_STEP;
-	s->carrier_freq                     = APP_CARRIER_FREQ;
-	s->freq_dev_hz                      = APP_FREQ_DEV;
-	s->bitrate                          = APP_BITRATE;
+    s->Fxosc                            = F_XOSC;
+    s->Fstep                            = F_STEP;
+    s->carrier_freq                     = APP_CARRIER_FREQ;
+    s->freq_dev_hz                      = APP_FREQ_DEV;
+    s->bitrate                          = APP_BITRATE;
 
-	sx1236_init_state(&s->sx1236_state);
+    sx1236_init_state(&s->sx1236_state);
 
-	s->sx1236_state.RegOpMode          = 0x0 | SX1236_LOW_FREQ_MODE | SX1236_FSK_MODE |  SX1236_TRANSMITTER_MODE ;
-	s->sx1236_state.RegOsc             = 0x0 | SX1236_OSC_DIV_8 ;
-	s->sx1236_state.RegPacketConfig2   = 0x0 | SX1236_CONTINUOUS_MODE ;
+    s->sx1236_state.RegOpMode          = 0x0 | SX1236_LOW_FREQ_MODE | SX1236_FSK_MODE |  SX1236_TRANSMITTER_MODE ;
+    s->sx1236_state.RegOsc             = 0x0 | SX1236_OSC_DIV_8 ;
+    s->sx1236_state.RegPacketConfig2   = 0x0 | SX1236_CONTINUOUS_MODE ;
 }
 
 static SerialConfig ser_cfg =
 {
-	115200,     //Baud rate
-	0,          //
-	0,          //
-	0,          //
+    115200,     //Baud rate
+    0,          //
+    0,          //
+    0,          //
 };
 
 /*
@@ -129,147 +122,162 @@ static SerialConfig ser_cfg =
  */
 static const SPIConfig spicfg =
 {
-	NULL,               // Operation complete callback
-	GPIOA,              // Slave select port
-	GPIOA_SPI1_NSS,     // Slave select pad
-	// SPI cr1 data (see 446 ref man.)
-	SPI_CR1_SPE     |   // SPI enable
-	SPI_CR1_MSTR    |   // Master
-	//SPI_CR1_BR_2    |
-	SPI_CR1_BR_1    |
-	SPI_CR1_BR_0   |       // fpclk/16  approx 5Mhz? BR = 0x011
-	SPI_CR1_SSM,
-	0, // SPI_CR2_SSOE,
+    NULL,               // Operation complete callback
+    GPIOA,              // Slave select port
+    GPIOA_SPI1_NSS,     // Slave select pad
+    // SPI cr1 data (see 446 ref man.)
+    SPI_CR1_SPE     |   // SPI enable
+    SPI_CR1_MSTR    |   // Master
+    //SPI_CR1_BR_2    |
+    SPI_CR1_BR_1    |
+    SPI_CR1_BR_0   |       // fpclk/16  approx 5Mhz? BR = 0x011
+    SPI_CR1_SSM,
+    0, // SPI_CR2_SSOE,
 };
 
 static void app_init(void)
 {
-	// Start up debug output, chprintf(DEBUG_CHP,...)
-	sdStart(&DEBUG_SERIAL, &ser_cfg);
+    // Start up debug output, chprintf(DEBUG_CHP,...)
+    sdStart(&DEBUG_SERIAL, &ser_cfg);
 
-	set_util_fwversion(&version_info);
-	set_util_hwversion(&version_info);
-	chThdSleepS(S2ST(2));
+    set_util_fwversion(&version_info);
+    set_util_hwversion(&version_info);
 
-	//Print FW/HW information
-	chprintf(DEBUG_CHP, "\r\nFirmware Info\r\n");
-	chprintf(DEBUG_CHP, "FW HASH: %s\r\n", version_info.firmware);
-	chprintf(DEBUG_CHP, "STF0x UNIQUE HW ID (H,C,L):\r\n0x%x\t0x%x\t0x%x\r\n"
-	         , version_info.hardware.id_high
-	         , version_info.hardware.id_center
-	         , version_info.hardware.id_low
-	        );
 
-	spiStart(&SPID1, &spicfg);
+    //Print FW/HW information
+    chprintf(DEBUG_CHP, "\r\nFirmware Info\r\n");
+    chprintf(DEBUG_CHP, "FW HASH: %s\r\n", version_info.firmware);
+    chprintf(DEBUG_CHP, "STF0x UNIQUE HW ID (H,C,L):\r\n0x%x\t0x%x\t0x%x\r\n"
+             , version_info.hardware.id_high
+             , version_info.hardware.id_center
+             , version_info.hardware.id_low
+            );
 
-	chprintf(DEBUG_CHP, "Reset\r\n");
-	sx1236_reset() ;
+    spiStart(&SPID1, &spicfg);
+
+    dio_init();
+
+    chprintf(DEBUG_CHP, "Reset sx1236\r\n");
+    sx1236_reset() ;
+
+
 }
 
 static void dio0_evt_handler(eventid_t id)
 {
-	(void)id;
-	chprintf(DEBUG_CHP, "dio0 event\r\n");
+    (void)id;
+    chprintf(DEBUG_CHP, "dio0 event\r\n");
 }
 
 static void dio1_evt_handler(eventid_t id)
 {
-	(void)id;
-	chprintf(DEBUG_CHP, "dio2 event\r\n");
+    (void)id;
+    chprintf(DEBUG_CHP, "dio1 event\r\n");
 }
 
 static void dio2_evt_handler(eventid_t id)
 {
-	(void)id;
-	chprintf(DEBUG_CHP, "dio2 event\r\n");
+    (void)id;
+    chprintf(DEBUG_CHP, "dio2 event\r\n");
 }
 
 
 static void dio3_evt_handler(eventid_t id)
 {
-	(void)id;
-	chprintf(DEBUG_CHP, "dio3 event\r\n");
+    (void)id;
+    chprintf(DEBUG_CHP, "dio3 event\r\n");
 }
 
 static void dio4_evt_handler(eventid_t id)
 {
-	(void)id;
-	chprintf(DEBUG_CHP, "dio4 event\r\n");
+    (void)id;
+    chprintf(DEBUG_CHP, "dio4 event\r\n");
 }
 
 static void dio5_evt_handler(eventid_t id)
 {
-	(void)id;
-	chprintf(DEBUG_CHP, "dio5 event\r\n");
+    (void)id;
+    // chprintf(DEBUG_CHP, "dio5 event\r\n");
 }
 
 static THD_WORKING_AREA(waThread_sx1236_dio, 512);
 static THD_FUNCTION(Thread_sx1236_dio, arg)
 {
-	(void) arg;
-	static const evhandler_t evhndl_sx1236_dio[] =
-	{
-		dio0_evt_handler,
-		dio1_evt_handler,
-		dio2_evt_handler,
-		dio3_evt_handler,
-		dio4_evt_handler,
-		dio5_evt_handler
-	};
+    (void) arg;
+    static const evhandler_t evhndl_sx1236_dio[] =
+    {
+        dio0_evt_handler,
+        dio1_evt_handler,
+        dio2_evt_handler,
+        dio3_evt_handler,
+        dio4_evt_handler,
+        dio5_evt_handler
+    };
 
-	event_listener_t evl_dio0, evl_dio1, evl_dio2, evl_dio3, evl_dio4, evl_dio5;
+    event_listener_t evl_dio0, evl_dio1, evl_dio2, evl_dio3, evl_dio4, evl_dio5;
 
-	chRegSetThreadName("sx1236_dio");
+    chRegSetThreadName("sx1236_dio");
 
-	chEvtRegister(&DIO0_EVT,           &evl_dio0,         0);
-	chEvtRegister(&DIO1_EVT,           &evl_dio1,         1);
-	chEvtRegister(&DIO2_EVT,           &evl_dio2,         2);
-	chEvtRegister(&DIO3_EVT,           &evl_dio3,         3);
-	chEvtRegister(&DIO4_EVT,           &evl_dio4,         4);
-	chEvtRegister(&DIO5_EVT,           &evl_dio5,         5);
+    chEvtRegister(&dio0_event,           &evl_dio0,         0);
+    chEvtRegister(&dio1_event,           &evl_dio1,         1);
+    chEvtRegister(&dio2_event,           &evl_dio2,         2);
+    chEvtRegister(&dio3_event,           &evl_dio3,         3);
+    chEvtRegister(&dio4_event,           &evl_dio4,         4);
+    chEvtRegister(&dio5_event,           &evl_dio5,         5);
 
-	chprintf(DEBUG_CHP, "Thread started: %s\r\n", "sx1236_dio");
-	while (TRUE)
-	{
-		chEvtDispatch(evhndl_sx1236_dio, chEvtWaitOneTimeout(EVENT_MASK(0), MS2ST(50)));
-	}
+    chprintf(DEBUG_CHP, "Thread started: %s\r\n", "sx1236_dio");
+    while (TRUE)
+    {
+        chEvtDispatch(evhndl_sx1236_dio, chEvtWaitOneTimeout(EVENT_MASK(0), MS2ST(50)));
+
+        /*
+         * Examples of different masking of events
+         */
+        // chEvtDispatch(evhndl_sx1236_dio, chEvtWaitOneTimeout(EVENT_MASK(0)| EVENT_MASK(1), MS2ST(50)));
+        // chEvtDispatch(evhndl_sx1236_dio, chEvtWaitOneTimeout(EVENT_MASK(2)| EVENT_MASK(3), MS2ST(50)));
+        // chEvtDispatch(evhndl_sx1236_dio, chEvtWaitOneTimeout(EVENT_MASK(4), MS2ST(50)));
+        // chEvtDispatch(evhndl_sx1236_dio, chEvtWaitOneTimeout(EVENT_MASK(5), MS2ST(50)));
+    }
 }
 
 static void start_threads(void)
 {
-	chThdCreateStatic(waThread_sx1236_dio,      sizeof(waThread_sx1236_dio),   NORMALPRIO, Thread_sx1236_dio, NULL);
+    chThdCreateStatic(waThread_sx1236_dio,      sizeof(waThread_sx1236_dio),   NORMALPRIO, Thread_sx1236_dio, NULL);
 }
 
 
 static void main_loop(void)
 {
-	chThdSleepMilliseconds(500);
-	chprintf(DEBUG_CHP, "\r\n");
-	sx1236_check_reg(&SPID1, regaddrs.RegVersion, 0x12);
+    chThdSleepMilliseconds(500);
+    chprintf(DEBUG_CHP, "\r\n");
+    sx1236_check_reg(&SPID1, regaddrs.RegVersion, 0x12);
 
-	init_tx_continuous(&dut_config);
-	sx1236_configure(&SPID1, &dut_config);
+    init_tx_continuous(&dut_config);
+    sx1236_configure(&SPID1, &dut_config);
 
-	// chprintf(DEBUG_CHP, "**INFO**\r\n");
-	// sx1236_print_regs(&SPID1);
+    // chprintf(DEBUG_CHP, "**INFO**\r\n");
+    // sx1236_print_regs(&SPID1);
 
-	while (true)
-	{
-		chThdSleepMilliseconds(500);
-		palTogglePad(GPIOA, GPIOA_SX_TESTOUT);
-		chprintf(DEBUG_CHP, ".");
-	}
+    while (true)
+    {
+        chThdSleepMilliseconds(500);
+        palTogglePad(GPIOA, GPIOA_SX_TESTOUT);
+        chprintf(DEBUG_CHP, ".");
+    }
 }
 
 int main(void)
 {
-	halInit();
-	chSysInit();
-	app_init();
+    halInit();
+    chSysInit();
+    app_init();
 
-	start_threads();
-	main_loop();
-	return 0;
+	// Enable interrupt through the EXT interface
+    extStart(&EXTD1, &extcfg);
+
+    start_threads();
+    main_loop();
+    return 0;
 }
 
 
