@@ -73,8 +73,8 @@ static const SPIConfig spicfg = {
     SPI_CR1_SPE     |// SPI enable
     SPI_CR1_MSTR    |// Master
     SPI_CR1_BR_0    |
-    SPI_CR1_BR_1   // SPI baudrate
-
+    SPI_CR1_BR_1,   // SPI baudrate
+    0
 };
 
 /*
@@ -174,7 +174,6 @@ static THD_WORKING_AREA(can_tx_wa, 256);
 static THD_FUNCTION(can_tx, p)
 {
     CANTxFrame txmsg;
-    msg_t msg;
 
     (void)p;
     chRegSetThreadName("transmitter");
@@ -202,7 +201,7 @@ static THD_FUNCTION(can_tx, p)
         chThdSleepMilliseconds(750);
 
         //Transmit message
-        msg = canTransmit(&CAND1, CAN_ANY_MAILBOX, &txmsg, MS2ST(100));
+        canTransmit(&CAND1, CAN_ANY_MAILBOX, &txmsg, MS2ST(100));
         /*chprintf(DEBUG_CHP, "TX msg: %d\n\r", msg);*/
     }
 }
@@ -252,8 +251,6 @@ int main(void) {
     chThdCreateStatic(can_rx_wa, sizeof(can_rx_wa), NORMALPRIO + 7, can_rx, NULL);
     chThdCreateStatic(can_tx_wa, sizeof(can_tx_wa), NORMALPRIO + 7, can_tx, NULL);
 
-    //Test SPI connectivity
-    semtech_test_read(&SPID1);
     /*
      * Begin main loop
      */
