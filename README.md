@@ -5,6 +5,11 @@ Here's a block diagram (bet you're gonna be so jelly of our sweet drawing skillz
 
 ![DevSat Block Diagram](https://github.com/oresat/devsat/blob/master/doc/block_diagram.jpg)
 
+Photo of the actual thing:
+
+![DevSat Photo](https://github.com/oresat/devsat/blob/master/doc/devsat_photo.jpg)
+
+
 And here are some details:
 
 - M0 board
@@ -22,11 +27,16 @@ And here are some details:
 - USB to CAN adapters
     - Usually use use CANUSB, but they're expensive, so we found this one!
     - Protofusion [CANable](https://www.tindie.com/products/protofusion/canable-usb-to-can-bus-adapter/) USB to CAN bus adapter.
+- Semtech SX1236 development board
+    - An engineering reference design that is similar to the Semtech versions for various parts but unavailable for the SX1236. this one was designed by our own Evan Yand.
+    - Design details are in the [semtech-dev-board](https://github.com/oresat/semtech-dev-board) repo.
+
+- 4 port powered USB hub
+    - Yes...
 
 - Still need to spec:
-   - A Semtech dev board
-   - A >= 4 port powered USB hub
    - A box
    - A CAN "bus"
-- User needs a laptop, and another Semtech dev board.
+
+- User needs a laptop, and another Semtech dev board / M4 package.
 
