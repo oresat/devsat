@@ -3,7 +3,7 @@
 
 NUCLEO64_TOP           = ../..
 NUCLEO64_TOOLCHAIN     = $(NUCLEO64_TOP)/toolchain
-OPENOCD_DIR            = $(NUCLEO64_TOOLCHAIN)/openocd
+OPENOCD_DIR            = $(NUCLEO64_TOOLCHAIN)/openocd_f4
 
 # source directories
 NUCLEO64_UTIL          = $(NUCLEO64_TOP)/src/util

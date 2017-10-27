@@ -2,8 +2,8 @@
 # Directories for NUCLEO32 configuration
 
 NUCLEO32_TOP           = ../..
-NUCLEO32_TOOLCHAIN     = $(NUCLEO32_TOP)/toolchain/
-OPENOCD_DIR           =  $(NUCLEO32_TOOLCHAIN)/openocd
+NUCLEO32_TOOLCHAIN     = $(NUCLEO32_TOP)/toolchain
+OPENOCD_DIR           =  $(NUCLEO32_TOOLCHAIN)/openocd_f0
 
 # source directories
 NUCLEO32_UTIL          = $(NUCLEO32_TOP)/src/util
