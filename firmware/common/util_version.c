@@ -30,9 +30,9 @@ void set_util_fwversion(VERSIONData * ver_data)
  */
 void set_util_hwversion(VERSIONData * ver_data)
 {
-        ver_data->hardware.id_low    = *STM32F4_UNIQUE_ID_LOW;
-        ver_data->hardware.id_center = *STM32F4_UNIQUE_ID_CENTER;
-        ver_data->hardware.id_high   = *STM32F4_UNIQUE_ID_HIGH;
+        ver_data->hardware.id_low    = *UID_BASE;
+        ver_data->hardware.id_center = *UID_BASE + 0x4;
+        ver_data->hardware.id_high   = *UID_BASE + 0x8;
 }
 
 //! @}

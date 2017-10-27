@@ -5,14 +5,6 @@ NUCLEO64_TOP           = ../..
 NUCLEO64_TOOLCHAIN     = $(NUCLEO64_TOP)/toolchain
 OPENOCD_DIR            = $(NUCLEO64_TOOLCHAIN)/openocd_f4
 
-# source directories
-NUCLEO64_UTIL          = $(NUCLEO64_TOP)/src/util
-NUCLEO64_LTC2990       = $(NUCLEO64_TOP)/src/ltc2990
-NUCLEO64_SX1236        = $(NUCLEO64_TOP)/src/sx1236
-NUCLEO64_SOLARV1       = $(NUCLEO64_TOP)/src/solar_v1
-NUCLEO64_SATSHELL      = $(NUCLEO64_TOP)/src/satshell
-NUCLEO64_BOARDS        = $(NUCLEO64_TOP)/src/boards
-
 # make rules
 NUCLEO64_RULES         = $(OPENOCD_DIR)/openocd_stlinkv2-1.mk
 

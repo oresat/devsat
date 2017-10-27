@@ -95,10 +95,10 @@ CHIBIOS   = $(PROJ_ROOT)/ChibiOS-RT
 BOARD     = ST_NUCLEO32_F042K6
 BOARDDIR  = $(PROJ_ROOT)/boards/$(BOARD)
 
+include $(BOARDDIR)/board.mk
+
 # Nucleo32 specific files
 include $(TOOLCHAIN)/nucleo32.mk
-
-include $(BOARDDIR)/board.mk
 
 # Startup files
 include $(CHIBIOS)/os/common/startup/ARMCMx/compilers/GCC/mk/startup_stm32f0xx.mk
@@ -169,7 +169,7 @@ INCDIR = $(CHIBIOS)/os/license \
          $(CHIBIOS)/os/hal/lib/streams $(CHIBIOS)/os/various \
          $(CHIBIOS)/os/various \
          $(CONF_DIR) \
-		 $(PROJ_INC)/include
+         $(PROJ_INC)/include
 
 #
 # Project, sources and paths
