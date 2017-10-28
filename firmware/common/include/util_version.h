@@ -8,14 +8,9 @@
 
 #include <stdint.h>
 
-#define         MAX_FW_VERSION_LENGTH       50
+#include "hal.h"
 
-//#define         STM32F0_UNIQUE_ID_LOW       ((uint32_t*)0x1FFFF7AC)
-//#define         STM32F0_UNIQUE_ID_CENTER    ((uint32_t*)0x1FFFF7B0)
-//#define         STM32F0_UNIQUE_ID_HIGH      ((uint32_t*)0x1FFFF7B4)
-//#define         STM32F4_UNIQUE_ID_LOW       ((uint32_t*)0x1FFF7A10)
-//#define         STM32F4_UNIQUE_ID_CENTER    ((uint32_t*)0x1FFF7A14)
-//#define         STM32F4_UNIQUE_ID_HIGH      ((uint32_t*)0x1FFF7A18)
+#define         MAX_FW_VERSION_LENGTH       50
 
 #ifdef __cplusplus
 extern "C" {

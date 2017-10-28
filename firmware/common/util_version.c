@@ -13,7 +13,7 @@
 VERSIONData version_info;
 
 /*! \brief Firmware GIT Hash
- * GIT_COMMIT_VERSION is inserted by the build system 
+ * GIT_COMMIT_VERSION is inserted by the build system
  *     generated in common/marionette.mk
  */
 void set_util_fwversion(VERSIONData * ver_data)
@@ -24,15 +24,11 @@ void set_util_fwversion(VERSIONData * ver_data)
     strncpy(ver_data->firmware, GIT_COMMIT_VERSION, MAX_FW_VERSION_LENGTH);
 }
 
-/*! \brief  HW Version
- * 4 32 bit registers: base address: 0x1FFF 7A10
- * ST Ref. STM32f40x Page 1399 section 34 'Device Electronic Signature'
- */
 void set_util_hwversion(VERSIONData * ver_data)
 {
-        ver_data->hardware.id_low    = *UID_BASE;
-        ver_data->hardware.id_center = *UID_BASE + 0x4;
-        ver_data->hardware.id_high   = *UID_BASE + 0x8;
+        ver_data->hardware.id_low    = *((uint32_t*)UID_BASE);
+        ver_data->hardware.id_center = *((uint32_t*)UID_BASE + 0x4);
+        ver_data->hardware.id_high   = *((uint32_t*)UID_BASE + 0x8);
 }
 
 //! @}
