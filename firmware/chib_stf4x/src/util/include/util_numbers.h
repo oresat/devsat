@@ -23,6 +23,8 @@ static inline int round_nearest(float f)
 double incr_rnd(double d, double m) ;
 signed int sign_extend_13bit(signed int);
 
+uint8_t bits_get_bit_n(uint8_t byte, uint8_t n) ;
+
 #ifdef __cplusplus
 }
 #endif
