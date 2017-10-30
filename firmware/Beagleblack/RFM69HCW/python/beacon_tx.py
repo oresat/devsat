@@ -1,5 +1,9 @@
 #!/usr/bin/python
 
+
+# Beacon for testing semtech chips
+
+import sys
 import time
 import Adafruit_BBIO.GPIO as GPIO
 from Adafruit_BBIO.SPI import SPI
@@ -127,6 +131,11 @@ TRANSMITTER_MODE = (0b011<<2)
 RECEIVER_MODE    = (0b100<<2)
 
 G0_PIN           = "P9_12"
+G1_PIN           = "P8_7"   # DIO1/DCLK
+G2_PIN           = "P8_8"   # DIO2/DATA
+G3_PIN           = "P8_9"
+G4_PIN           = "P8_10"
+G5_PIN           = "P8_12"
 BLUE_LEDPIN      = "P9_41"
 MODULE_EN        = "P9_23"
 MODULE_RST       = "P9_15"
@@ -153,12 +162,25 @@ def PAOutputCfg(PA, Power):
 
 def g0int(a):
   print "g0"
+def g1int(a):
+  print "g1"
+def g2int(a):
+  print "g2"
+def g3int(a):
+  print "g3"
+def g4int(a):
+  print "g4"
+def g5int(a):
+  print "g5"
+
 
 def io_setup():
   GPIO.setup(BLUE_LEDPIN, GPIO.OUT)
   GPIO.setup(MODULE_EN, GPIO.OUT)
   GPIO.setup(MODULE_RST, GPIO.OUT)
   GPIO.setup(G0_PIN, GPIO.IN)
+  GPIO.setup(G1_PIN, GPIO.OUT)
+  GPIO.setup(G2_PIN, GPIO.OUT)
   # GPIO.add_event_detect(G0_PIN, GPIO.FALLING, callback=g0int)
   GPIO.add_event_detect(G0_PIN, GPIO.RISING,  callback=g0int)
 
@@ -197,7 +219,7 @@ def RFM69HCW_Read_Register(reg):
 #   Frf   = int(carrier_hz/Fstep)
 def RFM69HCW_Write_Carrier_Freq(carrier_hz):
 
-  global Fstep 
+  global Fstep
   frf      = int(carrier_hz / Fstep)
 
   # vals = RFM_SPI.xfer2([RegFrfMsb, 0x0, 0x0, 0x0])
@@ -214,14 +236,19 @@ def RFM69HCW_Write_Carrier_Freq(carrier_hz):
   # print "Post: vals=\t", hex(vals[0]), "\t", hex(vals[1]), "\t", hex(vals[2]), "\t", hex(vals[3])
 
 def RFM69HCW_Set_Freq_Deviation(freq_dev_hz):
-  global Fstep 
+  global Fstep
   freqdev = int(freq_dev_hz/Fstep)
 
   wbuf    = [(sx1231_reg["RegFdevMsb"]|0x80), (int(freqdev>>8) & 0x3f), int(freqdev&0xff)]
   RFM_SPI.writebytes(wbuf)
+  print "fdev_msb:\t",
+  check_register(sx1231_reg["RegFdevMsb"], (int(freqdev>>8) & 0x3f))
+  print "\nfdev_lsb:\t",
+  check_register(sx1231_reg["RegFdevLsb"], (int(freqdev & 0xff)))
+  print "\n"
 
 def RFM69HCW_Set_Bitrate(bitrate_hz):
-  global Fxosc 
+  global Fxosc
   rate = int(Fxosc/bitrate_hz)
 
   wbuf    = [(sx1231_reg["RegBitrateMsb"]|0x80), (int(rate>>8) & 0xff), int(rate&0xff)]
@@ -229,11 +256,11 @@ def RFM69HCW_Set_Bitrate(bitrate_hz):
 
 
 def RFM69HCW_Set_Sync_Value(fourbytelist):
-  wbuf    = [(sx1231_reg["RegSyncValue1"]|0x80)] + fourbytelist 
+  wbuf    = [(sx1231_reg["RegSyncValue1"]|0x80)] + fourbytelist
   RFM_SPI.writebytes(wbuf)
 
 def RFM69HCW_Set_Preamble(twobytelist):
-  wbuf    = [(sx1231_reg["RegPreambleMsb"]|0x80)] + twobytelist 
+  wbuf    = [(sx1231_reg["RegPreambleMsb"]|0x80)] + twobytelist
   RFM_SPI.writebytes(wbuf)
 
 def RFM69HCW_config_xcvr(OpMode, pa):
@@ -247,12 +274,13 @@ def RFM69HCW_config_xcvr(OpMode, pa):
   RFM69HCW_Write_Carrier_Freq(436500000)
   # RFM69HCW_Write_Carrier_Freq(433000000)
 
-  RFM69HCW_Set_Freq_Deviation(2500)
+  # RFM69HCW_Set_Freq_Deviation(2500)
 
   RFM69HCW_Set_Bitrate(2400)
+  # RFM69HCW_Set_Bitrate(38400)
 
-  RFM69HCW_Write_Register(sx1231_reg["RegDataModul"], DataModul_Packet | DataModul_FSK | DataModul_NoShaping)
-  check_register(sx1231_reg["RegDataModul"], DataModul_Packet | DataModul_FSK | DataModul_NoShaping)
+  RFM69HCW_Write_Register(sx1231_reg["RegDataModul"], DataModul_Continuous | DataModul_FSK | DataModul_NoShaping)
+  check_register(sx1231_reg["RegDataModul"], DataModul_Continuous | DataModul_FSK | DataModul_NoShaping)
 
   # # PLL Bandwith
   RFM69HCW_Write_Register(sx1231_reg["RegTestPllBW"], PLLBandwidth_75kHz )
@@ -264,70 +292,12 @@ def RFM69HCW_config_xcvr(OpMode, pa):
   RFM69HCW_Write_Register(sx1231_reg["RegPaLevel"], pa )
   check_register(sx1231_reg["RegPaLevel"], pa)
 
-  # Op Mode
-  if OpMode == MODE_TX:
-    autoModes = EnterFifoNotEmpty | InterTX | ExitPacketSent
-  else: 
-    raise ModeError("MODE_TX only at this time")
-
-  RFM69HCW_Write_Register(sx1231_reg["RegAutoModes"], autoModes )
-  check_register(sx1231_reg["RegAutoModes"], autoModes)
-
-  RFM69HCW_Write_Register(sx1231_reg["RegRxBw"], 0x55 )
-  check_register(sx1231_reg["RegRxBw"], 0x55)
-
-  RFM69HCW_Write_Register(sx1231_reg["RegRssiThresh"], 0x70 )  # VERY Sensitive?
-  check_register(sx1231_reg["RegRssiThresh"], 0x70)
-
-  SyncConfig = SyncOn | FifoFillSyncAddress | SyncSize(1) | SyncTol(0)
-  RFM69HCW_Write_Register(sx1231_reg["RegSyncConfig"], SyncConfig)
-  check_register(sx1231_reg["RegSyncConfig"], SyncConfig)
-
-  RFM69HCW_Set_Sync_Value([0xe7, 0xe7, 0xe7, 0xe7])
-
-  RFM69HCW_Write_Register(sx1231_reg["RegPacketConfig1"], 0x08)
-  check_register(sx1231_reg["RegPacketConfig1"], 0x08)
-
-  RFM69HCW_Set_Preamble([0x00, 0x10])
-
-##"""
-#        Sets the payload length
-#
-#                The payload length needs to be equal to the buffer of data to be sent
-#                when the tx ready signal is produces on fifo_not_empty. If the tx
-#                ready signal is received from a fifo threshold reached condition
-#                then the payload length needs to be the same as the fifo threshold and
-#                the buffer needs to be one larger than the payload size.
-#
-#                When using auto modes be sure to set the transceiver into standby mode
-#                it will wake and do its thing automagically.
-#
-#"""
-
-  RFM69HCW_Write_Register(sx1231_reg["RegPayloadLength"], 0x05)
-  check_register(sx1231_reg["RegPayloadLength"], 0x05)
-
-
-  # To trigger on a fifo threshhold set RegFifoThresh to PACKET_LENGTH
-  # Trigger on fifo not empty 
-  RFM69HCW_Write_Register(sx1231_reg["RegFifoThresh"], 0x05)
-  check_register(sx1231_reg["RegFifoThresh"], 0x05)
-
-  RFM69HCW_Write_Register(sx1231_reg["RegAfcFei"], AfcAutoOn | AfcAutoclearOn )
-  # Afc should be done during configure
-  check_register(sx1231_reg["RegAfcFei"], AfcDone | AfcAutoOn | AfcAutoclearOn)
-
-  RFM69HCW_Write_Register(sx1231_reg["RegAfcBw"], 0x8b)
-  check_register(sx1231_reg["RegAfcBw"], 0x8b)
-
-  # RFM69HCW_Write_Register(sx1231_reg["RegOpMode"], OpMode)
-  # check_register(sx1231_reg["RegOpMode"], OpMode )
-
+  RFM69HCW_Write_Register(sx1231_reg["RegOpMode"], OpMode)
+  check_register(sx1231_reg["RegOpMode"], OpMode )
 
   time.sleep(0.05)
 
-def spi_config():
-  global RFM_SPI
+def reset_radio():
   blue_blink(2)
   GPIO.output(MODULE_EN,GPIO.HIGH)
   GPIO.output(MODULE_RST,GPIO.LOW)
@@ -336,6 +306,9 @@ def spi_config():
   time.sleep(0.5)
   GPIO.output(MODULE_RST,GPIO.LOW)
   time.sleep(0.5)
+
+def spi_config():
+  global RFM_SPI
   RFM_SPI     = SPI(0,0)
   RFM_SPI.msh = 5000000
 
@@ -344,46 +317,54 @@ def RFM69HCW_Write_Fifo(bytelist):
   wbuf = [(sx1231_reg["RegFifo"]|0x80)] + bytelist
   RFM_SPI.writebytes(wbuf)
 
-def spi_test():
-  # kcallsign    = ['k', 'g', '7', 'e', 'y', 'd']  # K's callsign
-  # callsign     = kcallsign
-  # ord_callsign = map(ord,callsign)
+def tx_send_byte(byte):
+  GPIO.output(G1_PIN,GPIO.HIGH)
+  time.sleep(0.1)
+  GPIO.output(G1_PIN,GPIO.LOW)
+  for x in range(0, 8):
+    thisbit = (byte>>x) & 0b1
+    # print "Thisbit:\t",thisbit
+    if thisbit!=0:
+        GPIO.output(G2_PIN,GPIO.HIGH)
+    else:
+        GPIO.output(G2_PIN,GPIO.LOW)
+    time.sleep(0.1)
+    GPIO.output(G1_PIN,GPIO.HIGH)
+    time.sleep(0.1)
+    GPIO.output(G1_PIN,GPIO.LOW)
+
+def tx_continuous():
+  kcallsign    = ['k', 'g', '7', 'e', 'y', 'd']  # K's callsign
+  callsign     = kcallsign
+  ord_callsign = map(ord,callsign)
 
   # callsign = None
-  if callsign is None: 
+  if callsign is None:
     raise NoCallSign("FCC Callsign not defined")
 
   #RFM69HCW_config_xcvr(MODE_TX, PAOutputCfg(PA0, 0x0))
-  RFM69HCW_config_xcvr(MODE_TX, PAOutputCfg(PA0, 0x10))
-
-  RFM69HCW_Write_Register(sx1231_reg["RegOpMode"], STANDBY_MODE)
-  check_register(sx1231_reg["RegOpMode"], STANDBY_MODE )
-
-
-  # RFM69HCW_Write_Register(sx1231_reg["RegOpMode"], TRANSMITTER_MODE)
-  # check_register(sx1231_reg["RegOpMode"], TRANSMITTER_MODE )
+  RFM69HCW_config_xcvr(MODE_TX, PAOutputCfg(PA0, 0x1F))
 
   count = 0
   while True:
-    count = count + 5
     count = count & 0xff
-    RFM69HCW_Write_Fifo([count, count+1, count+2, count+3, count+4])
-    time.sleep(2.00)
-    print "regfifo:\t" + str(RFM69HCW_Read_Register(sx1231_reg["RegFifo"]))
-    print "regirqflags2:\t" + str(RFM69HCW_Read_Register(sx1231_reg["RegIrqFlags2"]))
-    if (count % 250) == 0:
-      print "Count is: " + str(count)
-      print "Callsign: " + "".join(callsign)
-      print map(hex,ord_callsign)
-      RFM69HCW_Write_Fifo(ord_callsign)
+    tx_send_byte(count)
+    count = count + 1
+    time.sleep(1.00)
+    print hex(count)
+    # if (count % 250) == 0:
+      # print "Count is: " + str(hex(count))
+      # print "Callsign: " + "".join(callsign)
+      # print map(hex,ord_callsign)
 
 
 
 if __name__ == "__main__":
   try:
     io_setup()
+    reset_radio()
     spi_config()
-    spi_test()
+    tx_continuous()
     GPIO.output(BLUE_LEDPIN, GPIO.LOW)
     print "End. Ctl-C to Quit..."
     while True:
