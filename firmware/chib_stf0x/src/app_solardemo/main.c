@@ -65,7 +65,7 @@ static const I2CConfig i2cfg1 =
     0,
     0,
 };
-const  uint8_t           LTC2990_I2C_ADDR   =    0x98;
+const  uint8_t           LTC2990_I2C_ADDR   =    0b1001100;
 
 /*
  * CAN Register configuration

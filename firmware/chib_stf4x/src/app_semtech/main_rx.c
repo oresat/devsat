@@ -24,9 +24,11 @@
 #include "util_version.h"
 #include "util_numbers.h"
 
-#include "ltc2990.h"
-#include "solar_v1.h"
+//#include "ltc2990.h"
+//#include "solar_v1.h"
 #include "semtech.c"
+//#include "sx1236.h"
+//#include "semtech-dev-board-registers.h"
 
 #define DEBUG_SERIAL  SD2
 #define DEBUG_CHP     ((BaseSequentialStream *) &DEBUG_SERIAL)
@@ -109,6 +111,8 @@ static void app_init(void)
     // SPI Driver 1
     spiStart(&SPID1, &spicfg);
 
+    semtech_reset();
+
 }
 
 int main(void) {
@@ -133,25 +137,33 @@ int main(void) {
 */
     //semtech_test_read(&SPID1);
     
-    uint8_t rcvData[12];
-    uint8_t address = 0x03;
-    uint8_t i;
-    semtech_burst_read(&SPID1, address, &rcvData);
-
-    chprintf(DEBUG_CHP, "\r\n Reg values: \r\n" );
-    for (i = 0; i<12; i++){
-       
-        chprintf(DEBUG_CHP, "\r\n %x %x\r\n ",i + address, rcvData[i]);
-    };
-
-
     /*
      * Begin main loop
      */
+    
+
+    semtech_print_regs(&SPID1);
+    semtech_config(&SPID1);
+    
+    semtech_write(&SPID1, transceiver.RegOpMode, 0x08, 1);
+    chThdSleepMilliseconds(1);
+    semtech_write(&SPID1, transceiver.RegOpMode, 0x9, 1);
+    chThdSleepMilliseconds(1);
+    semtech_write(&SPID1, transceiver.RegOpMode, 0xc,1);
+    chThdSleepMilliseconds(1);
+    semtech_write(&SPID1, transceiver.RegOpMode, 0xd,1);
+
+    semtech_print_regs(&SPID1);
+
+    //semtech_listen(&SPID1);
+
+
     while (true)
     {
         chThdSleepMilliseconds(500);
         //Test SPI connectivity
+        chprintf(DEBUG_CHP, "RSSI: %x\r\n", semtech_read(&SPID1, transceiver.RegRssiValue));
+        //chprintf(DEBUG_CHP, "Temp: %x\r\n", semtech_read_temp(&SPID1));
     }
 
     return 0;
