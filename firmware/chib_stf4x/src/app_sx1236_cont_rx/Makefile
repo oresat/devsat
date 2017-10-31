@@ -217,11 +217,9 @@ CWARN = -Wall -Wextra -Wstrict-prototypes  -Wdisabled-optimization \
 	-Wdouble-promotion -Wformat=2 -Wfloat-equal \
 	-Waggressive-loop-optimizations \
 	-Waggregate-return -Wlogical-op \
-	-Wchar-subscripts -Wchkp -Wimplicit-fallthrough \
-	-Wswitch-unreachable \
+	-Wchar-subscripts -Wchkp  \
 	-Wswitch-enum \
-       	-Wswitch-bool \
-	-Wno-implicit-fallthrough
+       	-Wswitch-bool 
 
 	# -Wswitch-default 
 

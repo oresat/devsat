@@ -1,4 +1,5 @@
 /*
+
     ChibiOS - Copyright (C) 2006..2015 Giovanni Di Sirio
 
     Licensed under the Apache License, Version 2.0 (the "License");
@@ -169,37 +170,12 @@ static void dio0_evt_handler(eventid_t id)
     chprintf(DEBUG_CHP, "dio0 event\r\n");
 }
 
-/* In continuous mode DIO1 is DCLK RX
-	See reference manual 4.1.12.3
-
-	Rising edge interrupt
-*/
 static void dio1_evt_handler(eventid_t id)
 {
     (void)id;
-    uint8_t bit  = 0;
-
-    static uint8_t count = 0;
-    static uint8_t byte  = 0x0;
-
-    /* Data Clock received, get bit from DIO2 */
-    bit  = palReadPad(GPIOC, GPIOC_SX_DIO2);
-    byte = byte | (bit << count);
-
-    count += 1;
-
-    if(count == 8) {
-        chprintf(DEBUG_CHP, "RX Byte: 0x%x\r\n", byte );
-        count = 0;
-        byte  = 0x0;
-    }
-
     chprintf(DEBUG_CHP, "dio1 event\r\n");
 }
 
-/* In continuous mode DIO2 is DATA RX
-	See reference manual 4.1.12.3
-*/
 static void dio2_evt_handler(eventid_t id)
 {
     (void)id;
@@ -253,7 +229,7 @@ static THD_FUNCTION(Thread_sx1236_dio, arg)
     chprintf(DEBUG_CHP, "Thread started: %s\r\n", "sx1236_dio");
     while (TRUE)
     {
-        chEvtDispatch(evhndl_sx1236_dio, chEvtWaitOneTimeout(EVENT_MASK(1), MS2ST(50)));
+        chEvtDispatch(evhndl_sx1236_dio, chEvtWaitOneTimeout(EVENT_MASK(0), MS2ST(50)));
 
         /*
          * Examples of different masking of events
@@ -265,17 +241,38 @@ static THD_FUNCTION(Thread_sx1236_dio, arg)
     }
 }
 
+static THD_WORKING_AREA(waThread_sx1236_tx, 512);
+static THD_FUNCTION(Thread_sx1236_tx, arg)
+{
+	(void) arg;
+	palSetPadMode(GPIOC, 1, PAL_MODE_OUTPUT_PUSHPULL );
+	palSetPadMode(GPIOC, 2, PAL_MODE_OUTPUT_PUSHPULL );
+	chThdSleepMilliseconds(200);
+	while (true)
+	{
+		chThdSleepMilliseconds(1);
+		palClearPad(GPIOC, GPIOC_SX_DIO1);
+		if (palReadPad(GPIOC, GPIOC_BUTTON))
+			palSetPad(GPIOC, GPIOC_SX_DIO2);
+		else
+			palClearPad(GPIOC, GPIOC_SX_DIO2);
+		chprintf(DEBUG_CHP, "writting DIO1\r\n");
+		chThdSleepMilliseconds(1);
+		palSetPad(GPIOC, GPIOC_SX_DIO1);
+
+	}
+}
+
 static void start_threads(void)
 {
     chThdCreateStatic(waThread_sx1236_dio,      sizeof(waThread_sx1236_dio),   NORMALPRIO, Thread_sx1236_dio, NULL);
+	chThdCreateStatic(waThread_sx1236_tx,      sizeof(waThread_sx1236_tx),   NORMALPRIO, Thread_sx1236_tx, NULL);
 }
 
 
 static void main_loop(void)
 {
     chThdSleepMilliseconds(500);
-    chprintf(DEBUG_CHP, "\r\n");
-    chprintf(DEBUG_CHP, "**INFO** SX1236 RX Test...\r\n");
     chprintf(DEBUG_CHP, "\r\n");
     sx1236_check_reg(&SPID1, regaddrs.RegVersion, 0x12);
 
@@ -299,8 +296,8 @@ int main(void)
     chSysInit();
     app_init();
 
-    // Enable interrupt through the EXT interface
-    extStart(&EXTD1, &extcfg);
+	// Enable interrupt through the EXT interface
+    //extStart(&EXTD1, &extcfg);
 
     start_threads();
     main_loop();

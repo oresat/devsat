@@ -1,5 +1,4 @@
 /*
-
     ChibiOS - Copyright (C) 2006..2015 Giovanni Di Sirio
 
     Licensed under the Apache License, Version 2.0 (the "License");
@@ -95,7 +94,7 @@ static config_sx1236 dut_config ;
 // {
 // }
 
-static void init_tx_continuous(config_sx1236 * s)
+static void init_rx_continuous(config_sx1236 * s)
 {
     s->Fxosc                            = F_XOSC;
     s->Fstep                            = F_STEP;
@@ -105,7 +104,7 @@ static void init_tx_continuous(config_sx1236 * s)
 
     sx1236_init_state(&s->sx1236_state);
 
-    s->sx1236_state.RegOpMode          = 0x0 | SX1236_LOW_FREQ_MODE | SX1236_FSK_MODE |  SX1236_TRANSMITTER_MODE ;
+    s->sx1236_state.RegOpMode          = 0x0 | SX1236_LOW_FREQ_MODE | SX1236_FSK_MODE |  SX1236_RECEIVER_MODE;
     s->sx1236_state.RegOsc             = 0x0 | SX1236_OSC_DIV_8 ;
     s->sx1236_state.RegPacketConfig2   = 0x0 | SX1236_CONTINUOUS_MODE ;
 }
@@ -170,12 +169,37 @@ static void dio0_evt_handler(eventid_t id)
     chprintf(DEBUG_CHP, "dio0 event\r\n");
 }
 
+/* In continuous mode DIO1 is DCLK RX
+	See reference manual 4.1.12.3
+
+	Rising edge interrupt
+*/
 static void dio1_evt_handler(eventid_t id)
 {
     (void)id;
+    uint8_t bit  = 0;
+
+    static uint8_t count = 0;
+    static uint8_t byte  = 0x0;
+
+    /* Data Clock received, get bit from DIO2 */
+    bit  = palReadPad(GPIOC, GPIOC_SX_DIO2);
+    byte = byte | (bit << count);
+
+    count += 1;
+
+    if(count == 8) {
+        chprintf(DEBUG_CHP, "RX Byte: 0x%x\r\n", byte );
+        count = 0;
+        byte  = 0x0;
+    }
+
     chprintf(DEBUG_CHP, "dio1 event\r\n");
 }
 
+/* In continuous mode DIO2 is DATA RX
+	See reference manual 4.1.12.3
+*/
 static void dio2_evt_handler(eventid_t id)
 {
     (void)id;
@@ -229,7 +253,7 @@ static THD_FUNCTION(Thread_sx1236_dio, arg)
     chprintf(DEBUG_CHP, "Thread started: %s\r\n", "sx1236_dio");
     while (TRUE)
     {
-        chEvtDispatch(evhndl_sx1236_dio, chEvtWaitOneTimeout(EVENT_MASK(0), MS2ST(50)));
+        chEvtDispatch(evhndl_sx1236_dio, chEvtWaitOneTimeout(EVENT_MASK(1), MS2ST(50)));
 
         /*
          * Examples of different masking of events
@@ -251,9 +275,11 @@ static void main_loop(void)
 {
     chThdSleepMilliseconds(500);
     chprintf(DEBUG_CHP, "\r\n");
+    chprintf(DEBUG_CHP, "**INFO** SX1236 RX Test...\r\n");
+    chprintf(DEBUG_CHP, "\r\n");
     sx1236_check_reg(&SPID1, regaddrs.RegVersion, 0x12);
 
-    init_tx_continuous(&dut_config);
+    init_rx_continuous(&dut_config);
     sx1236_configure(&SPID1, &dut_config);
 
     // chprintf(DEBUG_CHP, "**INFO**\r\n");
@@ -273,7 +299,7 @@ int main(void)
     chSysInit();
     app_init();
 
-	// Enable interrupt through the EXT interface
+    // Enable interrupt through the EXT interface
     extStart(&EXTD1, &extcfg);
 
     start_threads();
