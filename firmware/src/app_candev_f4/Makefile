@@ -87,7 +87,7 @@ endif
 PROJECT = app_candev
 
 # Imported source files and paths
-CONF_DIR  = conf
+CONFDIR  = conf
 PROJ_ROOT = ../..
 PROJ_INC  = $(PROJ_ROOT)/common
 TOOLCHAIN = $(PROJ_ROOT)/toolchain
@@ -170,7 +170,7 @@ INCDIR = $(CHIBIOS)/os/license \
          $(HALINC) $(PLATFORMINC) $(BOARDINC) $(TESTINC) \
          $(CHIBIOS)/os/various \
          $(STREAMSINC) \
-         $(CONF_DIR) \
+         $(CONFDIR) \
          $(PROJ_INC)/include
 
 #
