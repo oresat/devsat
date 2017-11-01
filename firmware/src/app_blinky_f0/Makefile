@@ -113,12 +113,13 @@ include $(CHIBIOS)/os/common/ports/ARMCMx/compilers/GCC/mk/port_v6m.mk
 include $(CHIBIOS)/test/lib/test.mk
 include $(CHIBIOS)/test/rt/rt_test.mk
 include $(CHIBIOS)/test/oslib/oslib_test.mk
+include $(CHIBIOS)/os/hal/lib/streams/streams.mk
 
 # Define linker script file here
 LDSCRIPT= $(STARTUPLD)/STM32F042x6.ld
 
 # Add application source files here
-APP_SRCS = util_version
+APP_SRCS = util_version.c
 
 # C sources that can be compiled in ARM or THUMB mode depending on the global
 # setting.
@@ -130,9 +131,7 @@ CSRC = $(STARTUPSRC) \
        $(PLATFORMSRC) \
        $(BOARDSRC) \
        $(TESTSRC) \
-       $(CHIBIOS)/os/hal/lib/streams/memstreams.c \
-       $(CHIBIOS)/os/hal/lib/streams/chprintf.c \
-       $(PROJ_INC)/$(APP_SRCS).c \
+       $(PROJ_INC)/$(APP_SRCS) \
        main.c
 
 # C++ sources that can be compiled in ARM or THUMB mode depending on the global
@@ -166,7 +165,6 @@ ASMXSRC = $(STARTUPASM) $(PORTASM) $(OSALASM)
 INCDIR = $(CHIBIOS)/os/license \
          $(STARTUPINC) $(KERNINC) $(PORTINC) $(OSALINC) \
          $(HALINC) $(PLATFORMINC) $(BOARDINC) $(TESTINC) \
-         $(CHIBIOS)/os/hal/lib/streams $(CHIBIOS)/os/various \
          $(CHIBIOS)/os/various \
          $(CONF_DIR) \
          $(PROJ_INC)/include

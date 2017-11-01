@@ -51,15 +51,12 @@
 #define STM32_PLLMUL_VALUE                  3
 #define STM32_HPRE                          STM32_HPRE_DIV1
 #define STM32_PPRE                          STM32_PPRE_DIV1
-// #define STM32_MCOSEL                        STM32_MCOSEL_NOCLOCK
 #define STM32_MCOSEL                        STM32_MCOSEL_SYSCLK
 #define STM32_MCOPRE                        STM32_MCOPRE_DIV1
 #define STM32_PLLNODIV                      STM32_PLLNODIV_DIV2
 #define STM32_USBSW                         STM32_USBSW_HSI48
 #define STM32_CECSW                         STM32_CECSW_HSI
 #define STM32_I2C1SW                        STM32_I2C1SW_HSI
-// #define STM32_I2C1SW                        STM32_I2C1SW_SYSCLK
-// #define STM32_USART1SW                      STM32_USART1SW_PCLK
 #define STM32_USART1SW                      STM32_USART1SW_HSI
 #define STM32_RTCSEL                        STM32_RTCSEL_LSI
 
