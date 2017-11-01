@@ -130,7 +130,7 @@ CSRC = $(STARTUPSRC) \
        $(HALSRC) \
        $(PLATFORMSRC) \
        $(BOARDSRC) \
-       $(TESTSRC) \
+       $(STREAMSSRC) \
        $(PROJ_INC)/$(APP_SRCS) \
        main.c
 
@@ -166,6 +166,7 @@ INCDIR = $(CHIBIOS)/os/license \
          $(STARTUPINC) $(KERNINC) $(PORTINC) $(OSALINC) \
          $(HALINC) $(PLATFORMINC) $(BOARDINC) $(TESTINC) \
          $(CHIBIOS)/os/various \
+         $(STREAMSINC) \
          $(CONF_DIR) \
          $(PROJ_INC)/include
 
