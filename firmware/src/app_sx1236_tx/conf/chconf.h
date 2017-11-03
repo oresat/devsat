@@ -1,5 +1,5 @@
 /*
-    ChibiOS - Copyright (C) 2006..2015 Giovanni Di Sirio
+    ChibiOS - Copyright (C) 2006..2016 Giovanni Di Sirio
 
     Licensed under the Apache License, Version 2.0 (the "License");
     you may not use this file except in compliance with the License.
@@ -29,6 +29,7 @@
 #define CHCONF_H
 
 #define _CHIBIOS_RT_CONF_
+#define _CHIBIOS_RT_CONF_VER_5_0_
 
 /*===========================================================================*/
 /**
@@ -140,7 +141,7 @@
  *
  * @note    The default is @p TRUE.
  */
-#define CH_CFG_USE_TM                       FALSE
+#define CH_CFG_USE_TM                       TRUE
 
 /**
  * @brief   Threads registry APIs.
@@ -292,7 +293,16 @@
  *
  * @note    The default is @p TRUE.
  */
-#define CH_CFG_USE_MEMPOOLS                 FALSE
+#define CH_CFG_USE_MEMPOOLS                 TRUE
+
+/**
+ * @brief  Objects FIFOs APIs.
+ * @details If enabled then the objects FIFOs APIs are included
+ *          in the kernel.
+ *
+ * @note    The default is @p TRUE.
+ */
+#define CH_CFG_USE_OBJ_FIFOS                TRUE
 
 /**
  * @brief   Dynamic Threads APIs.
@@ -303,7 +313,57 @@
  * @note    Requires @p CH_CFG_USE_WAITEXIT.
  * @note    Requires @p CH_CFG_USE_HEAP and/or @p CH_CFG_USE_MEMPOOLS.
  */
-#define CH_CFG_USE_DYNAMIC                  FALSE
+#define CH_CFG_USE_DYNAMIC                  TRUE
+
+/** @} */
+
+/*===========================================================================*/
+/**
+ * @name Objects factory options
+ * @{
+ */
+/*===========================================================================*/
+
+/**
+ * @brief   Objects Factory APIs.
+ * @details If enabled then the objects factory APIs are included in the
+ *          kernel.
+ *
+ * @note    The default is @p FALSE.
+ */
+#define CH_CFG_USE_FACTORY                  FALSE
+
+/**
+ * @brief   Maximum length for object names.
+ * @details If the specified length is zero then the name is stored by
+ *          pointer but this could have unintended side effects.
+ */
+#define CH_CFG_FACTORY_MAX_NAMES_LENGTH     8
+
+/**
+ * @brief   Enables the registry of generic objects.
+ */
+#define CH_CFG_FACTORY_OBJECTS_REGISTRY     TRUE
+
+/**
+ * @brief   Enables factory for generic buffers.
+ */
+#define CH_CFG_FACTORY_GENERIC_BUFFERS      TRUE
+
+/**
+ * @brief   Enables factory for semaphores.
+ */
+#define CH_CFG_FACTORY_SEMAPHORES           TRUE
+
+/**
+ * @brief   Enables factory for mailboxes.
+ */
+#define CH_CFG_FACTORY_MAILBOXES            TRUE
+
+/**
+ * @brief   Enables factory for objects FIFOs.
+ */
+#define CH_CFG_FACTORY_OBJ_FIFOS            TRUE
 
 /** @} */
 
@@ -328,7 +388,7 @@
  *
  * @note    The default is @p FALSE.
  */
-#define CH_DBG_SYSTEM_STATE_CHECK           FALSE
+#define CH_DBG_SYSTEM_STATE_CHECK           TRUE
 
 /**
  * @brief   Debug option, parameters checks.
@@ -337,7 +397,7 @@
  *
  * @note    The default is @p FALSE.
  */
-#define CH_DBG_ENABLE_CHECKS                FALSE
+#define CH_DBG_ENABLE_CHECKS                TRUE
 
 /**
  * @brief   Debug option, consistency checks.
@@ -347,7 +407,7 @@
  *
  * @note    The default is @p FALSE.
  */
-#define CH_DBG_ENABLE_ASSERTS               FALSE
+#define CH_DBG_ENABLE_ASSERTS               TRUE
 
 /**
  * @brief   Debug option, trace buffer.
@@ -355,7 +415,7 @@
  *
  * @note    The default is @p CH_DBG_TRACE_MASK_DISABLED.
  */
-#define CH_DBG_TRACE_MASK                   CH_DBG_TRACE_MASK_DISABLED
+#define CH_DBG_TRACE_MASK                   CH_DBG_TRACE_MASK_ALL
 
 /**
  * @brief   Trace buffer entries.
@@ -374,7 +434,7 @@
  * @note    The default failure mode is to halt the system with the global
  *          @p panic_msg variable set to @p NULL.
  */
-#define CH_DBG_ENABLE_STACK_CHECK           FALSE
+#define CH_DBG_ENABLE_STACK_CHECK           TRUE
 
 /**
  * @brief   Debug option, stacks initialization.
@@ -384,7 +444,7 @@
  *
  * @note    The default is @p FALSE.
  */
-#define CH_DBG_FILL_THREADS                 FALSE
+#define CH_DBG_FILL_THREADS                 TRUE
 
 /**
  * @brief   Debug option, threads profiling.
