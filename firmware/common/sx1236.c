@@ -310,7 +310,7 @@ void sx1236_set_freq_deviation(SPIDriver * spip, config_sx1236 * c)
 
 	freqdev          = (uint32_t)incr_rnd((1.0 * c->freq_dev_hz / c->Fstep), 1);
 
-	c->sx1236_state.RegFdevMsb      = (freqdev >> 8) & 0x3f;
+	c->sx1236_state.RegFdevMsb      = (freqdev >> 8) & 0xff;
 	c->sx1236_state.RegFdevLsb      = freqdev        & 0xff;
 
 	sx_txbuff[0] = c->sx1236_state.RegFdevMsb;

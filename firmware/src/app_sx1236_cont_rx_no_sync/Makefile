@@ -84,7 +84,7 @@ endif
 #
 
 # Define project name here
-PROJECT = app_sx1236_tx
+PROJECT = app_sx1236_rx
 
 # Imported source files and paths
 CONFDIR  = conf
@@ -247,7 +247,6 @@ UINCDIR =
 ULIBDIR =
 
 # List all user libraries here
-# ULIBS = -lm
 ULIBS =
 
 #

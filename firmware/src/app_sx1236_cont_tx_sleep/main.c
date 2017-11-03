@@ -241,9 +241,32 @@ static THD_FUNCTION(Thread_sx1236_dio, arg)
     }
 }
 
+static THD_WORKING_AREA(waThread_sx1236_tx, 512);
+static THD_FUNCTION(Thread_sx1236_tx, arg)
+{
+	(void) arg;
+	palSetPadMode(GPIOC, 1, PAL_MODE_OUTPUT_PUSHPULL );
+	palSetPadMode(GPIOC, 2, PAL_MODE_OUTPUT_PUSHPULL );
+	chThdSleepMilliseconds(200);
+	while (true)
+	{
+		chThdSleepMilliseconds(1);
+		palClearPad(GPIOC, GPIOC_SX_DIO1);
+		if (palReadPad(GPIOC, GPIOC_BUTTON))
+			palSetPad(GPIOC, GPIOC_SX_DIO2);
+		else
+			palClearPad(GPIOC, GPIOC_SX_DIO2);
+		chprintf(DEBUG_CHP, "writting DIO1\r\n");
+		chThdSleepMilliseconds(1);
+		palSetPad(GPIOC, GPIOC_SX_DIO1);
+
+	}
+}
+
 static void start_threads(void)
 {
     chThdCreateStatic(waThread_sx1236_dio,      sizeof(waThread_sx1236_dio),   NORMALPRIO, Thread_sx1236_dio, NULL);
+	chThdCreateStatic(waThread_sx1236_tx,      sizeof(waThread_sx1236_tx),   NORMALPRIO, Thread_sx1236_tx, NULL);
 }
 
 
@@ -274,7 +297,7 @@ int main(void)
     app_init();
 
 	// Enable interrupt through the EXT interface
-    extStart(&EXTD1, &extcfg);
+    //extStart(&EXTD1, &extcfg);
 
     start_threads();
     main_loop();
