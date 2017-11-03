@@ -153,7 +153,7 @@ static THD_FUNCTION(demo_measure, p)
         {
             lcd_clear();
             chprintf(DEBUG_CHP, "LTC2990 Error: Conversion not finished");
-            chThdSleepS(TIME_S2I(1));
+            chThdSleepS(S2ST(1));
         }
         else
         {
@@ -201,7 +201,7 @@ static THD_FUNCTION(demo_measure, p)
             }
             lcd_clear();
             chprintf(DEBUG_CHP, "%dC        %dmA  %dmV     %dC", params.temp_ext, params.current, params.vcc, params.tint);
-            canTransmit(&CAND1, CAN_ANY_MAILBOX, &txmsg, TIME_MS2I(100));
+            canTransmit(&CAND1, CAN_ANY_MAILBOX, &txmsg, MS2ST(100));
         }
         chThdSleepMilliseconds(1000);
     }
@@ -219,18 +219,18 @@ static void app_init(void)
     chprintf(DEBUG_CHP, "I2C1 Initialized.");
     set_util_fwversion(&version_info);
     set_util_hwversion(&version_info);
-    chThdSleepS(TIME_S2I(1));
+    chThdSleepS(S2ST(1));
 
     lcd_clear();
     chprintf(DEBUG_CHP, "FW HASH: %s", version_info.firmware);
-    chThdSleepS(TIME_S2I(1));
+    chThdSleepS(S2ST(1));
     lcd_clear();
     // chprintf(DEBUG_CHP, "STF0x UNIQUE HW ID (H,C,L):\r\n0x%x\t0x%x\t0x%x"
              // , version_info.hardware.id_high
              // , version_info.hardware.id_center
              // , version_info.hardware.id_low
             // );
-    chThdSleepS(TIME_S2I(1));
+    chThdSleepS(S2ST(1));
 
     /*
      * Activates CAN driver 1.
@@ -249,19 +249,19 @@ static void main_app(void)
     // chprintf(DEBUG_CHP, "OrSat Solar Demo");
     // streamPut(DEBUG_CHP, 0x7c);
     // streamPut(DEBUG_CHP, 0x0a);
-    // chThdSleepS(TIME_S2I(10));
+    // chThdSleepS(S2ST(10));
     streamPut(DEBUG_CHP, 0x7c);
     streamPut(DEBUG_CHP, 0x82);
-    chThdSleepS(TIME_S2I(1));
+    chThdSleepS(S2ST(1));
     chprintf(DEBUG_CHP, "Demo Start");
     // chprintf(DEBUG_CHP, ".");
     // while(1) {
 
     // chprintf(DEBUG_CHP, "+");
-    // chThdSleepS(TIME_S2I(1));
+    // chThdSleepS(S2ST(1));
 
     // }
-    chThdSleepS(TIME_S2I(2));
+    chThdSleepS(S2ST(2));
     lcd_clear();
 
     /*

@@ -25,7 +25,7 @@ static        uint8_t    i2c_rxbuf[LTC2990_I2C_RX_BUFSIZE];
 uint8_t ltc2990_readreg(uint8_t reg, i2cflags_t * i2c_errors)
 {
     msg_t status   = MSG_OK;
-    systime_t tmo  = TIME_MS2I(4);
+    systime_t tmo  = MS2ST(4);
 
     i2c_txbuf[0] = reg;
     i2c_rxbuf[0] = 0xff;
@@ -44,7 +44,7 @@ uint8_t ltc2990_readreg(uint8_t reg, i2cflags_t * i2c_errors)
 void ltc2990_writereg(uint8_t reg, uint8_t val, i2cflags_t * i2c_errors)
 {
     msg_t status   = MSG_OK;
-    systime_t tmo  = TIME_MS2I(4);
+    systime_t tmo  = MS2ST(4);
 
     i2c_txbuf[0] = reg;
     i2c_txbuf[1] = val;
@@ -61,7 +61,7 @@ void ltc2990_writereg(uint8_t reg, uint8_t val, i2cflags_t * i2c_errors)
 void ltc2990_read_all(ltc2990_data * d, i2cflags_t * i2c_errors)
 {
     msg_t status   = MSG_OK;
-    systime_t tmo  = TIME_MS2I(4);
+    systime_t tmo  = MS2ST(4);
 
     i2c_txbuf[0]   = LTC2990_STATUS;
     i2cAcquireBus(&I2CD1);

@@ -97,7 +97,7 @@ static THD_FUNCTION(can_rx, p)
     // Start RX Loop
     while(!chThdShouldTerminateX())
     {
-        if (chEvtWaitAnyTimeout(ALL_EVENTS, TIME_MS2I(100)) == 0)
+        if (chEvtWaitAnyTimeout(ALL_EVENTS, MS2ST(100)) == 0)
         {
             continue;
         }
@@ -200,7 +200,7 @@ static THD_FUNCTION(can_tx, p)
         chThdSleepMilliseconds(750);
 
         //Transmit message
-        canTransmit(&CAND1, CAN_ANY_MAILBOX, &txmsg, TIME_MS2I(100));
+        canTransmit(&CAND1, CAN_ANY_MAILBOX, &txmsg, MS2ST(100));
         /*chprintf(DEBUG_CHP, "TX msg: %d\n\r", msg);*/
     }
 }
@@ -212,7 +212,7 @@ static void app_init(void)
 
     set_util_fwversion(&version_info);
     set_util_hwversion(&version_info);
-    chThdSleepS(TIME_S2I(2));
+    chThdSleepS(S2ST(2));
 
     //Print FW/HW information
     chprintf(DEBUG_CHP, "\r\nFirmware Info\r\n");
