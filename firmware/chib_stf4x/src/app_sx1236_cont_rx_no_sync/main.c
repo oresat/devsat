@@ -343,7 +343,7 @@ static THD_FUNCTION(Thread_sx1236_rx, arg)
 	chThdSleepMilliseconds(200);
 
 	gptStart(&GPTD3, &gpt3cfg);
-	gptStartContinuous(&GPTD3, 40);
+	gptStartContinuous(&GPTD3, 10);
 
 }
 
