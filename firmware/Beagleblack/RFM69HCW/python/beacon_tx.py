@@ -268,16 +268,18 @@ def RFM69HCW_config_xcvr(OpMode, pa):
   #    set mode FS - Frequency Synthesizer mode
   # RFM69HCW_Write_Register(sx1231_reg["RegOpMode"], FS_MODE)
   # check_register(sx1231_reg["RegOpMode"], FS_MODE)
-  time.sleep(0.05)
+  # time.sleep(0.05)
 
   # # Set Carrier Frequency
   RFM69HCW_Write_Carrier_Freq(436500000)
   # RFM69HCW_Write_Carrier_Freq(433000000)
 
   # RFM69HCW_Set_Freq_Deviation(2500)
+  RFM69HCW_Set_Freq_Deviation(20000)
 
-  RFM69HCW_Set_Bitrate(2400)
+  # RFM69HCW_Set_Bitrate(2400)
   # RFM69HCW_Set_Bitrate(38400)
+  RFM69HCW_Set_Bitrate(19200)
 
   RFM69HCW_Write_Register(sx1231_reg["RegDataModul"], DataModul_Continuous | DataModul_FSK | DataModul_NoShaping)
   check_register(sx1231_reg["RegDataModul"], DataModul_Continuous | DataModul_FSK | DataModul_NoShaping)
