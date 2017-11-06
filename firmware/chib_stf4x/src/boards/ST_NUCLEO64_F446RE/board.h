@@ -68,12 +68,17 @@
 #define GPIOA_USART2_TX             2U
 #define GPIOA_ARD_D0                3U
 #define GPIOA_USART2_RX             3U
-#define GPIOA_ARD_D10               4U
+#define GPIOA_ARD_A2                4U
 #define GPIOA_ADC12_IN4             4U
 #define GPIOA_SPI1_NSS              4U
+#define GPIOA_LED_GREEN             5U
+#define GPIOA_ARD_D13               5U
 #define GPIOA_SPI1_SCK              5U
+#define GPIOA_ARD_D12               6U
 #define GPIOA_SPI1_MISO             6U
+#define GPIOA_ARD_D11               7U
 #define GPIOA_SPI1_MOSI             7U
+#define GPIOA_ARD_D7                8U
 #define GPIOA_SEMTECH_RST           8U
 #define GPIOA_ARD_D8                9U
 #define GPIOA_SX_TESTIN             9U
@@ -95,7 +100,9 @@
 #define GPIOB_ARD_D4                5U
 #define GPIOB_ARD_D10               6U
 #define GPIOB_PIN7                  7U
+#define GPIOB_ARD_D15               8U
 #define GPIOB_CAN1_RX               8U
+#define GPIOB_ARD_D14               9U
 #define GPIOB_CAN1_TX               9U
 #define GPIOB_ARD_D6                10U
 #define GPIOB_PIN11                 11U
@@ -248,6 +255,7 @@
 #define LINE_ARD_D13                PAL_LINE(GPIOA, 5U)
 #define LINE_ARD_D12                PAL_LINE(GPIOA, 6U)
 #define LINE_ARD_D11                PAL_LINE(GPIOA, 7U)
+#define LINE_ARD_D7                 PAL_LINE(GPIOA, 8U)
 #define LINE_SEMTECH_RST            PAL_LINE(GPIOA, 8U)
 #define LINE_ARD_D8                 PAL_LINE(GPIOA, 9U)
 #define LINE_ARD_D2                 PAL_LINE(GPIOA, 10U)
@@ -263,6 +271,8 @@
 #define LINE_ARD_D5                 PAL_LINE(GPIOB, 4U)
 #define LINE_ARD_D4                 PAL_LINE(GPIOB, 5U)
 #define LINE_ARD_D10                PAL_LINE(GPIOB, 6U)
+#define LINE_ARD_D15                PAL_LINE(GPIOB, 8U)
+#define LINE_ARD_D14                PAL_LINE(GPIOB, 9U)
 #define LINE_ARD_D6                 PAL_LINE(GPIOB, 10U)
 
 #define LINE_ARD_A5                 PAL_LINE(GPIOC, 0U)
