@@ -10,51 +10,51 @@ from Adafruit_BBIO.SPI import SPI
 
 class ModeError(Exception):
   def __init__(self, value):
-    self.value = value
+        self.value = value
   def __str__(self):
-    return repr(self.value)
+      return repr(self.value)
 
 class NoCallSign(Exception):
   def __init__(self, value):
-    self.value = value
+        self.value = value
   def __str__(self):
-    return repr(self.value)
+      return repr(self.value)
 
 class CheckError(Exception):
-  def __init__(self, value):
-    self.value = value
-  def __str__(self):
-    return repr(self.value)
+    def __init__(self, value):
+        self.value = value
+    def __str__(self):
+      return repr(self.value)
 
 
 # Registers
 sx1231_reg = {
-    "RegFifo"          : 0x00,
-    "RegOpMode"        : 0x01,
-    "RegDataModul"     : 0x02,
-    "RegBitrateMsb"    : 0x03,
-    "RegBitrateLsb"    : 0x04,
-    "RegFdevMsb"       : 0x05,
-    "RegFdevLsb"       : 0x06,
-    "RegFrfMsb"        : 0x07,
-    "RegFrfMid"        : 0x08,
-    "RegFrfLsb"        : 0x09,
-    "RegPaLevel"       : 0x11,
-    "RegLna"           : 0x18,
-    "RegRxBw"          : 0x19,
-    "RegAfcBw"         : 0x1a,
-    "RegAfcFei"        : 0x1e,
-    "RegIrqFlags2"     : 0x28,
-    "RegRssiThresh"    : 0x29,
-    "RegPreambleMsb"   : 0x2c,
-    "RegSyncConfig"    : 0x2e,
-    "RegSyncValue1"    : 0x2f,
-    "RegPacketConfig1" : 0x37,
-    "RegPayloadLength" : 0x38,
-    "RegAutoModes"     : 0x3b,
-    "RegFifoThresh"    : 0x3c,
-    "RegTestPllBW"     : 0x5f,
-    }
+        "RegFifo"          : 0x00,
+        "RegOpMode"        : 0x01,
+        "RegDataModul"     : 0x02,
+        "RegBitrateMsb"    : 0x03,
+        "RegBitrateLsb"    : 0x04,
+        "RegFdevMsb"       : 0x05,
+        "RegFdevLsb"       : 0x06,
+        "RegFrfMsb"        : 0x07,
+        "RegFrfMid"        : 0x08,
+        "RegFrfLsb"        : 0x09,
+        "RegPaLevel"       : 0x11,
+        "RegLna"           : 0x18,
+        "RegRxBw"          : 0x19,
+        "RegAfcBw"         : 0x1a,
+        "RegAfcFei"        : 0x1e,
+        "RegIrqFlags2"     : 0x28,
+        "RegRssiThresh"    : 0x29,
+        "RegPreambleMsb"   : 0x2c,
+        "RegSyncConfig"    : 0x2e,
+        "RegSyncValue1"    : 0x2f,
+        "RegPacketConfig1" : 0x37,
+        "RegPayloadLength" : 0x38,
+        "RegAutoModes"     : 0x3b,
+        "RegFifoThresh"    : 0x3c,
+        "RegTestPllBW"     : 0x5f,
+        }
 
 # inverse dictionary for register name lookup
 inv_sx1231_reg = {v: k for k, v in sx1231_reg.items()}
@@ -65,10 +65,10 @@ FifoFillSyncAddress =  (0 << 6)
 FifoFillCondition   =  (1 << 6)
 
 def SyncSize(bytes):
-  return ((((bytes) - 1) & 0x7) << 3)
+    return ((((bytes) - 1) & 0x7) << 3)
 
 def SyncTol(errors):
-  return ((errors) & 0x7)
+    return ((errors) & 0x7)
 
 
 # RegAfcFei
@@ -152,26 +152,26 @@ Fstep            = 61.03515625
 def check_register(addr, value):
   vals = RFM_SPI.xfer2([addr, 0x0])
   if vals[1] != value:
-    str = "addr: "+ hex(addr) + "(" + inv_sx1231_reg[addr] + ")" + " should be: " + hex(value) + " got: " + hex(vals[1])
-    raise CheckError(str)
+      str = "addr: "+ hex(addr) + "(" + inv_sx1231_reg[addr] + ")" + " should be: " + hex(value) + " got: " + hex(vals[1])
+      raise CheckError(str)
   print "Reg{",hex(addr),"}(",inv_sx1231_reg[addr],")\t\t=", hex(vals[1])
 
 
 def PAOutputCfg(PA, Power):
-  return (((PA) & (PA0 | PA1 | PA2)) | ((Power) & 0x1F))
+    return (((PA) & (PA0 | PA1 | PA2)) | ((Power) & 0x1F))
 
 def g0int(a):
-  print "g0"
+    print "g0"
 def g1int(a):
-  print "g1"
+    print "g1"
 def g2int(a):
-  print "g2"
+    print "g2"
 def g3int(a):
-  print "g3"
+    print "g3"
 def g4int(a):
-  print "g4"
+    print "g4"
 def g5int(a):
-  print "g5"
+    print "g5"
 
 
 def io_setup():
@@ -195,8 +195,8 @@ def blue_invert():
     GPIO.output(BLUE_LEDPIN,GPIO.LOW)
 
 def blue_blink(n):
-  for num in range(0,n):
-    blue_invert()
+    for num in range(0,n):
+        blue_invert()
     time.sleep(0.25)
 
 def RFM69HCW_Write_Register(reg, val):
@@ -275,18 +275,20 @@ def RFM69HCW_config_xcvr(OpMode, pa):
   # RFM69HCW_Write_Carrier_Freq(433000000)
 
   # RFM69HCW_Set_Freq_Deviation(2500)
+  RFM69HCW_Set_Freq_Deviation(20000)
 
-  RFM69HCW_Set_Bitrate(2400)
+  # RFM69HCW_Set_Bitrate(2400)
   # RFM69HCW_Set_Bitrate(38400)
+  RFM69HCW_Set_Bitrate(19200)
 
   RFM69HCW_Write_Register(sx1231_reg["RegDataModul"], DataModul_Continuous | DataModul_FSK | DataModul_NoShaping)
   check_register(sx1231_reg["RegDataModul"], DataModul_Continuous | DataModul_FSK | DataModul_NoShaping)
 
   # # PLL Bandwith
-  RFM69HCW_Write_Register(sx1231_reg["RegTestPllBW"], PLLBandwidth_75kHz )
+  # RFM69HCW_Write_Register(sx1231_reg["RegTestPllBW"], PLLBandwidth_75kHz )
 
   # # LNA Input Impedance
-  RFM69HCW_Write_Register(sx1231_reg["RegLna"], LnaZin50_AGC)
+  # RFM69HCW_Write_Register(sx1231_reg["RegLna"], LnaZin50_AGC)
 
   # # PA Output Power
   RFM69HCW_Write_Register(sx1231_reg["RegPaLevel"], pa )
@@ -318,6 +320,11 @@ def RFM69HCW_Write_Fifo(bytelist):
   RFM_SPI.writebytes(wbuf)
 
 def tx_send_byte(byte):
+  if byte > 32 and byte < 127:
+        print hex(byte),"\t", bin(byte), "\t", chr(byte)
+  else:
+      print hex(byte),"\t", bin(byte)
+
   GPIO.output(G1_PIN,GPIO.HIGH)
   time.sleep(0.1)
   GPIO.output(G1_PIN,GPIO.LOW)
@@ -334,54 +341,74 @@ def tx_send_byte(byte):
     GPIO.output(G1_PIN,GPIO.LOW)
 
 def tx_continuous():
-  kcallsign    = ['k', 'g', '7', 'e', 'y', 'd']  # K's callsign
+  kcallsign    = ['K', 'G', '7', 'E', 'Y', 'D']  # K's callsign
   callsign     = kcallsign
   ord_callsign = map(ord,callsign)
 
   # callsign = None
   if callsign is None:
-    raise NoCallSign("FCC Callsign not defined")
+      raise NoCallSign("FCC Callsign not defined")
 
-  #RFM69HCW_config_xcvr(MODE_TX, PAOutputCfg(PA0, 0x0))
+  # RFM69HCW_config_xcvr(MODE_TX, PAOutputCfg(PA0, 0x0))
   RFM69HCW_config_xcvr(MODE_TX, PAOutputCfg(PA0, 0x1F))
+
+  # Too much power? 
+  # RFM69HCW_config_xcvr(MODE_TX, PAOutputCfg(PA1, 0x1F))
+  # RFM69HCW_config_xcvr(MODE_TX, PAOutputCfg((PA2 | PA1), 0x1F))
+  tx_send_byte(0x55)
+  tx_send_byte(0x55)
+  tx_send_byte(0x55)
+  tx_send_byte(0x55)
+  tx_send_byte(0xAA)
+  tx_send_byte(0xAA)
+  tx_send_byte(0xAA)
+  tx_send_byte(0xAA)
+
 
   count = 0
   while True:
     count = count & 0xff
     tx_send_byte(count)
     count = count + 1
-    time.sleep(1.00)
-    print hex(count)
-    # if (count % 250) == 0:
+    time.sleep(0.25)
+    # print hex(count),"\t", bin(count)
+    if (count % 75) == 0:
       # print "Count is: " + str(hex(count))
       # print "Callsign: " + "".join(callsign)
       # print map(hex,ord_callsign)
+      tx_send_byte(0xff) # key byte for simple synchronization
+      tx_send_byte(0x2a)
+      tx_send_byte(0x2a)
+      map(tx_send_byte,ord_callsign)
+      tx_send_byte(0x2a)
+      tx_send_byte(0x2a)
+      count = 0
 
 
 
 if __name__ == "__main__":
-  try:
-    io_setup()
-    reset_radio()
-    spi_config()
-    tx_continuous()
-    GPIO.output(BLUE_LEDPIN, GPIO.LOW)
-    print "End. Ctl-C to Quit..."
-    while True:
-      blue_invert()
-      time.sleep(0.5)
+    try:
+        io_setup()
+        reset_radio()
+        spi_config()
+        tx_continuous()
+        GPIO.output(BLUE_LEDPIN, GPIO.LOW)
+        print "End. Ctl-C to Quit..."
+        while True:
+          blue_invert()
+          time.sleep(0.5)
 
 
-  except KeyboardInterrupt:
-    GPIO.cleanup()
-    print ("\nQuitting-Bye!")
+    except KeyboardInterrupt:
+      GPIO.cleanup()
+      print ("\nQuitting-Bye!")
 
-  except ModeError as e:
-    print ('Mode not supported:', e.value)
+    except ModeError as e:
+      print ('Mode not supported:', e.value)
 
-  except NoCallSign as e:
-    print ('No FCC Call Sign Entered', e.value)
+    except NoCallSign as e:
+      print ('No FCC Call Sign Entered', e.value)
 
-  except CheckError as e:
-    print ('Check Error', e.value)
+    except CheckError as e:
+      print ('Check Error', e.value)
 
