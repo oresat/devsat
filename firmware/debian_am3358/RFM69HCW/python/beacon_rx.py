@@ -1,8 +1,8 @@
 #!/usr/bin/python
 
-# TX TX TX TX TX TX TX TX TX TX TX TX TX TX TX TX TX TX TX TX TX TX TX TX TX TX TX TX TX TX TX TX TX TX TX TX TX TX TX TX TX TX TX TX TX TX TX TX TX TX  
-# TX Beacon for testing semtech chips
-# TX TX TX TX TX TX TX TX TX TX TX TX TX TX TX TX TX TX TX TX TX TX TX TX TX TX TX TX TX TX TX TX TX TX TX TX TX TX TX TX TX TX TX TX TX TX TX TX TX TX  
+# RX RX RX RX RX RX RX RX RX RX RX RX RX RX RX RX RX RX RX RX RX RX RX RX RX RX RX RX RX RX RX RX RX RX RX RX RX RX RX RX RX RX RX RX RX RX RX RX RX RX 
+# RX Beacon for testing semtech chips
+# RX RX RX RX RX RX RX RX RX RX RX RX RX RX RX RX RX RX RX RX RX RX RX RX RX RX RX RX RX RX RX RX RX RX RX RX RX RX RX RX RX RX RX RX RX RX RX RX RX RX 
 
 import sys
 import time
@@ -180,10 +180,11 @@ def io_setup():
   GPIO.setup(MODULE_EN, GPIO.OUT)
   GPIO.setup(MODULE_RST, GPIO.OUT)
   GPIO.setup(G0_PIN, GPIO.IN)
-  GPIO.setup(G1_PIN, GPIO.OUT)
-  GPIO.setup(G2_PIN, GPIO.OUT)
+  GPIO.setup(G1_PIN, GPIO.IN)
+  GPIO.setup(G2_PIN, GPIO.IN)
   # GPIO.add_event_detect(G0_PIN, GPIO.FALLING, callback=g0int)
-  GPIO.add_event_detect(G0_PIN, GPIO.RISING,  callback=g0int)
+  GPIO.add_event_detect(G1_PIN, GPIO.RISING,  callback=g1int)
+  GPIO.add_event_detect(G2_PIN, GPIO.RISING,  callback=g2int)
 
 
 def blue_invert():
@@ -315,86 +316,18 @@ def spi_config():
   RFM_SPI     = SPI(0,0)
   RFM_SPI.msh = 5000000
 
-
-def RFM69HCW_Write_Fifo(bytelist):
-  wbuf = [(sx1231_reg["RegFifo"]|0x80)] + bytelist
-  RFM_SPI.writebytes(wbuf)
-
-def tx_send_byte(byte):
-  if byte > 32 and byte < 127:
-        print hex(byte),"\t", bin(byte), "\t", chr(byte)
-  else:
-      print hex(byte),"\t", bin(byte)
-
-  GPIO.output(G1_PIN,GPIO.HIGH)
-  time.sleep(0.1)
-  GPIO.output(G1_PIN,GPIO.LOW)
-  for x in range(0, 8):
-    thisbit = (byte>>x) & 0b1
-    # print "Thisbit:\t",thisbit
-    if thisbit!=0:
-        GPIO.output(G2_PIN,GPIO.HIGH)
-    else:
-        GPIO.output(G2_PIN,GPIO.LOW)
-    time.sleep(0.1)
-    GPIO.output(G1_PIN,GPIO.HIGH)
-    time.sleep(0.1)
-    GPIO.output(G1_PIN,GPIO.LOW)
-
-def tx_continuous():
-  # kcallsign    = ['K', 'G', '7', 'E', 'Y', 'D']  # K's callsign
-  # callsign     = kcallsign
-  callsign     = None
-  ord_callsign = map(ord,callsign)
-
-  # callsign = None
-  if callsign is None:
-      raise NoCallSign("FCC Callsign not defined")
-
-  RFM69HCW_config_xcvr(MODE_TX, PAOutputCfg(PA0, 0x0))
-  # RFM69HCW_config_xcvr(MODE_TX, PAOutputCfg(PA0, 0x1F))
-
-  # Too much power? 
-  # RFM69HCW_config_xcvr(MODE_TX, PAOutputCfg(PA1, 0x1F))
-  # RFM69HCW_config_xcvr(MODE_TX, PAOutputCfg((PA2 | PA1), 0x1F))
-  tx_send_byte(0x55)
-  tx_send_byte(0x55)
-  tx_send_byte(0x55)
-  tx_send_byte(0x55)
-  tx_send_byte(0xAA)
-  tx_send_byte(0xAA)
-  tx_send_byte(0xAA)
-  tx_send_byte(0xAA)
-
-
-  count = 0
+def rx_continuous():
   while True:
-    count = count & 0xff
-    tx_send_byte(count)
-    count = count + 1
-    time.sleep(0.25)
-    # print hex(count),"\t", bin(count)
-    if (count % 75) == 0:
-      # print "Count is: " + str(hex(count))
-      # print "Callsign: " + "".join(callsign)
-      # print map(hex,ord_callsign)
-      tx_send_byte(0xff) # key byte for simple synchronization
-      tx_send_byte(0x2a)
-      tx_send_byte(0x2a)
-      map(tx_send_byte,ord_callsign)
-      tx_send_byte(0x2a)
-      tx_send_byte(0x2a)
-      count = 0
-
-
+    print ".",
+    time.sleep(10)
 
 if __name__ == "__main__":
     try:
-        print "Begin TX Beacon. Ctl-C to Quit..."
+        print "Begin RX Beacon. Ctl-C to Quit..."
         io_setup()
         reset_radio()
         spi_config()
-        tx_continuous()
+        rx_continuous()
         GPIO.output(BLUE_LEDPIN, GPIO.LOW)
         print "End. Ctl-C to Quit..."
         while True:
