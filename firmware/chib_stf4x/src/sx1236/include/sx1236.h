@@ -62,8 +62,10 @@
 #define SX1236_SYNC_OFF              ((uint8_t)(0b0<<4))
 
 // RxConfig
+#define SX1236_RESTART_RX_WITH_PLL_LOCK  ((uint8_t)(0b1<<5))
 #define SX1236_AFC_AUTO_ON           ((uint8_t)(0b1<<4))
-
+#define SX1236_AGC_AUTO_ON           ((uint8_t)(0b1<<3))
+#define SX1236_RXTRIGGER_ALL         ((uint8_t)(0b111<<0))
 // AfcFei
 #define SX1236_AFC_AUTO_CLEAR_ON     ((uint8_t)(0b1<<0))
 
@@ -71,6 +73,9 @@
 #define SX1236_OSC_DIV_1             ((uint8_t)(0b000<<0))
 #define SX1236_OSC_DIV_8             ((uint8_t)(0b011<<0))
 #define SX1236_OSC_OFF               ((uint8_t)(0b111<<0))
+
+// OOk peak
+#define SX1236_BIT_SYNC_ON           ((uint8_t)(0b1<<5))
 
 /*
  * struct to hold transceiver register addresses

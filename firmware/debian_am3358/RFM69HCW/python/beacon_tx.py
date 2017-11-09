@@ -268,7 +268,7 @@ def RFM69HCW_config_xcvr(OpMode, pa):
   #    set mode FS - Frequency Synthesizer mode
   # RFM69HCW_Write_Register(sx1231_reg["RegOpMode"], FS_MODE)
   # check_register(sx1231_reg["RegOpMode"], FS_MODE)
-  time.sleep(0.05)
+  # time.sleep(0.05)
 
   # # Set Carrier Frequency
   RFM69HCW_Write_Carrier_Freq(436500000)
@@ -343,14 +343,17 @@ def tx_send_byte(byte):
 def tx_continuous():
   kcallsign    = ['K', 'G', '7', 'E', 'Y', 'D']  # K's callsign
   callsign     = kcallsign
+  # kcallsign    = ['k', 'g', '7', 'e', 'y', 'd']  # K's callsign
+  # callsign     = kcallsign
+  # callsign     = None
   ord_callsign = map(ord,callsign)
 
   # callsign = None
   if callsign is None:
       raise NoCallSign("FCC Callsign not defined")
 
-  # RFM69HCW_config_xcvr(MODE_TX, PAOutputCfg(PA0, 0x0))
-  RFM69HCW_config_xcvr(MODE_TX, PAOutputCfg(PA0, 0x1F))
+  RFM69HCW_config_xcvr(MODE_TX, PAOutputCfg(PA0, 0x0))
+  # RFM69HCW_config_xcvr(MODE_TX, PAOutputCfg(PA0, 0x1F))
 
   # Too much power? 
   # RFM69HCW_config_xcvr(MODE_TX, PAOutputCfg(PA1, 0x1F))
