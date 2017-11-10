@@ -1,7 +1,9 @@
 #!/usr/bin/python
 
 # RX RX RX RX RX RX RX RX RX RX RX RX RX RX RX RX RX RX RX RX RX RX RX RX RX RX RX RX RX RX RX RX RX RX RX RX RX RX RX RX RX RX RX RX RX RX RX RX RX RX 
+#
 # RX Beacon for testing semtech chips
+#
 # RX RX RX RX RX RX RX RX RX RX RX RX RX RX RX RX RX RX RX RX RX RX RX RX RX RX RX RX RX RX RX RX RX RX RX RX RX RX RX RX RX RX RX RX RX RX RX RX RX RX 
 
 import sys
@@ -45,6 +47,8 @@ sx1231_reg = {
         "RegRxBw"          : 0x19,
         "RegAfcBw"         : 0x1a,
         "RegAfcFei"        : 0x1e,
+        "RegRssiConfig"     : 0x23,
+        "RegRssiValue"     : 0x24,
         "RegIrqFlags2"     : 0x28,
         "RegRssiThresh"    : 0x29,
         "RegPreambleMsb"   : 0x2c,
@@ -70,6 +74,7 @@ def SyncSize(bytes):
 
 def SyncTol(errors):
     return ((errors) & 0x7)
+
 
 
 # RegAfcFei
@@ -103,6 +108,8 @@ InterTX             =   (0b11  << 0)
 # Modes
 MODE_RX                    = (1 << 4)
 MODE_TX                    = (3 << 2)
+LISTEN_ON                  = (1 << 6)
+LISTEN_ABORT               = (1 << 5)
 
 # PA
 PA0                        = (1 << 7)
@@ -110,18 +117,19 @@ PA1                        = (1 << 6)
 PA2                        = (1 << 5)
 
 # RegLna
-LnaZin50_AGC               = (0x08)
+LnaZin50                   = (0x1 << 7)
+LnaGain_G6                 = (0x6 << 0)
 
 # RegTestPllBW
 PLLBandwidth_75kHz         = (0x0 << 2)
 
 # RegDataModul
-DataModul_Packet           = (0 << 5)
-DataModul_Continuous       = (2 << 5)
-DataModul_ContinuousNoSync = (3 << 5)
-DataModul_FSK              = (0 << 3)
-DataModul_OOK              = (1 << 3)
-DataModul_NoShaping        = (0 << 0)
+DataModul_Packet           = (0b00 << 5)
+DataModul_Continuous       = (0b10 << 5)
+DataModul_ContinuousNoSync = (0b11 << 5)
+DataModul_FSK              = (0b00 << 3)
+DataModul_OOK              = (0b01 << 3)
+DataModul_NoShaping        = (0b00 << 0)
 
 # sx1231 RegOpMode s
 # sx1231 Datasheet p 65
@@ -161,16 +169,32 @@ def check_register(addr, value):
 def PAOutputCfg(PA, Power):
     return (((PA) & (PA0 | PA1 | PA2)) | ((Power) & 0x1F))
 
+count = 0
+
 def g0int(a):
     print "g0"
 def g1int(a):
-    print "g1"
+    global count
+    # print "g1"
+    count = count+1
+    value = GPIO.input(G2_PIN)
+    # print "Value: ", value
+    if value == 1 :
+        print("1"),
+    else:
+        print("0"),
+    sys.stdout.flush()
+
 def g2int(a):
-    print "g2"
+    pass
+    # global count
+    # # print "g2"
+    # count = count+1
+
 def g3int(a):
-    print "g3"
+    print "rssi g3"
 def g4int(a):
-    print "g4"
+    print "timeout g4"
 def g5int(a):
     print "g5"
 
@@ -182,9 +206,13 @@ def io_setup():
   GPIO.setup(G0_PIN, GPIO.IN)
   GPIO.setup(G1_PIN, GPIO.IN)
   GPIO.setup(G2_PIN, GPIO.IN)
+  GPIO.setup(G3_PIN, GPIO.IN)
+  GPIO.setup(G4_PIN, GPIO.IN)
   # GPIO.add_event_detect(G0_PIN, GPIO.FALLING, callback=g0int)
   GPIO.add_event_detect(G1_PIN, GPIO.RISING,  callback=g1int)
-  GPIO.add_event_detect(G2_PIN, GPIO.RISING,  callback=g2int)
+  GPIO.add_event_detect(G3_PIN, GPIO.RISING,  callback=g3int)
+  GPIO.add_event_detect(G4_PIN, GPIO.RISING,  callback=g4int)
+  # GPIO.add_event_detect(G2_PIN, GPIO.RISING,  callback=g2int)
 
 
 def blue_invert():
@@ -243,10 +271,10 @@ def RFM69HCW_Set_Freq_Deviation(freq_dev_hz):
 
   wbuf    = [(sx1231_reg["RegFdevMsb"]|0x80), (int(freqdev>>8) & 0x3f), int(freqdev&0xff)]
   RFM_SPI.writebytes(wbuf)
-  print "fdev_msb:\t",
-  check_register(sx1231_reg["RegFdevMsb"], (int(freqdev>>8) & 0x3f))
-  print "\nfdev_lsb:\t",
-  check_register(sx1231_reg["RegFdevLsb"], (int(freqdev & 0xff)))
+  # print "fdev_msb:\t",
+  # check_register(sx1231_reg["RegFdevMsb"], (int(freqdev>>8) & 0x3f))
+  # print "\nfdev_lsb:\t",
+  # check_register(sx1231_reg["RegFdevLsb"], (int(freqdev & 0xff)))
   print "\n"
 
 def RFM69HCW_Set_Bitrate(bitrate_hz):
@@ -265,7 +293,7 @@ def RFM69HCW_Set_Preamble(twobytelist):
   wbuf    = [(sx1231_reg["RegPreambleMsb"]|0x80)] + twobytelist
   RFM_SPI.writebytes(wbuf)
 
-def RFM69HCW_config_xcvr(OpMode, pa):
+def RFM69HCW_config_xcvr(OpMode, pa, RxThreshdbm):
   # RegOpMode
   #    set mode FS - Frequency Synthesizer mode
   # RFM69HCW_Write_Register(sx1231_reg["RegOpMode"], FS_MODE)
@@ -276,28 +304,35 @@ def RFM69HCW_config_xcvr(OpMode, pa):
   RFM69HCW_Write_Carrier_Freq(436500000)
   # RFM69HCW_Write_Carrier_Freq(433000000)
 
-  # RFM69HCW_Set_Freq_Deviation(2500)
   RFM69HCW_Set_Freq_Deviation(20000)
 
-  # RFM69HCW_Set_Bitrate(2400)
+  RFM69HCW_Set_Bitrate(1200)
   # RFM69HCW_Set_Bitrate(38400)
-  RFM69HCW_Set_Bitrate(19200)
+  # RFM69HCW_Set_Bitrate(19200)
 
   RFM69HCW_Write_Register(sx1231_reg["RegDataModul"], DataModul_Continuous | DataModul_FSK | DataModul_NoShaping)
+  print "send: ", hex( DataModul_Continuous | DataModul_FSK | DataModul_NoShaping)
   check_register(sx1231_reg["RegDataModul"], DataModul_Continuous | DataModul_FSK | DataModul_NoShaping)
 
+  # RFM69HCW_Write_Register(sx1231_reg["RegRxBw"], 0x44)  # 31.3kHz?
+  RFM69HCW_Write_Register(sx1231_reg["RegRxBw"], 0b01010011)  # 41.3kHz?
+
   # # PLL Bandwith
-  # RFM69HCW_Write_Register(sx1231_reg["RegTestPllBW"], PLLBandwidth_75kHz )
+  RFM69HCW_Write_Register(sx1231_reg["RegTestPllBW"], PLLBandwidth_75kHz )
 
   # # LNA Input Impedance
-  # RFM69HCW_Write_Register(sx1231_reg["RegLna"], LnaZin50_AGC)
+  RFM69HCW_Write_Register(sx1231_reg["RegLna"], (LnaZin50 | LnaGain_G6))
 
   # # PA Output Power
-  RFM69HCW_Write_Register(sx1231_reg["RegPaLevel"], pa )
-  check_register(sx1231_reg["RegPaLevel"], pa)
+  # RFM69HCW_Write_Register(sx1231_reg["RegPaLevel"], pa )
+  # check_register(sx1231_reg["RegPaLevel"], pa)
 
+  RFM69HCW_Write_Register(sx1231_reg["RegRssiThresh"], RxThreshdbm * 2)
+
+  RFM69HCW_Write_Register(sx1231_reg["RegOpMode"], ((LISTEN_ABORT)| OpMode))
+  print("val:\t", hex((LISTEN_ABORT)| OpMode))
   RFM69HCW_Write_Register(sx1231_reg["RegOpMode"], OpMode)
-  check_register(sx1231_reg["RegOpMode"], OpMode )
+  # check_register(sx1231_reg["RegOpMode"], (~(LISTEN_ON)|~(LISTEN_ABORT)) | OpMode )
 
   time.sleep(0.05)
 
@@ -317,9 +352,16 @@ def spi_config():
   RFM_SPI.msh = 5000000
 
 def rx_continuous():
+  print "RSSI Threshold.", (RFM69HCW_Read_Register(sx1231_reg["RegRssiThresh"])/2)
+  RFM69HCW_config_xcvr(MODE_RX, PAOutputCfg(PA0, 0x0),40)
+  print "RSSI Threshold.", (RFM69HCW_Read_Register(sx1231_reg["RegRssiThresh"])/2)
+  print "RegRxBw.", hex(RFM69HCW_Read_Register(sx1231_reg["RegRxBw"]))
   while True:
-    print ".",
-    time.sleep(10)
+    # RSSI VALUE REGISTER CAN ONLY BE READ IF RSSI > RSSI THREASHOLD!!!
+    RFM69HCW_Write_Register(sx1231_reg["RegRssiConfig"], 0x1 )   # Trigger RSSI measure
+    # print "RSSI.", (RFM69HCW_Read_Register(sx1231_reg["RegRssiValue"])/2)
+    # print "Gain setting.", hex(RFM69HCW_Read_Register(sx1231_reg["RegLna"]))
+    time.sleep(1)
 
 if __name__ == "__main__":
     try:
@@ -337,7 +379,7 @@ if __name__ == "__main__":
 
     except KeyboardInterrupt:
       GPIO.cleanup()
-      print ("\nQuitting-Bye!")
+      print ("\nQuitting-Bye!", count)
 
     except ModeError as e:
       print ('Mode not supported:', e.value)
