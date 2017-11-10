@@ -278,9 +278,9 @@ def RFM69HCW_config_xcvr(OpMode, pa):
   # RFM69HCW_Set_Freq_Deviation(2500)
   RFM69HCW_Set_Freq_Deviation(20000)
 
-  # RFM69HCW_Set_Bitrate(2400)
+  RFM69HCW_Set_Bitrate(1200)
   # RFM69HCW_Set_Bitrate(38400)
-  RFM69HCW_Set_Bitrate(19200)
+  # RFM69HCW_Set_Bitrate(19200)
 
   RFM69HCW_Write_Register(sx1231_reg["RegDataModul"], DataModul_Continuous | DataModul_FSK | DataModul_NoShaping)
   check_register(sx1231_reg["RegDataModul"], DataModul_Continuous | DataModul_FSK | DataModul_NoShaping)
@@ -342,20 +342,20 @@ def tx_send_byte(byte):
     GPIO.output(G1_PIN,GPIO.LOW)
 
 def tx_continuous():
-  # kcallsign    = ['K', 'G', '7', 'E', 'Y', 'D']  # K's callsign
-  # callsign     = kcallsign
-  callsign     = None
+  kcallsign    = ['K', 'G', '7', 'E', 'Y', 'D']  # K's callsign
+  callsign     = kcallsign
+  # callsign     = None
   ord_callsign = map(ord,callsign)
 
   # callsign = None
   if callsign is None:
       raise NoCallSign("FCC Callsign not defined")
 
-  RFM69HCW_config_xcvr(MODE_TX, PAOutputCfg(PA0, 0x0))
+  # RFM69HCW_config_xcvr(MODE_TX, PAOutputCfg(PA0, 0x0))
   # RFM69HCW_config_xcvr(MODE_TX, PAOutputCfg(PA0, 0x1F))
 
   # Too much power? 
-  # RFM69HCW_config_xcvr(MODE_TX, PAOutputCfg(PA1, 0x1F))
+  RFM69HCW_config_xcvr(MODE_TX, PAOutputCfg(PA1, 0x1F))
   # RFM69HCW_config_xcvr(MODE_TX, PAOutputCfg((PA2 | PA1), 0x1F))
   tx_send_byte(0x55)
   tx_send_byte(0x55)
@@ -366,6 +366,9 @@ def tx_continuous():
   tx_send_byte(0xAA)
   tx_send_byte(0xAA)
 
+  # while True:
+    # tx_send_byte(0xff)
+    # time.sleep(0.25)
 
   count = 0
   while True:
