@@ -342,10 +342,10 @@ def tx_send_byte(byte):
     GPIO.output(G1_PIN,GPIO.LOW)
 
 def tx_continuous():
-  kcallsign    = ['K', 'G', '7', 'E', 'Y', 'D']  # K's callsign
-  callsign     = kcallsign
-  # callsign     = None
-  ord_callsign = map(ord,callsign)
+  callsign     = None
+  # kcallsign    = ['K', 'G', '7', 'E', 'Y', 'D']  # K's callsign
+  # callsign     = kcallsign
+  # ord_callsign = map(ord,callsign)
 
   # callsign = None
   if callsign is None:
