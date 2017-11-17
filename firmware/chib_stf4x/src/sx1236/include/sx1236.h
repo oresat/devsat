@@ -291,6 +291,8 @@ uint8_t sx1236_read_reg(SPIDriver * spip, uint8_t address) ;
 void sx1236_write(SPIDriver * spip, uint8_t address, uint8_t * tx_buf, uint8_t n);
 void sx1236_write_reg(SPIDriver * spip, uint8_t address, uint8_t newval);
 void sx1236_check_reg(SPIDriver * spip, uint8_t address, uint8_t checkval);
+void sx1236_write_FIFO(SPIDriver * spip, uint8_t value);
+uint8_t sx1236_read_FIFO(SPIDriver * spip);
 
 void sx1236_configure(SPIDriver * spip, config_sx1236 * c);
 

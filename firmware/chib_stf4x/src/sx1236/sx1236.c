@@ -310,7 +310,7 @@ void sx1236_set_freq_deviation(SPIDriver * spip, config_sx1236 * c)
 
 	freqdev          = (uint32_t)incr_rnd((1.0 * c->freq_dev_hz / c->Fstep), 1);
 
-	c->sx1236_state.RegFdevMsb      = (freqdev >> 8) & 0xff;
+	c->sx1236_state.RegFdevMsb      = (freqdev >> 8) & 0x3f;
 	c->sx1236_state.RegFdevLsb      = freqdev        & 0xff;
 
 	sx_txbuff[0] = c->sx1236_state.RegFdevMsb;
@@ -327,7 +327,7 @@ void sx1236_set_bitrate(SPIDriver * spip, config_sx1236 * c)
 
 	rate             = (uint32_t)incr_rnd(((1.0 * c->Fxosc) / c->bitrate), 1);
 
-	c->sx1236_state.RegBitrateMsb = (rate >> 8) & 0x3f;
+	c->sx1236_state.RegBitrateMsb = (rate >> 8) & 0xff;
 	c->sx1236_state.RegBitrateLsb = rate        & 0xff;
 
 	sx_txbuff[0]     = c->sx1236_state.RegBitrateMsb;
@@ -420,6 +420,29 @@ void sx1236_init_state(struct SX1236 * s)
 	s->RegAgcThresh3      = POR_defaults.RegAgcThresh3;
 	s->RegPllLf           = POR_defaults.RegPllLf;
 };
+
+/*
+ * write FIFO
+ */
+void sx1236_write_FIFO(SPIDriver * spip, uint8_t value)
+{
+	sx1236_write_reg(spip, regaddrs.RegFifo,  value         );
+}
+
+
+/*
+ * Read FIFO
+ */
+uint8_t sx1236_read_FIFO(SPIDriver * spip)
+{
+	uint8_t value;
+	chprintf(DEBUG_CHP, "+");
+	value = sx1236_read_reg(spip, regaddrs.RegFifo);
+	chprintf(DEBUG_CHP, "****");
+	return value;
+}
+
+
 
 /*
  * Configure to a state given in a config_sx1236 structure
