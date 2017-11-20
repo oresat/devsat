@@ -47,8 +47,12 @@ sx1231_reg = {
         "RegRxBw"          : 0x19,
         "RegAfcBw"         : 0x1a,
         "RegAfcFei"        : 0x1e,
+        "RegAfcMsb"        : 0x1f,
+        "RegAfcLsb"        : 0x20,
         "RegRssiConfig"     : 0x23,
         "RegRssiValue"     : 0x24,
+        "RegDioMapping1"     : 0x25,
+        "RegDioMapping2"     : 0x26,
         "RegIrqFlags2"     : 0x28,
         "RegRssiThresh"    : 0x29,
         "RegPreambleMsb"   : 0x2c,
@@ -119,6 +123,7 @@ PA2                        = (1 << 5)
 # RegLna
 LnaZin50                   = (0x1 << 7)
 LnaGain_G6                 = (0x6 << 0)
+LnaGain_AGC                = (0x0 << 0)
 
 # RegTestPllBW
 PLLBandwidth_75kHz         = (0x0 << 2)
@@ -170,19 +175,28 @@ def PAOutputCfg(PA, Power):
     return (((PA) & (PA0 | PA1 | PA2)) | ((Power) & 0x1F))
 
 count = 0
+byte = 0x0
 
 def g0int(a):
     print "g0"
+
 def g1int(a):
     global count
-    # print "g1"
-    count = count+1
-    value = GPIO.input(G2_PIN)
-    # print "Value: ", value
-    if value == 1 :
-        print("1"),
-    else:
-        print("0"),
+    global byte
+    rxrdy = GPIO.input(G4_PIN)
+    if rxrdy == 1 :
+      count = count+1
+      value = GPIO.input(G2_PIN)
+      if value == 1 :
+          byte = byte | 1<<count
+      else:
+          byte = byte | 0<<count  #  no effect - conceptual
+  
+    if count >= 7:
+      print hex(byte)," ",
+      count = 0
+      byte  = 0
+
     sys.stdout.flush()
 
 def g2int(a):
@@ -194,7 +208,7 @@ def g2int(a):
 def g3int(a):
     print "rssi g3"
 def g4int(a):
-    print "timeout g4"
+    print "rx_rdy g4"
 def g5int(a):
     print "g5"
 
@@ -210,7 +224,7 @@ def io_setup():
   GPIO.setup(G4_PIN, GPIO.IN)
   # GPIO.add_event_detect(G0_PIN, GPIO.FALLING, callback=g0int)
   GPIO.add_event_detect(G1_PIN, GPIO.RISING,  callback=g1int)
-  GPIO.add_event_detect(G3_PIN, GPIO.RISING,  callback=g3int)
+  # GPIO.add_event_detect(G3_PIN, GPIO.RISING,  callback=g3int)
   GPIO.add_event_detect(G4_PIN, GPIO.RISING,  callback=g4int)
   # GPIO.add_event_detect(G2_PIN, GPIO.RISING,  callback=g2int)
 
@@ -311,16 +325,22 @@ def RFM69HCW_config_xcvr(OpMode, pa, RxThreshdbm):
   # RFM69HCW_Set_Bitrate(19200)
 
   RFM69HCW_Write_Register(sx1231_reg["RegDataModul"], DataModul_Continuous | DataModul_FSK | DataModul_NoShaping)
-  print "send: ", hex( DataModul_Continuous | DataModul_FSK | DataModul_NoShaping)
   check_register(sx1231_reg["RegDataModul"], DataModul_Continuous | DataModul_FSK | DataModul_NoShaping)
+                                                       # 0     1     2      3
+  # RFM69HCW_Write_Register(sx1231_reg["RegDioMapping1"], xx<<6|xx<<4|xx<<2|xx    )
 
+  RFM69HCW_Write_Register(sx1231_reg["RegDioMapping2"], 0b01<<6    )  # RxReady
+  check_register(sx1231_reg["RegDioMapping2"], 0b01<<6)
+
+  RFM69HCW_Write_Register(sx1231_reg["RegRxBw"], (010<<5|0x10<<3|100<<0) ) # 20.8kHz?
   # RFM69HCW_Write_Register(sx1231_reg["RegRxBw"], 0x44)  # 31.3kHz?
-  RFM69HCW_Write_Register(sx1231_reg["RegRxBw"], 0b01010011)  # 41.3kHz?
+  # RFM69HCW_Write_Register(sx1231_reg["RegRxBw"], 0b01010011)  # 41.3kHz?
 
   # # PLL Bandwith
   RFM69HCW_Write_Register(sx1231_reg["RegTestPllBW"], PLLBandwidth_75kHz )
 
   # # LNA Input Impedance
+  # RFM69HCW_Write_Register(sx1231_reg["RegLna"], (LnaZin50 | LnaGain_G6))
   RFM69HCW_Write_Register(sx1231_reg["RegLna"], (LnaZin50 | LnaGain_G6))
 
   # # PA Output Power
@@ -355,13 +375,21 @@ def rx_continuous():
   print "RSSI Threshold.", (RFM69HCW_Read_Register(sx1231_reg["RegRssiThresh"])/2)
   RFM69HCW_config_xcvr(MODE_RX, PAOutputCfg(PA0, 0x0),40)
   print "RSSI Threshold.", (RFM69HCW_Read_Register(sx1231_reg["RegRssiThresh"])/2)
-  print "RegRxBw.", hex(RFM69HCW_Read_Register(sx1231_reg["RegRxBw"]))
+  # print "RegRxBw.", hex(RFM69HCW_Read_Register(sx1231_reg["RegRxBw"]))
   while True:
     # RSSI VALUE REGISTER CAN ONLY BE READ IF RSSI > RSSI THREASHOLD!!!
     RFM69HCW_Write_Register(sx1231_reg["RegRssiConfig"], 0x1 )   # Trigger RSSI measure
-    # print "RSSI.", (RFM69HCW_Read_Register(sx1231_reg["RegRssiValue"])/2)
+    RFM69HCW_Write_Register(sx1231_reg["RegAfcFei"], 0x1 )   # Trigger Afc start
+    AfcValMSB = RFM69HCW_Read_Register(sx1231_reg["RegAfcMsb"])
+    AfcValLSB = RFM69HCW_Read_Register(sx1231_reg["RegAfcLsb"])
+
+    AfcVal    = int(0xf & AfcValMSB << 8 | AfcValLSB)
+    print "\r\nAFCVAL:\t", AfcVal
+
+    # print " Threshold.", (RFM69HCW_Read_Register(sx1231_reg["RegRssiThresh"])/2)
+    print "\r\nRSSI:\t-",(RFM69HCW_Read_Register(sx1231_reg["RegRssiValue"])/2),"dBm"
     # print "Gain setting.", hex(RFM69HCW_Read_Register(sx1231_reg["RegLna"]))
-    time.sleep(1)
+    time.sleep(2)
 
 if __name__ == "__main__":
     try:

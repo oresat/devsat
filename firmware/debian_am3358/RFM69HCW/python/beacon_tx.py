@@ -342,20 +342,20 @@ def tx_send_byte(byte):
     GPIO.output(G1_PIN,GPIO.LOW)
 
 def tx_continuous():
-  callsign     = None
+  # callsign     = None
   # kcallsign    = ['K', 'G', '7', 'E', 'Y', 'D']  # K's callsign
   # callsign     = kcallsign
   # ord_callsign = map(ord,callsign)
 
-  # callsign = None
+  callsign = None
   if callsign is None:
       raise NoCallSign("FCC Callsign not defined")
 
   # RFM69HCW_config_xcvr(MODE_TX, PAOutputCfg(PA0, 0x0))
-  # RFM69HCW_config_xcvr(MODE_TX, PAOutputCfg(PA0, 0x1F))
+  RFM69HCW_config_xcvr(MODE_TX, PAOutputCfg(PA0, 0x1F))
 
   # Too much power? 
-  RFM69HCW_config_xcvr(MODE_TX, PAOutputCfg(PA1, 0x1F))
+  # RFM69HCW_config_xcvr(MODE_TX, PAOutputCfg(PA1, 0x1F))
   # RFM69HCW_config_xcvr(MODE_TX, PAOutputCfg((PA2 | PA1), 0x1F))
   tx_send_byte(0x55)
   tx_send_byte(0x55)
