@@ -62,6 +62,27 @@ sx1231_reg = {
 # inverse dictionary for register name lookup
 inv_sx1231_reg = {v: k for k, v in sx1231_reg.items()}
 
+# RegPaLevel
+PA0                         =   (0b1      << 7)
+PA1                         =   (0b1      << 6)
+PA2                         =   (0b1      << 5)
+
+# Hardwired choices to bbb shield
+G0_PIN                      =   "P9_12"
+G1_PIN                      =   "P8_7"   # DIO1/DCLK
+G2_PIN                      =   "P8_8"   # DIO2/DATA
+G3_PIN                      =   "P8_9"
+G4_PIN                      =   "P8_10"
+G5_PIN                      =   "P8_12"
+BLUE_LEDPIN                 =   "P9_41"
+MODULE_EN                   =   "P9_23"
+MODULE_RST                  =   "P9_15"
+SPI0_MISO                   =   "P9_21"
+SPI0_MOSI                   =   "P9_18"
+SPI0_CLK                    =   "P9_22"
+SPI0_CS                     =   "P9_17"
+
+
 # RegSyncConfig
 SyncOn              =  (1 << 7)
 FifoFillSyncAddress =  (0 << 6)
@@ -109,6 +130,7 @@ def io_setup():
   # GPIO.add_event_detect(G0_PIN, GPIO.FALLING, callback=g0int)
   GPIO.add_event_detect(G0_PIN, GPIO.RISING,  callback=g0int)
 
+LED_STATE = False
 
 def blue_invert():
   global LED_STATE

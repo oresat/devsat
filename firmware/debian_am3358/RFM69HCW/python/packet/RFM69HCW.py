@@ -103,6 +103,32 @@ sx1231_reg = {
 # inverse dictionary for register name lookup
 inv_sx1231_reg = {v: k for k, v in sx1231_reg.items()}
 
+# sx1231 RegOpMode
+# sx1231 Datasheet p 65
+OPMODE_SEQUENCER_ON                =   (0b0  <<7)
+OPMODE_SEQUENCER_OFF               =   (0b1  <<7)
+OPMODE_LISTEN_ON                   =   (0b1  <<6)
+OPMODE_LISTEN_OFF                  =   (0b0  <<6)
+OPMODE_LISTEN_ABORT                =   (0b1  <<5)
+OPMODE_SLEEP                      =   (0b000<<2)
+OPMODE_STANDBY                    =   (0b001<<2)
+OPMODE_FS                         =   (0b010<<2)
+OPMODE_TRANSMITTER                =   (0b011<<2)
+OPMODE_RECEIVER                   =   (0b100<<2)
+
+# RegDataModul
+DATAMODUL_Packet            =   (0b00     << 5)
+DATAMODUL_Continuous        =   (0b10     << 5)
+DATAMODUL_ContinuousNoSync  =   (0b11     << 5)
+DATAMODUL_FSK               =   (0b00     << 3)
+DATAMODUL_OOK               =   (0b01     << 3)
+DATAMODUL_NoShaping         =   (0b00     << 0)
+
+# RegPaLevel
+PA0                         =   (0b1      << 7)
+PA1                         =   (0b1      << 6)
+PA2                         =   (0b1      << 5)
+
 # RegAfcFei
 AfcAutoOn                   =   (1 << 2)
 AfcAutoclearOn              =   (1 << 3)
@@ -145,22 +171,6 @@ LnaZin50_AGC                =   (0x08)
 # RegTestPllBW
 PLLBandwidth_75kHz          =   (0x0   << 2)
 
-# RegDataModul
-DataModul_Packet            =   (0     << 5)
-DataModul_Continuous        =   (2     << 5)
-DataModul_ContinuousNoSync  =   (3     << 5)
-DataModul_FSK               =   (0     << 3)
-DataModul_OOK               =   (1     << 3)
-DataModul_NoShaping         =   (0     << 0)
-
-# sx1231 RegOpMode s
-# sx1231 Datasheet p 65
-SLEEP_MODE                  =   (0b000<<2)
-STANDBY_MODE                =   (0b001<<2)
-FS_MODE                     =   (0b010<<2)
-TRANSMITTER_MODE            =   (0b011<<2)
-RECEIVER_MODE               =   (0b100<<2)
-
 # Hardwired choices to bbb shield
 G0_PIN                      =   "P9_12"
 G1_PIN                      =   "P8_7"   # DIO1/DCLK
@@ -180,7 +190,14 @@ SPI0_CS                     =   "P9_17"
 default_LED_STATE           =   False
 default_Fxosc               =   32e6
 default_Fstep               =   61.03515625
-default_callsign            = None
+default_callsign            =   None
+                
+default_node_id             = 0x33
+default_network_id          = 1
+
+default_carrier_freq        =   436500000
+default_carrier_dev         =   20000
+default_bitrate             =   1200
 
 class CheckError(Exception):
     def __init__(self, value):
@@ -194,37 +211,144 @@ class NoCallSign(Exception):
   def __str__(self):
       return repr(self.value)
 
+"""
+ Interrupt callbacks
+"""
+def g0int(a):
+    print "g0"
+
+def g1int(a):
+    global count
+    global byte
+    rxrdy = GPIO.input(G4_PIN)
+    if rxrdy == 1 :
+        count = count+1
+        value = GPIO.input(G2_PIN)
+        if value == 1 :
+            byte = byte | 1<<count
+        else:
+            byte = byte | 0<<count  #  no effect - conceptual
+
+    if count >= 7:
+        print hex(byte)," ",
+        count = 0
+        byte  = 0
+
+    sys.stdout.flush()
+
+def g2int(a):
+    pass
+# global count
+# # print "g2"
+# count = count+1
+
+def g3int(a):
+    print "rssi g3"
+
+def g4int(a):
+    print "rx_rdy g4"
+
+def g5int(a):
+    print "g5"
+
+### END INTERRUPT CALLBACKS
+##########################
+"""
+Example Usage:
+    try:
+        BEACON       = RFM69HCW(callsign="ABXCDE")
+        # BEACON.start_tx()
+        BEACON.report_setup()
+        BEACON.blue_blink()
+ 
+    except: 
+        pass
+"""
 class RFM69HCW():
-    def __init__(self, LED_STATE=default_LED_STATE, Fxosc=default_Fxosc, Fstep=default_Fstep,  callsign=None):
+    def __init__(self, LED_STATE=default_LED_STATE, 
+                 Fxosc=default_Fxosc,
+                 Fstep=default_Fstep,
+                 callsign=None,
+                 node_id=default_node_id,
+                 network_id=default_network_id,
+                 carrier_freq=default_carrier_freq,
+                 carrier_dev=default_carrier_dev,
+                 carrier_bitrate=default_bitrate
+                ):
         self.LED_STATE      = LED_STATE
         self.Fxosc          = Fxosc
         self.Fstep          = Fstep
         self.callsign       = callsign
+        self.RFM_SPI        = SPI(0,0)
+        self.RFM_SPI.msh    = 5000000
+        self.carrier_freq   = carrier_freq
+        self.carrier_dev    = carrier_dev
+        self.bitrate        = carrier_bitrate
+        self.node_id        = node_id
+        self.network_id     = network_id
+
         if self.callsign is None:
             raise NoCallSign("FCC Callsign not defined")
         self.ord_callsign   = map(ord,list(self.callsign))
         self._io_setup()
+        self.reset_radio()
+        GPIO.output(BLUE_LEDPIN,GPIO.LOW)
         return
 
     def _io_setup(self):
-      GPIO.setup(BLUE_LEDPIN, GPIO.OUT)
-      GPIO.setup(MODULE_EN, GPIO.OUT)
-      GPIO.setup(MODULE_RST, GPIO.OUT)
-      GPIO.setup(G0_PIN, GPIO.IN)
-      GPIO.setup(G1_PIN, GPIO.OUT)
-      GPIO.setup(G2_PIN, GPIO.OUT)
-      # GPIO.add_event_detect(G0_PIN, GPIO.FALLING, callback=g0int)
-      # GPIO.add_event_detect(G0_PIN, GPIO.RISING,  callback=g0int)
+        GPIO.setup(BLUE_LEDPIN, GPIO.OUT)
+        GPIO.setup(MODULE_EN, GPIO.OUT)
+        GPIO.setup(MODULE_RST, GPIO.OUT)
+        GPIO.setup(G0_PIN, GPIO.IN)
+        GPIO.setup(G1_PIN, GPIO.OUT)
+        GPIO.setup(G2_PIN, GPIO.OUT)
+        # GPIO.add_event_detect(G0_PIN, GPIO.FALLING, callback=g0int)
+        # GPIO.add_event_detect(G0_PIN, GPIO.RISING,  callback=g0int)
+
+    def _check_register(self, addr, value):
+        vals = self.RFM_SPI.xfer2([addr, 0x0])
+        if vals[1] != value:
+            str = "addr: "+ hex(addr) + "(" + inv_sx1231_reg[addr] + ")" + " should be: " + hex(value) + " got: " + hex(vals[1])
+            raise CheckError(str)
+        print "Reg{",hex(addr),"}(",inv_sx1231_reg[addr],")\t\t=", hex(vals[1])
+
+    def write_register(self, reg, val):
+      reg = reg | 0x80
+      # print "reg is: ", bin(reg)
+      # print "val is: " , bin(val)
+      # RFM_SPI.writebytes([reg, val])
+      self.RFM_SPI.xfer2([reg, val])
+    
+    def read_register(self, reg):
+      regval = self.RFM_SPI.xfer2([reg, 0x0])
+      return regval[1]
+
+    def reset_radio(self):
+        self.blue_blink(2)
+        GPIO.output(MODULE_EN,GPIO.HIGH)
+        GPIO.output(MODULE_RST,GPIO.LOW)
+        time.sleep(0.5)
+        GPIO.output(MODULE_RST,GPIO.HIGH)
+        time.sleep(0.5)
+        GPIO.output(MODULE_RST,GPIO.LOW)
+        time.sleep(0.5)
 
     def blue_invert(self):
-      if(self.LED_STATE) == 1:
-        self.LED_STATE=0
+        if(self.LED_STATE) == True:
+            self.blue_off()
+        else:
+            self.blue_on()
+
+    def blue_off(self):
+        self.LED_STATE=False
         GPIO.output(BLUE_LEDPIN,GPIO.HIGH)
-      else:
-        self.LED_STATE=1
+        return
+
+    def blue_on(self):
+        self.LED_STATE=True
         GPIO.output(BLUE_LEDPIN,GPIO.LOW)
-      return
-    
+        return
+
     def blue_blink(self,n=3):
         for num in range(0,n*2):
             self.blue_invert()
@@ -232,37 +356,115 @@ class RFM69HCW():
         return
 
     def report_setup(self):
-        print 'LED_STATE is: ', self.LED_STATE
-        print 'Fxosc is: ', self.Fxosc
-        print 'Fstep is: ', self.Fstep
-        print 'Callsign is: ', self.callsign
+        print 'LED_STATE is:\t', self.LED_STATE
+        print 'Fxosc is:    \t', self.Fxosc
+        print 'Fstep is:    \t', self.Fstep
+        print 'Callsign is: \t', self.callsign
         return
 
-    def start_tx(self):
+    # Facts:
+    #   Fxosc = 32Mhz
+    #   Fstep = 32e6/2^9  =  61.03515625
+    #   Frf   = int(carrier_hz/Fstep)
+    def Write_Carrier_Freq(self, carrier_hz=436500000):
+        frf      = int(carrier_hz / self.Fstep)
+    
+        # vals = RFM_SPI.xfer2([RegFrfMsb, 0x0, 0x0, 0x0])
+        # print "Pre: vals=\t", hex(vals[0]), "\t", hex(vals[1]), "\t", hex(vals[2]), "\t", hex(vals[3])
+    
+        frfmsb = (frf>>16) & 0xff
+        frfmid = (frf>>8)  & 0xff
+        frflsb = frf       & 0xff
+    
+        wbuf      = [(sx1231_reg["RegFrfMsb"]|0x80), int(frfmsb), int(frfmid), int(frflsb)]
+        self.RFM_SPI.writebytes(wbuf)
+    
+        vals = self.RFM_SPI.xfer2([sx1231_reg["RegFrfMsb"], 0x0, 0x0, 0x0])
+        # print "Post: vals=\t", hex(vals[0]), "\t", hex(vals[1]), "\t", hex(vals[2]), "\t", hex(vals[3])
+        return
+    
+    def Set_Freq_Deviation(self, freq_dev_hz=20000):
+        freqdev = int(freq_dev_hz/self.Fstep)
+    
+        wbuf    = [(sx1231_reg["RegFdevMsb"]|0x80), (int(freqdev>>8) & 0x3f), int(freqdev&0xff)]
+        self.RFM_SPI.writebytes(wbuf)
+        # print "fdev_msb:\t",
+        # check_register(sx1231_reg["RegFdevMsb"], (int(freqdev>>8) & 0x3f))
+        # print "\nfdev_lsb:\t",
+        # check_register(sx1231_reg["RegFdevLsb"], (int(freqdev & 0xff)))
+        # print "\n"
+        return
+    
+    def Set_Bitrate(self, bitrate_hz=1200):
+        rate = int(self.Fxosc/bitrate_hz)
+    
+        wbuf    = [(sx1231_reg["RegBitrateMsb"]|0x80), (int(rate>>8) & 0xff), int(rate&0xff)]
+        self.RFM_SPI.writebytes(wbuf)
+    
+    def Set_Sync_Value(fourbytelist):
+        wbuf    = [(sx1231_reg["RegSyncValue1"]|0x80)] + fourbytelist
+        self.RFM_SPI.writebytes(wbuf)
+    
+    def Set_Preamble(twobytelist):
+        wbuf    = [(sx1231_reg["RegPreambleMsb"]|0x80)] + twobytelist
+        self.RFM_SPI.writebytes(wbuf)
+
+    """
+    Experiment with automodes 
+    """
+    def Config_rx_packet(self, pa):
+        # Begin with sequencer on, listen off, and in standby
+        self.write_register(sx1231_reg["RegOpMode"], OPMODE_SEQUENCER_ON|OPMODE_LISTEN_OFF|OPMODE_STANDBY) 
+        self._check_register(sx1231_reg["RegOpMode"], OPMODE_SEQUENCER_ON|OPMODE_LISTEN_OFF|OPMODE_STANDBY)
+
+        # Packet Mode, FSK, No Shaping
+        self.write_register(sx1231_reg["RegDataModul"], DATAMODUL_Packet|DATAMODUL_FSK|DATAMODUL_NoShaping) 
+        self._check_register(sx1231_reg["RegDataModul"], DATAMODUL_Packet|DATAMODUL_FSK|DATAMODUL_NoShaping) 
+
+        self.Write_Carrier_Freq(self.carrier_freq)
+        self.Set_Freq_Deviation(self.carrier_dev)
+        self.Set_Bitrate(self.bitrate)
+
+        # # PA Output Power
+        self.write_register(sx1231_reg["RegPaLevel"], pa )
+        self._check_register(sx1231_reg["RegPaLevel"], pa)
+
+        return
+    
+    def start_tx_packet(self):
         return
 
-    def start_rx(self):
+    def start_rx_packet(self):
         return
 
     def stop(self):
         return
 
 
+def PAOutputCfg(PA, Power):
+    return (((PA) & (PA0 | PA1 | PA2)) | ((Power) & 0x1F))
+
 if __name__ == "__main__":
     try:
-       BEACON       = RFM69HCW(callsign="KG7EYD")
-       # BEACON.start_tx()
-       BEACON.report_setup()
-       BEACON.blue_blink(10)
+        BEACON       = RFM69HCW(callsign="KG7EYD")
+        # BEACON.start_tx()
+        BEACON.report_setup()
+        BEACON.blue_blink()
+        BEACON.Config_rx_packet(PAOutputCfg(PA0, 0x1F))
+        # Too much power? 
+        # BEACON.config_rx_packet(PAOutputCfg(PA1, 0x1F))
+        # BEACON.config_rx_packet(PAOutputCfg(PA2|PA1, 0x1F))
 
-       # BEACON.stop()
-       print("Bye.")
+
+        BEACON.reset_radio()
+        # BEACON.stop()
+        print("Bye.")
 
     except NoCallSign as e:
-      print ('No FCC Call Sign Entered', e.value)
+        print ('No FCC Call Sign Entered', e.value)
 
     except CheckError as e:
-      print ('Check Error', e.value)
+        print ('Check Error', e.value)
 
     except KeyboardInterrupt:
         BEACON.stop()
