@@ -160,6 +160,25 @@ InterTX                     =   (0b11  << 0)
 MODE_RX                     =   (1     << 4)
 MODE_TX                     =   (3     << 2)
 
+
+
+# DioMapping1
+DIO_0_POS                   =   6
+DIO_1_POS                   =   4
+DIO_2_POS                   =   2
+DIO_3_POS                   =   0
+DIO1_RX_TIMEOUT            =   (0b11)
+
+
+# DioMapping2
+DIO_4_POS                   =   6
+DIO_5_POS                   =   4
+DIO_CLKOFF                  =   0b111
+DIO_CLK_DIV32               =   0b101
+
+DIO4_RXRDY                  =   (0b10)
+
+
 # PA
 PA0                         =   (1     << 7)
 PA1                         =   (1     << 6)
@@ -170,6 +189,16 @@ LnaZin50_AGC                =   (0x08)
 
 # RegTestPllBW
 PLLBandwidth_75kHz          =   (0x0   << 2)
+
+
+# RegSyncConfig
+SYNCCFG_SYNC_ON             =   (0b1<<7)
+SYNCCFG_SYNC_OFF            =   (0b0<<7)
+SYNCCFG_FILL_FIFO_INTR      =   (0b0<<6)
+SYNCCFG_SIZE_2              =   (0b001<<3)
+SYNCCFG_SIZE_3              =   (0b010<<3)
+SYNCCFG_SIZE_4              =   (0b011<<3)
+
 
 # Hardwired choices to bbb shield
 G0_PIN                      =   "P9_12"
@@ -312,12 +341,16 @@ class RFM69HCW():
             raise CheckError(str)
         print "Reg{",hex(addr),"}(",inv_sx1231_reg[addr],")\t\t=", hex(vals[1])
 
-    def write_register(self, reg, val):
+    def write_register(self, reg, val, checkit=False):
+      addr=reg
       reg = reg | 0x80
       # print "reg is: ", bin(reg)
       # print "val is: " , bin(val)
       # RFM_SPI.writebytes([reg, val])
       self.RFM_SPI.xfer2([reg, val])
+      if checkit==True:
+         self._check_register(addr, val)
+      return
     
     def read_register(self, reg):
       regval = self.RFM_SPI.xfer2([reg, 0x0])
@@ -366,7 +399,7 @@ class RFM69HCW():
     #   Fxosc = 32Mhz
     #   Fstep = 32e6/2^9  =  61.03515625
     #   Frf   = int(carrier_hz/Fstep)
-    def Write_Carrier_Freq(self, carrier_hz=436500000):
+    def write_carrier_freq(self, carrier_hz=436500000):
         frf      = int(carrier_hz / self.Fstep)
     
         # vals = RFM_SPI.xfer2([RegFrfMsb, 0x0, 0x0, 0x0])
@@ -383,7 +416,7 @@ class RFM69HCW():
         # print "Post: vals=\t", hex(vals[0]), "\t", hex(vals[1]), "\t", hex(vals[2]), "\t", hex(vals[3])
         return
     
-    def Set_Freq_Deviation(self, freq_dev_hz=20000):
+    def set_freq_deviation(self, freq_dev_hz=20000):
         freqdev = int(freq_dev_hz/self.Fstep)
     
         wbuf    = [(sx1231_reg["RegFdevMsb"]|0x80), (int(freqdev>>8) & 0x3f), int(freqdev&0xff)]
@@ -395,39 +428,60 @@ class RFM69HCW():
         # print "\n"
         return
     
-    def Set_Bitrate(self, bitrate_hz=1200):
+    def set_bitrate(self, bitrate_hz=1200):
         rate = int(self.Fxosc/bitrate_hz)
     
         wbuf    = [(sx1231_reg["RegBitrateMsb"]|0x80), (int(rate>>8) & 0xff), int(rate&0xff)]
         self.RFM_SPI.writebytes(wbuf)
     
-    def Set_Sync_Value(fourbytelist):
+    def set_sync_value(fourbytelist):
         wbuf    = [(sx1231_reg["RegSyncValue1"]|0x80)] + fourbytelist
         self.RFM_SPI.writebytes(wbuf)
     
-    def Set_Preamble(twobytelist):
+    def set_preamble(twobytelist):
         wbuf    = [(sx1231_reg["RegPreambleMsb"]|0x80)] + twobytelist
         self.RFM_SPI.writebytes(wbuf)
 
     """
     Experiment with automodes 
     """
-    def Config_rx_packet(self, pa):
+    def config_rx_packet(self, pa, node_id=0x33, network_id=0x77):
         # Begin with sequencer on, listen off, and in standby
-        self.write_register(sx1231_reg["RegOpMode"], OPMODE_SEQUENCER_ON|OPMODE_LISTEN_OFF|OPMODE_STANDBY) 
-        self._check_register(sx1231_reg["RegOpMode"], OPMODE_SEQUENCER_ON|OPMODE_LISTEN_OFF|OPMODE_STANDBY)
+        self.write_register(sx1231_reg["RegOpMode"], OPMODE_SEQUENCER_ON|OPMODE_LISTEN_OFF|OPMODE_STANDBY, True) 
 
         # Packet Mode, FSK, No Shaping
         self.write_register(sx1231_reg["RegDataModul"], DATAMODUL_Packet|DATAMODUL_FSK|DATAMODUL_NoShaping) 
-        self._check_register(sx1231_reg["RegDataModul"], DATAMODUL_Packet|DATAMODUL_FSK|DATAMODUL_NoShaping) 
 
-        self.Write_Carrier_Freq(self.carrier_freq)
-        self.Set_Freq_Deviation(self.carrier_dev)
-        self.Set_Bitrate(self.bitrate)
+        self.write_carrier_freq(self.carrier_freq)
+        self.set_freq_deviation(self.carrier_dev)
+        self.set_bitrate(self.bitrate)
 
-        # # PA Output Power
+        # PA Output Power
         self.write_register(sx1231_reg["RegPaLevel"], pa )
-        self._check_register(sx1231_reg["RegPaLevel"], pa)
+
+
+        # DIO Mappings
+                                                #  (DccFreq|RxBwMant|RxBwExp) Table 13
+        self.write_register(sx1231_reg["RegRxBw"], (010<<5|0x10<<3|100<<0) ) # 20.8kHz?
+
+        self.write_register(sx1231_reg["RegDioMapping1"], DIO1_RX_TIMEOUT<<DIO_1_POS            , True  )
+
+        self.write_register(sx1231_reg["RegDioMapping2"], (DIO4_RXRDY<<DIO_4_POS | DIO_CLK_DIV32), True )
+
+        # RSSI Thresh
+        self.write_register(sx1231_reg["RegRssiThresh"], 0xdc, True)   # -220/2 = -110dBm?
+
+        # Preamble length (0xaa..N)
+        self.write_register(sx1231_reg["RegPreambleLsb"], 0xf, True)
+
+        # Sync Config
+        self.write_register(sx1231_reg["RegSyncConfig"], SYNCCFG_SYNC_ON | SYNCCFG_FILL_FIFO_INTR | SYNCCFG_SIZE_2, True)
+
+        # Sync Word
+        self.write_register(sx1231_reg["RegSyncValue1"], node_id   , True )
+        self.write_register(sx1231_reg["RegSyncValue2"], network_id, True )
+        
+        # Packet config here
 
         return
     
@@ -450,7 +504,7 @@ if __name__ == "__main__":
         # BEACON.start_tx()
         BEACON.report_setup()
         BEACON.blue_blink()
-        BEACON.Config_rx_packet(PAOutputCfg(PA0, 0x1F))
+        BEACON.config_rx_packet(PAOutputCfg(PA0, 0x1F))
         # Too much power? 
         # BEACON.config_rx_packet(PAOutputCfg(PA1, 0x1F))
         # BEACON.config_rx_packet(PAOutputCfg(PA2|PA1, 0x1F))
@@ -469,8 +523,4 @@ if __name__ == "__main__":
     except KeyboardInterrupt:
         BEACON.stop()
         u.info("\r\nQuitting-keyboard interrupt.")
-
-
-
-
 
