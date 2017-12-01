@@ -4,6 +4,8 @@
 """
 Experiment with the sx1231/RFM69HCW module
 
+reference warning:
+    HopeRF RFM69HCW-V1.1.pdf has differences from semtech sx1231 reference See table 22
 """
 
 import sys
@@ -12,7 +14,6 @@ import threading
 import time
 import Adafruit_BBIO.GPIO as GPIO
 from Adafruit_BBIO.SPI import SPI
-
 
 # SX1231 Registers
 sx1231_reg = {
@@ -105,16 +106,16 @@ inv_sx1231_reg = {v: k for k, v in sx1231_reg.items()}
 
 # sx1231 RegOpMode
 # sx1231 Datasheet p 65
-OPMODE_SEQUENCER_ON                =   (0b0  <<7)
-OPMODE_SEQUENCER_OFF               =   (0b1  <<7)
-OPMODE_LISTEN_ON                   =   (0b1  <<6)
-OPMODE_LISTEN_OFF                  =   (0b0  <<6)
-OPMODE_LISTEN_ABORT                =   (0b1  <<5)
-OPMODE_SLEEP                      =   (0b000<<2)
-OPMODE_STANDBY                    =   (0b001<<2)
-OPMODE_FS                         =   (0b010<<2)
-OPMODE_TRANSMITTER                =   (0b011<<2)
-OPMODE_RECEIVER                   =   (0b100<<2)
+OPMODE_SEQUENCER_ON         =   (0b0  <<7)
+OPMODE_SEQUENCER_OFF        =   (0b1  <<7)
+OPMODE_LISTEN_ON            =   (0b1  <<6)
+OPMODE_LISTEN_OFF           =   (0b0  <<6)
+OPMODE_LISTEN_ABORT         =   (0b1  <<5)
+OPMODE_SLEEP                =   (0b000<<2)
+OPMODE_STANDBY              =   (0b001<<2)
+OPMODE_FS                   =   (0b010<<2)
+OPMODE_TRANSMITTER          =   (0b011<<2)
+OPMODE_RECEIVER             =   (0b100<<2)
 
 # RegDataModul
 DATAMODUL_Packet            =   (0b00     << 5)
@@ -160,14 +161,12 @@ InterTX                     =   (0b11  << 0)
 MODE_RX                     =   (1     << 4)
 MODE_TX                     =   (3     << 2)
 
-
-
 # DioMapping1
 DIO_0_POS                   =   6
 DIO_1_POS                   =   4
 DIO_2_POS                   =   2
 DIO_3_POS                   =   0
-DIO1_RX_TIMEOUT            =   (0b11)
+DIO1_RX_TIMEOUT             =   (0b11)
 
 
 # DioMapping2
@@ -190,7 +189,6 @@ LnaZin50_AGC                =   (0x08)
 # RegTestPllBW
 PLLBandwidth_75kHz          =   (0x0   << 2)
 
-
 # RegSyncConfig
 SYNCCFG_SYNC_ON             =   (0b1<<7)
 SYNCCFG_SYNC_OFF            =   (0b0<<7)
@@ -199,6 +197,26 @@ SYNCCFG_SIZE_2              =   (0b001<<3)
 SYNCCFG_SIZE_3              =   (0b010<<3)
 SYNCCFG_SIZE_4              =   (0b011<<3)
 
+# RegPacketConfig1
+PACKET1_FORMAT_FIXED            =   (0b0   << 7)
+PACKET1_FORMAT_VARIABLE         =   (0b1   << 7)
+PACKET1_DCFREE_NONE             =   (0b00  << 5)
+PACKET1_CRC_ON                  =   (0b1   << 4)
+PACKET1_CRC_OFF                 =   (0b0   << 4)
+PACKET1_CRCAUTOCLEAR_ON         =   (0b0   << 3)
+PACKET1_CRCAUTOCLEAR_OFF        =   (0b1   << 3)
+PACKET1_ADDRESS_FILTERING_NONE  =   (0b00  << 1)
+
+# RegPacketConfig2
+PACKET2_AUTORX_RESTART_ON       =   (0b1   << 1)
+PACKET2_AUTORX_RESTART_OFF      =   (0b0   << 1)
+PACKET2_AES_ON                  =   (0b1   << 0)
+PACKET2_AES_OFF                 =   (0b0   << 0)
+
+# RegAutomode
+AUTOMODE_ENTER_CRC_OK           = (0b011<<5)
+AUTOMODE_EXIT_FIFO_NOT_EMPTY    = (0b001<<2)
+AUTOMODE_INTERM_STDBY           = (0b01 <<0) 
 
 # Hardwired choices to bbb shield
 G0_PIN                      =   "P9_12"
@@ -216,13 +234,18 @@ SPI0_CLK                    =   "P9_22"
 SPI0_CS                     =   "P9_17"
 
 #initial defaults
+default_Payload_bytes       =   10
 default_LED_STATE           =   False
 default_Fxosc               =   32e6
 default_Fstep               =   61.03515625
 default_callsign            =   None
                 
-default_node_id             = 0x33
-default_network_id          = 1
+# See AddressFiltering in PacketConfig1
+# See NodeAdrs and BroadcastAdrs 
+# Address field is 1st byte of payload? (Check this?)
+# Network address is sync word? (check this?)
+default_node_id             =   0x33
+default_network_id          =   1
 
 default_carrier_freq        =   436500000
 default_carrier_dev         =   20000
@@ -280,6 +303,13 @@ def g4int(a):
 def g5int(a):
     print "g5"
 
+## for defining output power and amplifier choice
+#  example: BEACON.config_rx_packet(PAOutputCfg(PA1, 0x1F))
+#           BEACON.config_rx_packet(PAOutputCfg(PA2|PA1, 0x1F))
+def PAOutputCfg(PA, Power):
+    return (((PA) & (PA0 | PA1 | PA2)) | ((Power) & 0x1F))
+
+
 ### END INTERRUPT CALLBACKS
 ##########################
 """
@@ -320,8 +350,8 @@ class RFM69HCW():
             raise NoCallSign("FCC Callsign not defined")
         self.ord_callsign   = map(ord,list(self.callsign))
         self._io_setup()
-        self.reset_radio()
         GPIO.output(BLUE_LEDPIN,GPIO.LOW)
+        self.reset_radio()
         return
 
     def _io_setup(self):
@@ -447,7 +477,10 @@ class RFM69HCW():
     """
     def config_rx_packet(self, pa, node_id=0x33, network_id=0x77):
         # Begin with sequencer on, listen off, and in standby
-        self.write_register(sx1231_reg["RegOpMode"], OPMODE_SEQUENCER_ON|OPMODE_LISTEN_OFF|OPMODE_STANDBY, True) 
+        self.write_register(sx1231_reg["RegOpMode"], OPMODE_SEQUENCER_ON|OPMODE_LISTEN_OFF|OPMODE_RECEIVER, True) 
+
+        # Automodes - Finish Emptying fifo while in STBY 
+        self.write_register(sx1231_reg["RegAutoModes"], AUTOMODE_ENTER_CRC_OK |AUTOMODE_EXIT_FIFO_NOT_EMPTY|AUTOMODE_INTERM_STDBY, True) 
 
         # Packet Mode, FSK, No Shaping
         self.write_register(sx1231_reg["RegDataModul"], DATAMODUL_Packet|DATAMODUL_FSK|DATAMODUL_NoShaping) 
@@ -457,8 +490,7 @@ class RFM69HCW():
         self.set_bitrate(self.bitrate)
 
         # PA Output Power
-        self.write_register(sx1231_reg["RegPaLevel"], pa )
-
+        self.write_register(sx1231_reg["RegPaLevel"], PAOutputCfg(PA0, 0x1F) )   # keep at PA0 until end of initialize
 
         # DIO Mappings
                                                 #  (DccFreq|RxBwMant|RxBwExp) Table 13
@@ -481,8 +513,26 @@ class RFM69HCW():
         self.write_register(sx1231_reg["RegSyncValue1"], node_id   , True )
         self.write_register(sx1231_reg["RegSyncValue2"], network_id, True )
         
-        # Packet config here
+        # Packet config 1
+        self.write_register(sx1231_reg["RegPacketConfig1"], PACKET1_FORMAT_FIXED|PACKET1_DCFREE_NONE|PACKET1_CRC_ON|PACKET1_CRCAUTOCLEAR_ON|PACKET1_ADDRESS_FILTERING_NONE , True )
 
+        # Payload Length
+        self.write_register(sx1231_reg["RegPayloadLength"], default_Payload_bytes, True )
+
+        # Node address: _ No address filtering right now
+        # self.write_register(sx1231_reg["RegNodeAdrs"], self.node_id, True )
+        # self.write_register(sx1231_reg["RegBroadcastAdrs"], self.node_id, True )
+
+        # Fifothresh? Only for TX
+        
+        # Packet config 2 
+        self.write_register(sx1231_reg["RegPacketConfig2"], PACKET2_AUTORX_RESTART_ON, True )
+
+        # Magic numbers
+        self.write_register(sx1231_reg["RegPaRamp"], 0b0011, True )   # 500uS   close to 1/2400 bps ... see PacketConfig2 InterPacketRxDelay Must match the tx PA Ramp-down time
+        self.write_register(sx1231_reg["RegAfcCtrl"],0x40 | (0b1<<5) , True ) # AfcLowBetaOn  - Manual misprint....bits 7-6 read as 0b01  not 0b00
+        self.write_register(sx1231_reg["RegTestDagc"], 0x20, True )    # page 74 for AfcLowBetaOn=1
+        self.write_register(sx1231_reg["RegPaLevel"], pa )
         return
     
     def start_tx_packet(self):
@@ -493,10 +543,6 @@ class RFM69HCW():
 
     def stop(self):
         return
-
-
-def PAOutputCfg(PA, Power):
-    return (((PA) & (PA0 | PA1 | PA2)) | ((Power) & 0x1F))
 
 if __name__ == "__main__":
     try:
