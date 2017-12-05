@@ -157,9 +157,12 @@ InterStdby                  =   (0b01  << 0)
 InterRX                     =   (0b10  << 0)
 InterTX                     =   (0b11  << 0)
 
-# Modes
-MODE_RX                     =   (1     << 4)
-MODE_TX                     =   (3     << 2)
+# OpModes
+OPMODE_SLEEP                =  (0b000  << 2)
+OPMODE_STANDBY              =  (0b001  << 2)
+OPMODE_FS_SYNTH             =  (0b010  << 2)
+OPMODE_TX                   =  (0b011  << 2)
+OPMODE_RX                   =  (0b100  << 2)
 
 # DioMapping1
 DIO_0_POS                   =   6
@@ -167,6 +170,7 @@ DIO_1_POS                   =   4
 DIO_2_POS                   =   2
 DIO_3_POS                   =   0
 DIO1_RX_TIMEOUT             =   (0b11)
+
 
 
 # DioMapping2
@@ -177,6 +181,8 @@ DIO_CLK_DIV32               =   0b101
 
 DIO4_RXRDY                  =   (0b10)
 
+# IrqFlags2
+IRQFLAGS2_FIFOOVERRUN       =   (0b1<<4)
 
 # PA
 PA0                         =   (1     << 7)
@@ -212,6 +218,10 @@ PACKET2_AUTORX_RESTART_ON       =   (0b1   << 1)
 PACKET2_AUTORX_RESTART_OFF      =   (0b0   << 1)
 PACKET2_AES_ON                  =   (0b1   << 0)
 PACKET2_AES_OFF                 =   (0b0   << 0)
+
+# FifoThresh
+FIFOTHRESH_NOT_EMPTY            =   (0b1   << 7)
+FIFOTHRESH_THRESHOLD_15         =   (0xf)
 
 # RegAutomode
 AUTOMODE_ENTER_CRC_OK           = (0b011<<5)
@@ -303,15 +313,17 @@ def g4int(a):
 def g5int(a):
     print "g5"
 
-## for defining output power and amplifier choice
-#  example: BEACON.config_rx_packet(PAOutputCfg(PA1, 0x1F))
-#           BEACON.config_rx_packet(PAOutputCfg(PA2|PA1, 0x1F))
+### END INTERRUPT CALLBACKS
+##########################
+
+"""
+Used for defining output power and amplifier choice
+  example: BEACON.config_rx_packet(PAOutputCfg(PA1, 0x1F))
+           BEACON.config_rx_packet(PAOutputCfg(PA2|PA1, 0x1F))
+"""
 def PAOutputCfg(PA, Power):
     return (((PA) & (PA0 | PA1 | PA2)) | ((Power) & 0x1F))
 
-
-### END INTERRUPT CALLBACKS
-##########################
 """
 Example Usage:
     try:
@@ -334,6 +346,7 @@ class RFM69HCW():
                  carrier_dev=default_carrier_dev,
                  carrier_bitrate=default_bitrate
                 ):
+        self._mode          = OPMODE_SLEEP
         self.LED_STATE      = LED_STATE
         self.Fxosc          = Fxosc
         self.Fstep          = Fstep
@@ -477,7 +490,8 @@ class RFM69HCW():
     """
     def config_rx_packet(self, pa, node_id=0x33, network_id=0x77):
         # Begin with sequencer on, listen off, and in standby
-        self.write_register(sx1231_reg["RegOpMode"], OPMODE_SEQUENCER_ON|OPMODE_LISTEN_OFF|OPMODE_RECEIVER, True) 
+        self.write_register(sx1231_reg["RegOpMode"], OPMODE_SEQUENCER_ON|OPMODE_LISTEN_OFF, True) 
+        self.set_mode(OPMODE_STANDBY)
 
         # Automodes - Finish Emptying fifo while in STBY 
         self.write_register(sx1231_reg["RegAutoModes"], AUTOMODE_ENTER_CRC_OK |AUTOMODE_EXIT_FIFO_NOT_EMPTY|AUTOMODE_INTERM_STDBY, True) 
@@ -500,6 +514,9 @@ class RFM69HCW():
 
         self.write_register(sx1231_reg["RegDioMapping2"], (DIO4_RXRDY<<DIO_4_POS | DIO_CLK_DIV32), True )
 
+        # Clear IRQFLAG and reset FIFO
+        self.write_register(sx1231_reg["RegIrqFlags2"], IRQFLAGS2_FIFOOVERRUN )
+
         # RSSI Thresh
         self.write_register(sx1231_reg["RegRssiThresh"], 0xdc, True)   # -220/2 = -110dBm?
 
@@ -514,31 +531,60 @@ class RFM69HCW():
         self.write_register(sx1231_reg["RegSyncValue2"], network_id, True )
         
         # Packet config 1
-        self.write_register(sx1231_reg["RegPacketConfig1"], PACKET1_FORMAT_FIXED|PACKET1_DCFREE_NONE|PACKET1_CRC_ON|PACKET1_CRCAUTOCLEAR_ON|PACKET1_ADDRESS_FILTERING_NONE , True )
+        self.write_register(sx1231_reg["RegPacketConfig1"], 
+                            PACKET1_FORMAT_FIXED
+                            | PACKET1_DCFREE_NONE
+                            | PACKET1_CRC_ON
+                            | PACKET1_CRCAUTOCLEAR_ON
+                            | PACKET1_ADDRESS_FILTERING_NONE
+                            , True )
 
         # Payload Length
         self.write_register(sx1231_reg["RegPayloadLength"], default_Payload_bytes, True )
 
-        # Node address: _ No address filtering right now
+        # Node address: 
         # self.write_register(sx1231_reg["RegNodeAdrs"], self.node_id, True )
         # self.write_register(sx1231_reg["RegBroadcastAdrs"], self.node_id, True )
 
         # Fifothresh? Only for TX
+        self.write_register(sx1231_reg["RegFifoThresh"], FIFOTHRESH_NOT_EMPTY | FIFOTHRESH_THRESHOLD_15, True )
         
         # Packet config 2 
         self.write_register(sx1231_reg["RegPacketConfig2"], PACKET2_AUTORX_RESTART_ON, True )
 
         # Magic numbers
         self.write_register(sx1231_reg["RegPaRamp"], 0b0011, True )   # 500uS   close to 1/2400 bps ... see PacketConfig2 InterPacketRxDelay Must match the tx PA Ramp-down time
-        self.write_register(sx1231_reg["RegAfcCtrl"],0x40 | (0b1<<5) , True ) # AfcLowBetaOn  - Manual misprint....bits 7-6 read as 0b01  not 0b00
+        # self.write_register(sx1231_reg["RegAfcCtrl"],0x40 | (0b1<<5) , True ) # AfcLowBetaOn  - Manual misprint....bits 7-6 read as 0b01  not 0b00
+        self.write_register(sx1231_reg["RegAfcCtrl"], (0b1<<5) , True ) # AfcLowBetaOn  - Manual misprint....bits 7-6 read as 0b01  not 0b00
         self.write_register(sx1231_reg["RegTestDagc"], 0x20, True )    # page 74 for AfcLowBetaOn=1
         self.write_register(sx1231_reg["RegPaLevel"], pa )
         return
     
-    def start_tx_packet(self):
-        return
+    def set_mode(self, mode):
+        if(mode==self._mode):
+            return
 
-    def start_rx_packet(self):
+        if(mode==OPMODE_SLEEP):
+            self.write_register(sx1231_reg["RegOpMode"], (self.read_register(sx1231_reg["RegOpMode"]) & 0xe3) | OPMODE_SLEEP, True) 
+            self._mode=OPMODE_SLEEP
+            return
+        elif(mode==OPMODE_STANDBY):
+            self.write_register(sx1231_reg["RegOpMode"], (self.read_register(sx1231_reg["RegOpMode"]) & 0xe3) | OPMODE_STANDBY, True) 
+            self._mode=OPMODE_STANDBY
+            return
+        elif(mode==OPMODE_FS_SYNTH):
+            self.write_register(sx1231_reg["RegOpMode"], (self.read_register(sx1231_reg["RegOpMode"]) & 0xe3) | OPMODE_FS_SYNTH, True) 
+            self._mode=OPMODE_FS_SYNTH
+            return
+        elif(mode==OPMODE_TX):
+            self.write_register(sx1231_reg["RegOpMode"], (self.read_register(sx1231_reg["RegOpMode"]) & 0xe3) | OPMODE_TX, True) 
+            self._mode=OPMODE_TX
+            return
+        elif(mode==OPMODE_RX):
+            self.write_register(sx1231_reg["RegOpMode"], (self.read_register(sx1231_reg["RegOpMode"]) & 0xe3) | OPMODE_RX, True) 
+            self._mode=OPMODE_RX
+        else:
+            raise ValueError('Unrecognized Mode')            
         return
 
     def stop(self):
@@ -549,7 +595,6 @@ if __name__ == "__main__":
         BEACON       = RFM69HCW(callsign="KG7EYD")
         # BEACON.start_tx()
         BEACON.report_setup()
-        BEACON.blue_blink()
         BEACON.config_rx_packet(PAOutputCfg(PA0, 0x1F))
         # Too much power? 
         # BEACON.config_rx_packet(PAOutputCfg(PA1, 0x1F))
