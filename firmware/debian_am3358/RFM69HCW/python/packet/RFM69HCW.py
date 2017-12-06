@@ -56,6 +56,7 @@ sx1231_reg = {
     "RegRssiValue"      : 0x24,
     "RegDioMapping1"    : 0x25,
     "RegDioMapping2"    : 0x26,
+    "RegIrqFlags1"      : 0x27,
     "RegIrqFlags2"      : 0x28,
     "RegRssiThresh"     : 0x29,
     "RegRxTimeout2"     : 0x2B,
@@ -164,11 +165,13 @@ OPMODE_FS_SYNTH             =  (0b010  << 2)
 OPMODE_TX                   =  (0b011  << 2)
 OPMODE_RX                   =  (0b100  << 2)
 
+
 # DioMapping1
 DIO_0_POS                   =   6
 DIO_1_POS                   =   4
 DIO_2_POS                   =   2
 DIO_3_POS                   =   0
+DIO0_PACKETSENT             =   (0b00)
 DIO1_RX_TIMEOUT             =   (0b11)
 
 
@@ -180,6 +183,11 @@ DIO_CLKOFF                  =   0b111
 DIO_CLK_DIV32               =   0b101
 
 DIO4_RXRDY                  =   (0b10)
+
+# IrqFlags1
+IRQFLAGS1_MODEREADY         =   (0b1<<7)
+
+
 
 # IrqFlags2
 IRQFLAGS2_FIFOOVERRUN       =   (0b1<<4)
@@ -228,6 +236,12 @@ AUTOMODE_ENTER_CRC_OK           = (0b011<<5)
 AUTOMODE_EXIT_FIFO_NOT_EMPTY    = (0b001<<2)
 AUTOMODE_INTERM_STDBY           = (0b01 <<0) 
 
+# RSSICONFIG
+RSSI_DONE                       = (0b1<<1)
+
+# LIMITS
+MAX_PACKET_LEN                  = 35   # Testing
+
 # Hardwired choices to bbb shield
 G0_PIN                      =   "P9_12"
 G1_PIN                      =   "P8_7"   # DIO1/DCLK
@@ -266,6 +280,7 @@ class CheckError(Exception):
         self.value = value
     def __str__(self):
       return repr(self.value)
+
 
 class NoCallSign(Exception):
   def __init__(self, value):
@@ -488,7 +503,7 @@ class RFM69HCW():
     """
     Experiment with automodes 
     """
-    def config_rx_packet(self, pa, node_id=0x33, network_id=0x77):
+    def config_packet(self, pa, node_id=0x33, network_id=0x77):
         # Begin with sequencer on, listen off, and in standby
         self.write_register(sx1231_reg["RegOpMode"], OPMODE_SEQUENCER_ON|OPMODE_LISTEN_OFF, True) 
         self.set_mode(OPMODE_STANDBY)
@@ -510,8 +525,13 @@ class RFM69HCW():
                                                 #  (DccFreq|RxBwMant|RxBwExp) Table 13
         self.write_register(sx1231_reg["RegRxBw"], (010<<5|0x10<<3|100<<0) ) # 20.8kHz?
 
-        self.write_register(sx1231_reg["RegDioMapping1"], DIO1_RX_TIMEOUT<<DIO_1_POS            , True  )
+        # DIO_0 is packet_sent
+        self.write_register(sx1231_reg["RegDioMapping1"], ((self.read_register(sx1231_reg["RegDioMapping1"]) & (~(0b11 << DIO_0_POS))) | DIO0_PACKETSENT<<DIO_0_POS), True) 
 
+        # DIO_1 is RX TIMEOUT
+        self.write_register(sx1231_reg["RegDioMapping1"], ((self.read_register(sx1231_reg["RegDioMapping1"]) & (~(0b11 << DIO_1_POS))) | DIO1_RX_TIMEOUT<<DIO_1_POS), True) 
+
+        # DIO_4 is Clkout
         self.write_register(sx1231_reg["RegDioMapping2"], (DIO4_RXRDY<<DIO_4_POS | DIO_CLK_DIV32), True )
 
         # Clear IRQFLAG and reset FIFO
@@ -565,27 +585,63 @@ class RFM69HCW():
             return
 
         if(mode==OPMODE_SLEEP):
-            self.write_register(sx1231_reg["RegOpMode"], (self.read_register(sx1231_reg["RegOpMode"]) & 0xe3) | OPMODE_SLEEP, True) 
+            self.write_register(sx1231_reg["RegOpMode"], (self.read_register(sx1231_reg["RegOpMode"]) & 0xe3) | OPMODE_SLEEP ) 
             self._mode=OPMODE_SLEEP
             return
         elif(mode==OPMODE_STANDBY):
-            self.write_register(sx1231_reg["RegOpMode"], (self.read_register(sx1231_reg["RegOpMode"]) & 0xe3) | OPMODE_STANDBY, True) 
+            self.write_register(sx1231_reg["RegOpMode"], (self.read_register(sx1231_reg["RegOpMode"]) & 0xe3) | OPMODE_STANDBY) 
             self._mode=OPMODE_STANDBY
             return
         elif(mode==OPMODE_FS_SYNTH):
-            self.write_register(sx1231_reg["RegOpMode"], (self.read_register(sx1231_reg["RegOpMode"]) & 0xe3) | OPMODE_FS_SYNTH, True) 
+            self.write_register(sx1231_reg["RegOpMode"], (self.read_register(sx1231_reg["RegOpMode"]) & 0xe3) | OPMODE_FS_SYNTH) 
             self._mode=OPMODE_FS_SYNTH
             return
         elif(mode==OPMODE_TX):
-            self.write_register(sx1231_reg["RegOpMode"], (self.read_register(sx1231_reg["RegOpMode"]) & 0xe3) | OPMODE_TX, True) 
+            self.write_register(sx1231_reg["RegOpMode"], (self.read_register(sx1231_reg["RegOpMode"]) & 0xe3) | OPMODE_TX) 
             self._mode=OPMODE_TX
             return
         elif(mode==OPMODE_RX):
-            self.write_register(sx1231_reg["RegOpMode"], (self.read_register(sx1231_reg["RegOpMode"]) & 0xe3) | OPMODE_RX, True) 
+            self.write_register(sx1231_reg["RegOpMode"], (self.read_register(sx1231_reg["RegOpMode"]) & 0xe3) | OPMODE_RX) 
             self._mode=OPMODE_RX
         else:
             raise ValueError('Unrecognized Mode')            
+
+        while ((self.read_register(sx1231_reg["RegIrqFlags1"]) & IRQFLAGS1_MODEREADY) == 0x00):
+            pass
+
         return
+
+    def RSSI(self):
+        # write trigger
+        self.write_register(sx1231_reg["RegRssiConfig"], 0b1) 
+        while ((self.read_register(sx1231_reg["RegRssiConfig"]) & RSSI_DONE) == 0x0):
+            pass
+        rssival = -self.read_register(sx1231_reg["RegRssiValue"])
+        rssival = rssival/2
+        return rssival
+
+    def send(self, bytelist):
+        self.set_mode(OPMODE_STANDBY)
+        if len(bytelist) > MAX_PACKET_LEN:
+            raise ValueError('Max Packet Len Exceeded')
+
+        wbuf      = [(sx1231_reg["RegFifo"]|0x80)] + bytelist
+        self.RFM_SPI.writebytes(wbuf)
+        self.set_mode(OPMODE_TX)
+
+        value = GPIO.input(G0_PIN)
+        start_time = time.time()
+        print "Start send ", start_time
+        while value == 0:
+            value = GPIO.input(G0_PIN)
+            elapsed_time = time.time() - start_time
+            if(elapsed_time > 10):
+                break
+
+        print "Stop send ", elapsed_time
+        self.set_mode(OPMODE_STANDBY)
+        return        
+
 
     def stop(self):
         return
@@ -593,9 +649,14 @@ class RFM69HCW():
 if __name__ == "__main__":
     try:
         BEACON       = RFM69HCW(callsign="KG7EYD")
-        # BEACON.start_tx()
+
         BEACON.report_setup()
-        BEACON.config_rx_packet(PAOutputCfg(PA0, 0x1F))
+        BEACON.config_packet(PAOutputCfg(PA0, 0x1F))
+
+        # Test reading RSSI
+        print "RSSI:\t",BEACON.RSSI()
+        BEACON.send([1,2,3])
+
         # Too much power? 
         # BEACON.config_rx_packet(PAOutputCfg(PA1, 0x1F))
         # BEACON.config_rx_packet(PAOutputCfg(PA2|PA1, 0x1F))
