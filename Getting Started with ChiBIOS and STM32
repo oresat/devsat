@@ -1,4 +1,7 @@
 Getting Started with ChiBIOS and STM32 
+Oliver Rew
+12/5/17
+
 I used Ubuntu with the STM32F0 devboard , but it should be similar for the F4.
 
 Clone "devsat" repo
