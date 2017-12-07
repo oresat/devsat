@@ -12,6 +12,7 @@ import sys
 import random
 import threading
 import time
+import Utils as u
 import Adafruit_BBIO.GPIO as GPIO
 from Adafruit_BBIO.SPI import SPI
 
@@ -333,8 +334,8 @@ def g5int(a):
 
 """
 Used for defining output power and amplifier choice
-  example: BEACON.config_rx_packet(PAOutputCfg(PA1, 0x1F))
-           BEACON.config_rx_packet(PAOutputCfg(PA2|PA1, 0x1F))
+  example: DUT.config_rx_packet(PAOutputCfg(PA1, 0x1F))
+           DUT.config_rx_packet(PAOutputCfg(PA2|PA1, 0x1F))
 """
 def PAOutputCfg(PA, Power):
     return (((PA) & (PA0 | PA1 | PA2)) | ((Power) & 0x1F))
@@ -342,10 +343,10 @@ def PAOutputCfg(PA, Power):
 """
 Example Usage:
     try:
-        BEACON       = RFM69HCW(callsign="ABXCDE")
-        # BEACON.start_tx()
-        BEACON.report_setup()
-        BEACON.blue_blink()
+        DUT       = RFM69HCW(callsign="ABXCDE")
+        # DUT.start_tx()
+        DUT.report_setup()
+        DUT.blue_blink()
  
     except: 
         pass
@@ -648,22 +649,25 @@ class RFM69HCW():
 
 if __name__ == "__main__":
     try:
-        BEACON       = RFM69HCW(callsign="KG7EYD")
+        DUT       = RFM69HCW(callsign="KG7EYD")
 
-        BEACON.report_setup()
-        BEACON.config_packet(PAOutputCfg(PA0, 0x1F))
+        DUT.report_setup()
+        DUT.config_packet(PAOutputCfg(PA0, 0x1F))
 
         # Test reading RSSI
-        print "RSSI:\t",BEACON.RSSI()
-        BEACON.send([1,2,3])
+        print "RSSI:\t",DUT.RSSI()
+        while True:
+            DUT.send([1,2,3])
+            time.sleep(0.5)
+            print "."
 
         # Too much power? 
-        # BEACON.config_rx_packet(PAOutputCfg(PA1, 0x1F))
-        # BEACON.config_rx_packet(PAOutputCfg(PA2|PA1, 0x1F))
+        # DUT.config_rx_packet(PAOutputCfg(PA1, 0x1F))
+        # DUT.config_rx_packet(PAOutputCfg(PA2|PA1, 0x1F))
 
 
-        BEACON.reset_radio()
-        # BEACON.stop()
+        DUT.reset_radio()
+        # DUT.stop()
         print("Bye.")
 
     except NoCallSign as e:
@@ -673,6 +677,6 @@ if __name__ == "__main__":
         print ('Check Error', e.value)
 
     except KeyboardInterrupt:
-        BEACON.stop()
-        u.info("\r\nQuitting-keyboard interrupt.")
+        DUT.stop()
+        u.info("Quitting-keyboard interrupt.")
 
