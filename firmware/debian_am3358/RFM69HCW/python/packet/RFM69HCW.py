@@ -220,11 +220,13 @@ SYNCCFG_SIZE_4              =   (0b011<<3)
 PACKET1_FORMAT_FIXED            =   (0b0   << 7)
 PACKET1_FORMAT_VARIABLE         =   (0b1   << 7)
 PACKET1_DCFREE_NONE             =   (0b00  << 5)
+PACKET1_DCFREE_MANCHESTER       =   (0b01  << 5)
 PACKET1_CRC_ON                  =   (0b1   << 4)
 PACKET1_CRC_OFF                 =   (0b0   << 4)
 PACKET1_CRCAUTOCLEAR_ON         =   (0b0   << 3)
 PACKET1_CRCAUTOCLEAR_OFF        =   (0b1   << 3)
 PACKET1_ADDRESS_FILTERING_NONE  =   (0b00  << 1)
+PACKET1_ADDRESS_FILTERING_NODE  =   (0b01  << 1)
 
 # RegPacketConfig2
 PACKET2_AUTORX_RESTART_ON       =   (0b1   << 1)
@@ -565,14 +567,14 @@ class RFM69HCW():
                             | PACKET1_DCFREE_NONE
                             | PACKET1_CRC_ON
                             | PACKET1_CRCAUTOCLEAR_ON
-                            | PACKET1_ADDRESS_FILTERING_NONE
+                            | PACKET1_ADDRESS_FILTERING_NODE
                             , True )
 
         # Payload Length
         self.write_register(sx1231_reg["RegPayloadLength"], default_Payload_bytes, True )
 
         # Node address: 
-        # self.write_register(sx1231_reg["RegNodeAdrs"], self.node_id, True )
+        self.write_register(sx1231_reg["RegNodeAdrs"], self.node_id, True )
         # self.write_register(sx1231_reg["RegBroadcastAdrs"], self.node_id, True )
 
         # Fifothresh? Only for TX
