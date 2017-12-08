@@ -38,7 +38,7 @@
 #define     APP_FREQ_DEV                    (5000U)
 
 // #define     APP_BITRATE                     (4800)
-#define     APP_BITRATE                     (1200U)
+#define     APP_BITRATE                     (10U)
 
 // RegPaConfig
 #define     PA_MAXPOWER                     ((uint8_t)(0x0))
@@ -289,10 +289,10 @@ static THD_FUNCTION(Thread_sx1236_tx, arg)
 
 	while (true)
     {
-        chThdSleepMilliseconds(1000);
-        sx1236_write_FIFO(&SPID1,0x4B);
-		chThdSleepMilliseconds(1000);
-        sx1236_write_FIFO(&SPID1,0x7A);
+        chThdSleepMilliseconds(100);
+        sx1236_write_FIFO(&SPID1,0x32);
+		chThdSleepMilliseconds(100);
+        sx1236_write_FIFO(&SPID1,0x5E);
     }
 
 }
