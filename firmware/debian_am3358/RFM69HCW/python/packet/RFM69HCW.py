@@ -227,6 +227,7 @@ PACKET1_CRCAUTOCLEAR_ON         =   (0b0   << 3)
 PACKET1_CRCAUTOCLEAR_OFF        =   (0b1   << 3)
 PACKET1_ADDRESS_FILTERING_NONE  =   (0b00  << 1)
 PACKET1_ADDRESS_FILTERING_NODE  =   (0b01  << 1)
+PACKET1_ADDRESS_FILTERING_BOTH  =   (0b10  << 1)
 
 # RegPacketConfig2
 PACKET2_AUTORX_RESTART_ON       =   (0b1   << 1)
@@ -265,7 +266,7 @@ SPI0_CLK                    =   "P9_22"
 SPI0_CS                     =   "P9_17"
 
 #initial defaults
-default_Payload_bytes       =   10
+default_Payload_bytes       =   11
 default_LED_STATE           =   False
 default_Fxosc               =   32e6
 default_Fstep               =   61.03515625
@@ -567,15 +568,16 @@ class RFM69HCW():
                             | PACKET1_DCFREE_NONE
                             | PACKET1_CRC_ON
                             | PACKET1_CRCAUTOCLEAR_ON
-                            | PACKET1_ADDRESS_FILTERING_NODE
+                            | PACKET1_ADDRESS_FILTERING_BOTH
                             , True )
 
         # Payload Length
         self.write_register(sx1231_reg["RegPayloadLength"], default_Payload_bytes, True )
 
-        # Node address: 
+
+       # Node address:
         self.write_register(sx1231_reg["RegNodeAdrs"], self.node_id, True )
-        # self.write_register(sx1231_reg["RegBroadcastAdrs"], self.node_id, True )
+        self.write_register(sx1231_reg["RegBroadcastAdrs"], self.node_id+1, True )
 
         # Fifothresh? Only for TX
         self.write_register(sx1231_reg["RegFifoThresh"], FIFOTHRESH_NOT_EMPTY | FIFOTHRESH_THRESHOLD_15, True )
