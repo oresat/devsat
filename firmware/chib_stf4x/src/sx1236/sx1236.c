@@ -436,9 +436,7 @@ void sx1236_write_FIFO(SPIDriver * spip, uint8_t value)
 uint8_t sx1236_read_FIFO(SPIDriver * spip)
 {
 	uint8_t value;
-	chprintf(DEBUG_CHP, "+");
 	value = sx1236_read_reg(spip, regaddrs.RegFifo);
-	chprintf(DEBUG_CHP, "****");
 	return value;
 }
 

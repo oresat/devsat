@@ -116,7 +116,7 @@ static void init_tx_continuous(config_sx1236 * s)
 
 /*
  * GPT3 callback.
- */
+
 static void gpt3cb(GPTDriver *gptp) {
 	
 	  (void)gptp;
@@ -128,16 +128,17 @@ static void gpt3cb(GPTDriver *gptp) {
 
 }
 
-/*
+
  * GPT3 configuration.
- */
+
 static const GPTConfig gpt3cfg = {
-	1000,    /* 10kHz timer clock.*/
-	gpt3cb,   /* Timer callback.*/
+	1000,    // 10kHz timer clock.
+	gpt3cb,   // Timer callback.
 	0,
 	0
 };
 
+ */
 static SerialConfig ser_cfg =
 {
     115200,     //Baud rate
@@ -280,9 +281,19 @@ static THD_FUNCTION(Thread_sx1236_tx, arg)
 	palSetPadMode(GPIOC, 2, PAL_MODE_OUTPUT_PUSHPULL );
 	chThdSleepMilliseconds(200);
 
+	/*
 	gptStart(&GPTD3, &gpt3cfg);
 	chThdSleepMilliseconds(200);
 	gptStartContinuous(&GPTD3, 1000);
+	*/
+
+	while (true)
+    {
+        chThdSleepMilliseconds(1000);
+        sx1236_write_FIFO(&SPID1,0x4B);
+		chThdSleepMilliseconds(1000);
+        sx1236_write_FIFO(&SPID1,0x7A);
+    }
 
 }
 
@@ -297,7 +308,7 @@ static void main_loop(void)
 {
     chThdSleepMilliseconds(500);
     chprintf(DEBUG_CHP, "\r\n");
-    sx1236_check_reg(&SPID1, regaddrs.RegVersion, 0x12);
+    //sx1236_check_reg(&SPID1, regaddrs.RegVersion, 0x12);
 
     init_tx_continuous(&dut_config);
     

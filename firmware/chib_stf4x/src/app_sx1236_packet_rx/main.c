@@ -115,7 +115,7 @@ static void init_rx_continuous(config_sx1236 * s)
 
 /*
  * GPT3 callback.
- */
+
 static void gpt3cb(GPTDriver *gptp) {
 	
 	(void)gptp;
@@ -125,16 +125,16 @@ static void gpt3cb(GPTDriver *gptp) {
 
 }
 
-/*
+
  * GPT3 configuration.
- */
+ 
 static const GPTConfig gpt3cfg = {
-	1000,    /* 4.8kHz timer clock.*/
-	gpt3cb,   /* Timer callback.*/
+	1000,    // 4.8kHz timer clock.
+	gpt3cb,  // Timer callback.
 	0,
 	0
 };
-
+ */
 static SerialConfig ser_cfg =
 {
     115200,     //Baud rate
@@ -295,13 +295,27 @@ static THD_WORKING_AREA(waThread_sx1236_rx, 512);
 static THD_FUNCTION(Thread_sx1236_rx, arg)
 {
 	(void) arg;
+	uint8_t value=0;
 
 	//palSetPadMode(GPIOC, 1, PAL_MODE_INPUT );
 	//palSetPadMode(GPIOC, 2, PAL_MODE_INPUT );
 	chThdSleepMilliseconds(2000);
 
-	gptStart(&GPTD3, &gpt3cfg);
-	gptStartContinuous(&GPTD3, 2000);
+	//gptStart(&GPTD3, &gpt3cfg);
+	//gptStartContinuous(&GPTD3, 2000);
+
+	
+    while (true)
+    {
+        chThdSleepMilliseconds(1000);
+ 		value = sx1236_read_FIFO(&SPID1);
+		chprintf(DEBUG_CHP, " %x \r\n", value);
+		value=0;
+        chThdSleepMilliseconds(1000);
+ 		value = sx1236_read_FIFO(&SPID1);
+		chprintf(DEBUG_CHP, " %x \r\n", value);
+    }
+	
 
 }
 
@@ -329,7 +343,7 @@ static void main_loop(void)
     while (true)
     {
         chThdSleepMilliseconds(500);
-        //palTogglePad(GPIOA, GPIOA_SX_TESTOUT);
+        palTogglePad(GPIOA, GPIOA_SX_TESTOUT);
         chprintf(DEBUG_CHP, ".");
     }
 }
