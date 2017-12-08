@@ -303,7 +303,7 @@ g4_flag=False
 g5_flag=False
 def g0int(a):
     global g0_flag
-    print "g0"
+    # print "g0"
     g0_flag=True
     return
 

@@ -19,8 +19,8 @@ try:
     # Test reading RSSI
     print "RSSI:\t",DUT_TX.RSSI()
     while True:
-        DUT_TX.send([1,2,3])
-        time.sleep(0.5)
+        DUT_TX.send([10,9,8,7,6,5,4,3,2,1,0])
+        time.sleep(1.5)
         print "."
 
     DUT_TX.reset_radio()
