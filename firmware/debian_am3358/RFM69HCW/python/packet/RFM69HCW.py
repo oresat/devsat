@@ -173,6 +173,7 @@ DIO_1_POS                   =   4
 DIO_2_POS                   =   2
 DIO_3_POS                   =   0
 DIO0_PACKETSENT             =   (0b00)
+DIO0_PAYLOADREADY           =   (0b01)
 DIO1_RX_TIMEOUT             =   (0b11)
 
 
@@ -192,6 +193,9 @@ IRQFLAGS1_MODEREADY         =   (0b1<<7)
 
 # IrqFlags2
 IRQFLAGS2_FIFOOVERRUN       =   (0b1<<4)
+IRQFLAGS2_PACKETSENT        =   (0b1<<3)
+IRQFLAGS2_PAYLOADREADY      =   (0b1<<2)
+IRQFLAGS2_CRCOK             =   (0b1<<1)
 
 # PA
 PA0                         =   (1     << 7)
@@ -280,54 +284,53 @@ class CheckError(Exception):
     def __init__(self, value):
         self.value = value
     def __str__(self):
-      return repr(self.value)
-
+        return repr(self.value)
 
 class NoCallSign(Exception):
-  def __init__(self, value):
+    def __init__(self, value):
         self.value = value
-  def __str__(self):
-      return repr(self.value)
+    def __str__(self):
+        return repr(self.value)
 
 """
  Interrupt callbacks
 """
+g0_flag=False
+g1_flag=False
+g2_flag=False
+g3_flag=False
+g4_flag=False
+g5_flag=False
 def g0int(a):
+    global g0_flag
     print "g0"
+    g0_flag=True
+    return
 
 def g1int(a):
-    global count
-    global byte
-    rxrdy = GPIO.input(G4_PIN)
-    if rxrdy == 1 :
-        count = count+1
-        value = GPIO.input(G2_PIN)
-        if value == 1 :
-            byte = byte | 1<<count
-        else:
-            byte = byte | 0<<count  #  no effect - conceptual
-
-    if count >= 7:
-        print hex(byte)," ",
-        count = 0
-        byte  = 0
-
-    sys.stdout.flush()
+    print "g1"
+    g1_flag=True
+    return
 
 def g2int(a):
-    pass
-# global count
-# # print "g2"
-# count = count+1
+    print "g2"
+    g2_flag=True
+    return
 
 def g3int(a):
-    print "rssi g3"
+    print "g3"
+    g3_flag=True
+    return
 
 def g4int(a):
-    print "rx_rdy g4"
+    print "g4"
+    g4_flag=True
+    return
 
 def g5int(a):
     print "g5"
+    g5_flag=True
+    return
 
 ### END INTERRUPT CALLBACKS
 ##########################
@@ -391,7 +394,7 @@ class RFM69HCW():
         GPIO.setup(G1_PIN, GPIO.OUT)
         GPIO.setup(G2_PIN, GPIO.OUT)
         # GPIO.add_event_detect(G0_PIN, GPIO.FALLING, callback=g0int)
-        # GPIO.add_event_detect(G0_PIN, GPIO.RISING,  callback=g0int)
+        GPIO.add_event_detect(G0_PIN, GPIO.RISING,  callback=g0int)
 
     def _check_register(self, addr, value):
         vals = self.RFM_SPI.xfer2([addr, 0x0])
@@ -523,12 +526,17 @@ class RFM69HCW():
         self.write_register(sx1231_reg["RegPaLevel"], PAOutputCfg(PA0, 0x1F) )   # keep at PA0 until end of initialize
 
         # DIO Mappings
+        g0_flag=False
+        g1_flag=False
+        g2_flag=False
+        g3_flag=False
+        g4_flag=False
+        g5_flag=False
                                                 #  (DccFreq|RxBwMant|RxBwExp) Table 13
         self.write_register(sx1231_reg["RegRxBw"], (010<<5|0x10<<3|100<<0) ) # 20.8kHz?
 
-        # DIO_0 is packet_sent
-        self.write_register(sx1231_reg["RegDioMapping1"], ((self.read_register(sx1231_reg["RegDioMapping1"]) & (~(0b11 << DIO_0_POS))) | DIO0_PACKETSENT<<DIO_0_POS), True) 
-
+        # DIO_0 initialize to PAYLOAD ready in RX
+        self.write_register(sx1231_reg["RegDioMapping1"], ((self.read_register(sx1231_reg["RegDioMapping1"]) & (~(0b11 << DIO_0_POS))) | DIO0_PAYLOADREADY<<DIO_0_POS), True) 
         # DIO_1 is RX TIMEOUT
         self.write_register(sx1231_reg["RegDioMapping1"], ((self.read_register(sx1231_reg["RegDioMapping1"]) & (~(0b11 << DIO_1_POS))) | DIO1_RX_TIMEOUT<<DIO_1_POS), True) 
 
@@ -586,22 +594,22 @@ class RFM69HCW():
             return
 
         if(mode==OPMODE_SLEEP):
+            self.write_register(sx1231_reg["RegDioMapping1"], ((self.read_register(sx1231_reg["RegDioMapping1"]) & (~(0b11 << DIO_0_POS))) | DIO0_PAYLOADREADY<<DIO_0_POS)) 
             self.write_register(sx1231_reg["RegOpMode"], (self.read_register(sx1231_reg["RegOpMode"]) & 0xe3) | OPMODE_SLEEP ) 
             self._mode=OPMODE_SLEEP
-            return
         elif(mode==OPMODE_STANDBY):
+            self.write_register(sx1231_reg["RegDioMapping1"], ((self.read_register(sx1231_reg["RegDioMapping1"]) & (~(0b11 << DIO_0_POS))) | DIO0_PAYLOADREADY<<DIO_0_POS)) 
             self.write_register(sx1231_reg["RegOpMode"], (self.read_register(sx1231_reg["RegOpMode"]) & 0xe3) | OPMODE_STANDBY) 
             self._mode=OPMODE_STANDBY
-            return
         elif(mode==OPMODE_FS_SYNTH):
             self.write_register(sx1231_reg["RegOpMode"], (self.read_register(sx1231_reg["RegOpMode"]) & 0xe3) | OPMODE_FS_SYNTH) 
             self._mode=OPMODE_FS_SYNTH
-            return
         elif(mode==OPMODE_TX):
+            self.write_register(sx1231_reg["RegDioMapping1"], ((self.read_register(sx1231_reg["RegDioMapping1"]) & (~(0b11 << DIO_0_POS))) | DIO0_PACKETSENT<<DIO_0_POS)) 
             self.write_register(sx1231_reg["RegOpMode"], (self.read_register(sx1231_reg["RegOpMode"]) & 0xe3) | OPMODE_TX) 
             self._mode=OPMODE_TX
-            return
         elif(mode==OPMODE_RX):
+            self.write_register(sx1231_reg["RegDioMapping1"], ((self.read_register(sx1231_reg["RegDioMapping1"]) & (~(0b11 << DIO_0_POS))) | DIO0_PAYLOADREADY<<DIO_0_POS)) 
             self.write_register(sx1231_reg["RegOpMode"], (self.read_register(sx1231_reg["RegOpMode"]) & 0xe3) | OPMODE_RX) 
             self._mode=OPMODE_RX
         else:
@@ -609,7 +617,6 @@ class RFM69HCW():
 
         while ((self.read_register(sx1231_reg["RegIrqFlags1"]) & IRQFLAGS1_MODEREADY) == 0x00):
             pass
-
         return
 
     def RSSI(self):
@@ -621,25 +628,53 @@ class RFM69HCW():
         rssival = rssival/2
         return rssival
 
+    # call when g0flag goes true
+    def read_fifo(self):
+        self.standby()
+        fifolist=self.RFM_SPI.readbytes(default_Payload_bytes+1)
+
+        #debugging
+        value = True
+        while value:
+            print "- "
+            value = self.read_register(sx1231_reg["RegIrqFlags2"]) & IRQFLAGS2_PAYLOADREADY
+            garbage=self.RFM_SPI.readbytes(default_Payload_bytes+1)
+
+        return fifolist
+
+    def standby(self):
+        self.set_mode(OPMODE_STANDBY)
+        return
+
+    def receive(self):
+        self.set_mode(OPMODE_RX)
+
+        g0_flag=False
+        return
+
     def send(self, bytelist):
         self.set_mode(OPMODE_STANDBY)
         if len(bytelist) > MAX_PACKET_LEN:
             raise ValueError('Max Packet Len Exceeded')
 
         wbuf      = [(sx1231_reg["RegFifo"]|0x80)] + bytelist
+
         self.RFM_SPI.writebytes(wbuf)
+        start_time = time.time()
         self.set_mode(OPMODE_TX)
 
-        value = GPIO.input(G0_PIN)
-        start_time = time.time()
-        print "Start send ", start_time
+        # Read pin or register...
+        # value = GPIO.input(G0_PIN)
+        value = self.read_register(sx1231_reg["RegIrqFlags2"]) & IRQFLAGS2_PACKETSENT
+        print "Start send:\t", start_time
         while value == 0:
-            value = GPIO.input(G0_PIN)
+            # value = GPIO.input(G0_PIN)
+            value = self.read_register(sx1231_reg["RegIrqFlags2"]) & IRQFLAGS2_PACKETSENT
             elapsed_time = time.time() - start_time
             if(elapsed_time > 10):
                 break
 
-        print "Stop send ", elapsed_time
+        print "Stop send:\t", elapsed_time
         self.set_mode(OPMODE_STANDBY)
         return        
 
