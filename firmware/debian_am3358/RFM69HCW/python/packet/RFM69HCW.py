@@ -421,7 +421,7 @@ class RFM69HCW():
       return regval[1]
 
     def reset_radio(self):
-        self.blue_blink(2)
+        #self.blue_blink(2)
         GPIO.output(MODULE_EN,GPIO.HIGH)
         GPIO.output(MODULE_RST,GPIO.LOW)
         time.sleep(0.5)
@@ -672,7 +672,7 @@ class RFM69HCW():
         # Read pin or register...
         # value = GPIO.input(G0_PIN)
         value = self.read_register(sx1231_reg["RegIrqFlags2"]) & IRQFLAGS2_PACKETSENT
-        print "Start send:\t", start_time
+        #print "Start send:\t", start_time
         while value == 0:
             # value = GPIO.input(G0_PIN)
             value = self.read_register(sx1231_reg["RegIrqFlags2"]) & IRQFLAGS2_PACKETSENT
@@ -680,7 +680,7 @@ class RFM69HCW():
             if(elapsed_time > 10):
                 break
 
-        print "Stop send:\t", elapsed_time
+        #print "Stop send:\t", elapsed_time
         self.set_mode(OPMODE_STANDBY)
         return        
 

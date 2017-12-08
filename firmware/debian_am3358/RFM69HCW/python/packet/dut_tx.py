@@ -4,9 +4,20 @@
 
 import RFM69HCW
 import time
+import random
 import Utils as u
 
 try:
+
+    # Init random number generator
+    # This method should generate more interesting seeds over short time periods
+    import time
+
+    t = int( time.time() * 10000.0 )
+    random.seed((t & 0xff))
+
+    baselist = [10,9,8,7,6,5,4,3,2,1]
+
     DUT_TX       = RFM69HCW.RFM69HCW(callsign="KG7EYD")
 
     DUT_TX.report_setup()
@@ -19,8 +30,10 @@ try:
     # Test reading RSSI
     print "RSSI:\t",DUT_TX.RSSI()
     while True:
-        DUT_TX.send([10,9,8,7,6,5,4,3,2,1,0])
-        time.sleep(1.5)
+        random.shuffle(baselist)
+        print "OUT: ", baselist
+        DUT_TX.send(baselist)
+        time.sleep(5.0)
         print "."
 
     DUT_TX.reset_radio()
