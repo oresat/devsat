@@ -22,7 +22,7 @@ try:
         # DUT_RX.send([1,2,3])
         time.sleep(0.5)
         DUT_RX.receive()
-        if RFM69HCW.g0_flag:
+        if RFM69HCW.g0_flag==True:
             bytesrx = DUT_RX.read_fifo()
             print bytesrx
 

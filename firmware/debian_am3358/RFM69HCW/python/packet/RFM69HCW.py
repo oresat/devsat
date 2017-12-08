@@ -630,16 +630,20 @@ class RFM69HCW():
 
     # call when g0flag goes true
     def read_fifo(self):
+        global g0_flag
         self.standby()
         fifolist=self.RFM_SPI.readbytes(default_Payload_bytes+1)
 
         #debugging
-        value = True
-        while value:
-            print "- "
-            value = self.read_register(sx1231_reg["RegIrqFlags2"]) & IRQFLAGS2_PAYLOADREADY
-            garbage=self.RFM_SPI.readbytes(default_Payload_bytes+1)
+        # value = True
+        # while value:
+            # print "* ";
+            # value = self.read_register(sx1231_reg["RegIrqFlags2"]) & IRQFLAGS2_PAYLOADREADY
+            # garbage=self.RFM_SPI.readbytes(default_Payload_bytes+1)
 
+        value = self.read_register(sx1231_reg["RegIrqFlags2"]) & IRQFLAGS2_PAYLOADREADY
+        if value==0:
+            g0_flag=False
         return fifolist
 
     def standby(self):
