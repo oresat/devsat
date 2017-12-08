@@ -574,7 +574,8 @@ class RFM69HCW():
         # Payload Length
         self.write_register(sx1231_reg["RegPayloadLength"], default_Payload_bytes, True )
 
-        # Node address: 
+
+       # Node address:
         self.write_register(sx1231_reg["RegNodeAdrs"], self.node_id, True )
         self.write_register(sx1231_reg["RegBroadcastAdrs"], self.node_id+1, True )
 
