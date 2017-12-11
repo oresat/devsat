@@ -7,7 +7,7 @@ import time
 import Utils as u
 
 try:
-    DUT_RX       = RFM69HCW.RFM69HCW(callsign="KG7EYD")
+    DUT_RX       = RFM69HCW.RFM69HCW(callsign="AB0DEF")
 
     DUT_RX.report_setup()
     DUT_RX.config_packet(RFM69HCW.PAOutputCfg(RFM69HCW.PA0, 0x1F))
