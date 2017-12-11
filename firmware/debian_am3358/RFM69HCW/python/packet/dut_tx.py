@@ -18,7 +18,7 @@ try:
 
     baselist = [10,9,8,7,6,5,4,3,2,1]
 
-    DUT_TX       = RFM69HCW.RFM69HCW(callsign="KG7EYD")
+    DUT_TX       = RFM69HCW.RFM69HCW(callsign="AB00DEF")
 
     DUT_TX.report_setup()
     DUT_TX.config_packet(RFM69HCW.PAOutputCfg(RFM69HCW.PA0, 0x1F))

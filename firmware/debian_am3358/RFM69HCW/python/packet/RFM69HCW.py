@@ -1,5 +1,5 @@
 #!/usr/bin/env python
-# file: DUT.py
+# file: RFM69HCW.py
 
 """
 Experiment with the sx1231/RFM69HCW module
@@ -697,7 +697,7 @@ class RFM69HCW():
 
 if __name__ == "__main__":
     try:
-        DUT       = RFM69HCW(callsign="KG7EYD")
+        DUT       = RFM69HCW(callsign="AB00DEF")
 
         DUT.report_setup()
         DUT.config_packet(PAOutputCfg(PA0, 0x1F))

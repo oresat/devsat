@@ -343,7 +343,7 @@ def tx_send_byte(byte):
 
 def tx_continuous():
   # callsign     = None
-  # kcallsign    = ['K', 'G', '7', 'E', 'Y', 'D']  # K's callsign
+  # kcallsign    = ['A', 'B', '1', '2', 'D', 'E']  #
   # callsign     = kcallsign
   # ord_callsign = map(ord,callsign)
 
