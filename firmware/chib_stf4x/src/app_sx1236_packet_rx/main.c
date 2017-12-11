@@ -37,7 +37,7 @@
 #define     APP_FREQ_DEV                    (5000U)
 
 // #define     APP_BITRATE                     (4800)
-#define     APP_BITRATE                     (10U)
+#define     APP_BITRATE                     (1200U)
 
 // RegPaConfig
 #define     PA_MAXPOWER                     ((uint8_t)(0x0))
@@ -106,11 +106,13 @@ static void init_rx_continuous(config_sx1236 * s)
 
     s->sx1236_state.RegOpMode          = 0x0 | SX1236_LOW_FREQ_MODE | SX1236_FSK_MODE |  SX1236_RECEIVER_MODE;
     //s->sx1236_state.RegOsc             = 0x0 | SX1236_OSC_DIV_8 ;
-    s->sx1236_state.RegPacketConfig2   = 0x0 | SX1236_PACKET_MODE ;
+    s->sx1236_state.RegPacketConfig1   	= 0x00 | SX1236_FIXED_PACKET | SX1236_CRC_ON ;
+	s->sx1236_state.RegPacketConfig2   	= 0x00 | SX1236_PACKET_MODE ;
+	s->sx1236_state.RegPayloadLength   	= 0x01;
 	//s->sx1236_state.RegOokPeak   		= 0x08;				//disable syncronizer bit
 
 	sx1236_configure(&SPID1, s);
-	//sx1236_print_regs(&SPID1);
+	sx1236_print_regs(&SPID1);
 }
 
 /*
@@ -297,8 +299,9 @@ static THD_FUNCTION(Thread_sx1236_rx, arg)
 	(void) arg;
 	uint8_t value=0;
 
-	//palSetPadMode(GPIOC, 1, PAL_MODE_INPUT );
-	//palSetPadMode(GPIOC, 2, PAL_MODE_INPUT );
+	palSetPadMode(GPIOC, 1, PAL_MODE_INPUT );
+	palSetPadMode(GPIOC, 2, PAL_MODE_INPUT );
+	palSetPadMode(GPIOC, 3, PAL_MODE_INPUT );
 	chThdSleepMilliseconds(2000);
 
 	//gptStart(&GPTD3, &gpt3cfg);
@@ -308,9 +311,14 @@ static THD_FUNCTION(Thread_sx1236_rx, arg)
     while (true)
     {
 		value=0;
-        chThdSleepMilliseconds(100);
- 		value = sx1236_read_FIFO(&SPID1);
-		chprintf(DEBUG_CHP, " %x \r\n", value);
+        chThdSleepMilliseconds(10);
+		if ( !palReadPad(GPIOC, GPIOC_SX_DIO3)){			//fifo not empty
+	  		value = sx1236_read_FIFO(&SPID1);
+			chprintf(DEBUG_CHP, " %x \r\n", value);
+ 		}	
+		if ( palReadPad(GPIOC, GPIOC_SX_DIO2))
+	  		chprintf(DEBUG_CHP, "FIFO Full\r\n");
+
     }
 	
 

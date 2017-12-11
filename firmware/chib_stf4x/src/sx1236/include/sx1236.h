@@ -47,9 +47,17 @@
 #define SX1236_FIXED_PACKET          ((uint8_t)(0b0<<7))
 #define SX1236_VARIABLE_PACKET       ((uint8_t)(0b1<<7))
 
+#define SX1236_DCFREE_NONE       	 ((uint8_t)(0b00<<5))
+#define SX1236_DCFREE_MANCHESTER   	 ((uint8_t)(0b00<<5))
+#define SX1236_DCFREE_WHITENING      ((uint8_t)(0b00<<5))
+
+#define SX1236_CRC_OFF		         ((uint8_t)(0b0<<4))
+#define SX1236_CRC_ON      			 ((uint8_t)(0b1<<4))
+
 // Packet Config 2
 #define SX1236_CONTINUOUS_MODE       ((uint8_t)(0b0<<6))
 #define SX1236_PACKET_MODE           ((uint8_t)(0b1<<6))
+
 
 // PllLf
 #define SX1236_PLLBW_75KHZ           ((uint8_t)(0b00<<6))

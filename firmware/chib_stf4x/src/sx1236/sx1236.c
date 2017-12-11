@@ -453,7 +453,7 @@ void sx1236_configure(SPIDriver * spip, config_sx1236 * c)
 	sx1236_set_freq_deviation(spip, c);
 	sx1236_set_bitrate(spip, c);
 
-	sx1236_write_reg(spip, regaddrs.RegFifo,  c->sx1236_state.RegFifo          );
+	//sx1236_write_reg(spip, regaddrs.RegFifo,  c->sx1236_state.RegFifo          );
 	sx1236_write_reg(spip, regaddrs.RegOpMode,  c->sx1236_state.RegOpMode        );
 	sx1236_write_reg(spip, regaddrs.RegBitrateMsb,  c->sx1236_state.RegBitrateMsb    );
 	sx1236_write_reg(spip, regaddrs.RegBitrateLsb,  c->sx1236_state.RegBitrateLsb    );
