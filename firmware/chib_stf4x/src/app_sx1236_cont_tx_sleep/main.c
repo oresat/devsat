@@ -1,4 +1,5 @@
 /*
+
     ChibiOS - Copyright (C) 2006..2015 Giovanni Di Sirio
 
     Licensed under the Apache License, Version 2.0 (the "License");
@@ -43,9 +44,6 @@
 #define     PA_MAXPOWER                     ((uint8_t)(0x0))
 #define     PA_OUTPOWER                     ((uint8_t)(0x0))
 
-// RSSI Smoothing
-#define     RSSI_SMOOTH_256                 ((uint8_t)(0b111))
-
 // RSSI Thresh
 #define     RSSI_THRESH                     ((uint8_t)(0x70U))
 
@@ -89,7 +87,15 @@ static config_sx1236 dut_config ;
 // {
 // }
 
-static void init_rx_continuous(config_sx1236 * s)
+// static void init_rx_continuous(config_sx1236 * s)
+// {
+// }
+
+// static void init_tx_packet(config_sx1236 * s)
+// {
+// }
+
+static void init_tx_continuous(config_sx1236 * s)
 {
     s->Fxosc                            = F_XOSC;
     s->Fstep                            = F_STEP;
@@ -99,38 +105,10 @@ static void init_rx_continuous(config_sx1236 * s)
 
     sx1236_init_state(&s->sx1236_state);
 
-    s->sx1236_state.RegOpMode          = 0x0 | SX1236_LOW_FREQ_MODE | SX1236_FSK_MODE |  SX1236_RECEIVER_MODE;
-    // s->sx1236_state.RegOpMode          = 0x0 | SX1236_LOW_FREQ_MODE | SX1236_FSK_MODE |  SX1236_FS_MODE_RX;
+    s->sx1236_state.RegOpMode          = 0x0 | SX1236_LOW_FREQ_MODE | SX1236_FSK_MODE |  SX1236_TRANSMITTER_MODE ;
     s->sx1236_state.RegOsc             = 0x0 | SX1236_OSC_DIV_8 ;
-    s->sx1236_state.RegOokPeak         = 0x0 | SX1236_BIT_SYNC_ON ;
-	s->sx1236_state.RegRxConfig        = 0x0 | SX1236_RXTRIGGER_ALL |SX1236_RESTART_RX_WITH_PLL_LOCK  | SX1236_AFC_AUTO_ON | SX1236_AGC_AUTO_ON ;
-	s->sx1236_state.RegRssiThresh      = RSSI_THRESH ;
-	s->sx1236_state.RegRssiConfig      = RSSI_SMOOTH_256 ;
-
+    s->sx1236_state.RegPacketConfig2   = 0x0 | SX1236_CONTINUOUS_MODE ;
 }
-
-/*
- * static void init_tx_packet(config_sx1236 * s)
- * {
- * }
- */
-
-/*
- * static void init_tx_continuous(config_sx1236 * s)
- * {
- *     s->Fxosc                            = F_XOSC;
- *     s->Fstep                            = F_STEP;
- *     s->carrier_freq                     = APP_CARRIER_FREQ;
- *     s->freq_dev_hz                      = APP_FREQ_DEV;
- *     s->bitrate                          = APP_BITRATE;
- * 
- *     sx1236_init_state(&s->sx1236_state);
- * 
- *     s->sx1236_state.RegOpMode          = 0x0 | SX1236_LOW_FREQ_MODE | SX1236_FSK_MODE |  SX1236_TRANSMITTER_MODE ;
- *     s->sx1236_state.RegOsc             = 0x0 | SX1236_OSC_DIV_8 ;
- *     s->sx1236_state.RegPacketConfig2   = 0x0 | SX1236_CONTINUOUS_MODE ;
- * }
- */
 
 static SerialConfig ser_cfg =
 {
@@ -192,39 +170,12 @@ static void dio0_evt_handler(eventid_t id)
     chprintf(DEBUG_CHP, "dio0 event\r\n");
 }
 
-/* In continuous mode DIO1 is DCLK RX
-	See reference manual 4.1.12.3
-
-	Rising edge interrupt
-*/
 static void dio1_evt_handler(eventid_t id)
 {
     (void)id;
-    uint8_t bit  = 0;
-
-    static uint8_t count = 0;
-    static uint8_t byte  = 0x0;
-
-	chprintf(DEBUG_CHP, "1");
-    /* Data Clock received, get bit from DIO2 */
-    bit  = palReadPad(GPIOC, GPIOC_SX_DIO2);
-    byte = byte | (bit << count);
-
-    count += 1;
-
-    if(count == 8) {
-        // chprintf(DEBUG_CHP, "RX Byte: 0x%x\r\n", byte );
-        // chprintf(DEBUG_CHP, "0x%x ", byte );
-        count = 0;
-        byte  = 0x0;
-    }
-
-    // chprintf(DEBUG_CHP, "dio1 event\r\n");
+    chprintf(DEBUG_CHP, "dio1 event\r\n");
 }
 
-/* In continuous mode DIO2 is DATA RX
-	See reference manual 4.1.12.3
-*/
 static void dio2_evt_handler(eventid_t id)
 {
     (void)id;
@@ -235,7 +186,7 @@ static void dio2_evt_handler(eventid_t id)
 static void dio3_evt_handler(eventid_t id)
 {
     (void)id;
-    chprintf(DEBUG_CHP, "3");
+    chprintf(DEBUG_CHP, "dio3 event\r\n");
 }
 
 static void dio4_evt_handler(eventid_t id)
@@ -278,7 +229,7 @@ static THD_FUNCTION(Thread_sx1236_dio, arg)
     chprintf(DEBUG_CHP, "Thread started: %s\r\n", "sx1236_dio");
     while (TRUE)
     {
-        chEvtDispatch(evhndl_sx1236_dio, chEvtWaitOneTimeout(EVENT_MASK(1)| EVENT_MASK(3), MS2ST(50)));
+        chEvtDispatch(evhndl_sx1236_dio, chEvtWaitOneTimeout(EVENT_MASK(0), MS2ST(50)));
 
         /*
          * Examples of different masking of events
@@ -290,9 +241,32 @@ static THD_FUNCTION(Thread_sx1236_dio, arg)
     }
 }
 
+static THD_WORKING_AREA(waThread_sx1236_tx, 512);
+static THD_FUNCTION(Thread_sx1236_tx, arg)
+{
+	(void) arg;
+	palSetPadMode(GPIOC, 1, PAL_MODE_OUTPUT_PUSHPULL );
+	palSetPadMode(GPIOC, 2, PAL_MODE_OUTPUT_PUSHPULL );
+	chThdSleepMilliseconds(200);
+	while (true)
+	{
+		chThdSleepMilliseconds(1);
+		palClearPad(GPIOC, GPIOC_SX_DIO1);
+		if (palReadPad(GPIOC, GPIOC_BUTTON))
+			palSetPad(GPIOC, GPIOC_SX_DIO2);
+		else
+			palClearPad(GPIOC, GPIOC_SX_DIO2);
+		chprintf(DEBUG_CHP, "writting DIO1\r\n");
+		chThdSleepMilliseconds(1);
+		palSetPad(GPIOC, GPIOC_SX_DIO1);
+
+	}
+}
+
 static void start_threads(void)
 {
     chThdCreateStatic(waThread_sx1236_dio,      sizeof(waThread_sx1236_dio),   NORMALPRIO, Thread_sx1236_dio, NULL);
+	chThdCreateStatic(waThread_sx1236_tx,      sizeof(waThread_sx1236_tx),   NORMALPRIO, Thread_sx1236_tx, NULL);
 }
 
 
@@ -300,35 +274,19 @@ static void main_loop(void)
 {
     chThdSleepMilliseconds(500);
     chprintf(DEBUG_CHP, "\r\n");
-    chprintf(DEBUG_CHP, "**INFO** SX1236 RX Test...\r\n");
-    chprintf(DEBUG_CHP, "\r\n");
     sx1236_check_reg(&SPID1, regaddrs.RegVersion, 0x12);
 
-    // init_tx_continuous(&dut_config);
-	init_rx_continuous(&dut_config);
-	sx1236_configure(&SPID1, &dut_config);
-
-	sx1236_write_reg(&SPID1, regaddrs.RegOpMode,  dut_config.sx1236_state.RegOpMode);
-	chThdSleepMilliseconds(100);
-	sx1236_check_reg(&SPID1, regaddrs.RegOpMode,  dut_config.sx1236_state.RegOpMode);
-	sx1236_write_reg(&SPID1, regaddrs.RegOpMode,  dut_config.sx1236_state.RegOpMode);
-	sx1236_check_reg(&SPID1, regaddrs.RegOpMode,  dut_config.sx1236_state.RegOpMode);
-	sx1236_write_reg(&SPID1, regaddrs.RegOpMode,  dut_config.sx1236_state.RegOpMode);
-	sx1236_check_reg(&SPID1, regaddrs.RegOpMode,  dut_config.sx1236_state.RegOpMode);
-
-
+    init_tx_continuous(&dut_config);
+    sx1236_configure(&SPID1, &dut_config);
 
     // chprintf(DEBUG_CHP, "**INFO**\r\n");
     // sx1236_print_regs(&SPID1);
 
     while (true)
     {
-		uint8_t rssival;
-        chThdSleepMilliseconds(1500);
+        chThdSleepMilliseconds(500);
         palTogglePad(GPIOA, GPIOA_SX_TESTOUT);
         chprintf(DEBUG_CHP, ".");
-		sx1236_read(&SPID1, regaddrs.RegRssiValue , &rssival, 1);
-		chprintf(DEBUG_CHP, "\r\n\tRSSI_VAL: -%d dbm\r\n", rssival/2);
     }
 }
 
@@ -338,8 +296,8 @@ int main(void)
     chSysInit();
     app_init();
 
-    // Enable interrupt through the EXT interface
-    extStart(&EXTD1, &extcfg);
+	// Enable interrupt through the EXT interface
+    //extStart(&EXTD1, &extcfg);
 
     start_threads();
     main_loop();

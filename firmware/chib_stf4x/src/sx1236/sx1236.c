@@ -328,7 +328,7 @@ void sx1236_set_bitrate(SPIDriver * spip, config_sx1236 * c)
 
 	rate             = (uint32_t)incr_rnd(((1.0 * c->Fxosc) / c->bitrate), 1);
 
-	c->sx1236_state.RegBitrateMsb = (rate >> 8) & 0x3f;
+	c->sx1236_state.RegBitrateMsb = (rate >> 8) & 0xff;
 	c->sx1236_state.RegBitrateLsb = rate        & 0xff;
 
 	sx_txbuff[0]     = c->sx1236_state.RegBitrateMsb;
@@ -423,6 +423,27 @@ void sx1236_init_state(struct SX1236 * s)
 };
 
 /*
+ * write FIFO
+ */
+void sx1236_write_FIFO(SPIDriver * spip, uint8_t value)
+{
+	sx1236_write_reg(spip, regaddrs.RegFifo,  value         );
+}
+
+
+/*
+ * Read FIFO
+ */
+uint8_t sx1236_read_FIFO(SPIDriver * spip)
+{
+	uint8_t value;
+	value = sx1236_read_reg(spip, regaddrs.RegFifo);
+	return value;
+}
+
+
+
+/*
  * Configure to a state given in a config_sx1236 structure
  *
  * Could have multiple state setups for tx, rx, tx_packet, rx_packet etc...
@@ -433,7 +454,7 @@ void sx1236_configure(SPIDriver * spip, config_sx1236 * c)
 	sx1236_set_freq_deviation(spip, c);
 	sx1236_set_bitrate(spip, c);
 
-	sx1236_write_reg(spip, regaddrs.RegFifo,  c->sx1236_state.RegFifo          );
+	//sx1236_write_reg(spip, regaddrs.RegFifo,  c->sx1236_state.RegFifo          );
 	sx1236_write_reg(spip, regaddrs.RegOpMode,  c->sx1236_state.RegOpMode        );
 	sx1236_write_reg(spip, regaddrs.RegBitrateMsb,  c->sx1236_state.RegBitrateMsb    );
 	sx1236_write_reg(spip, regaddrs.RegBitrateLsb,  c->sx1236_state.RegBitrateLsb    );
