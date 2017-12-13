@@ -27,9 +27,9 @@ static THD_FUNCTION(Thread1, arg) {
   (void)arg;
   chRegSetThreadName("blinker");
   while (true) {
-    palClearPad(GPIOA, GPIOA_ARD_D2);
+    palClearPad(GPIOA, GPIOA_LED_GREEN);
     chThdSleepMilliseconds(500);
-    palSetPad(GPIOA, GPIOA_ARD_D2);
+    palSetPad(GPIOA, GPIOA_LED_GREEN);
     chThdSleepMilliseconds(500);
   }
 }
@@ -55,6 +55,11 @@ int main(void) {
   sdStart(&SD2, NULL);
 
   /*
+   * Set the GPIOA_LED_GREEN to pushpull so we can toggle the LED. Overrides default SPI configuration
+   */
+  palSetPadMode(GPIOA, GPIOA_LED_GREEN, PAL_MODE_OUTPUT_PUSHPULL);
+
+  /*
    * Creates the blinker thread.
    */
   chThdCreateStatic(waThread1, sizeof(waThread1), NORMALPRIO, Thread1, NULL);
@@ -66,9 +71,9 @@ int main(void) {
   while (true) {
       //if (!palReadPad(GPIOC, GPIOC_BUTTON))
         //test_execute((BaseSequentialStream *)&SD2);
-    palClearPad(GPIOA, GPIOA_ARD_D2);
-    chThdSleepMilliseconds(500);
-    palSetPad(GPIOA, GPIOA_ARD_D2);
+    /*palClearPad(GPIOA, GPIOA_LED_GREEN);*/
+    /*chThdSleepMilliseconds(500);*/
+    /*palSetPad(GPIOA, GPIOA_LED_GREEN);*/
     chThdSleepMilliseconds(500);
   }
 }
