@@ -1,0 +1,68 @@
+Getting Started with ChiBIOS and STM32 
+Oliver Rew
+12/5/17
+
+I used Ubuntu with the STM32F0 devboard , but it should be similar for the F4.
+
+Clone "devsat" repo
+- sudo git clone https://github.com/oresat/devsat.git
+
+Install OpenOCD
+- sudo apt install openocd
+
+Install GCC
+- sudo apt git install gcc
+
+Get ChiBIOS submodules in Git repo. (Miles had a different solution to this problem, but this is what worked for me)
+
+- cd ./devsat/
+- git submodule update --init
+
+Install ARM GCC 
+
+- sudo apt-get install gcc-arm-none-eabi
+
+Check that STM32 USB is showing up. You should see something like "Bus 001 Device 003: ID 0483:374b STMicroelectronics ST-LINK/V2.1 (Nucleo-F103RB)'
+
+- lsusb
+
+Program STM32
+
+- cd ./devsat/firmware/chib_stf0x/src/app_blinky
+- make write
+
+Your should see something like:
+
+** Verified OK **
+** Resetting Target **
+
+
+Yay! You have now successfully programmed the STM32. If You want change the blink rate, change the line:
+
+"chThdSleepMilliseconds(100);"
+
+
+--Install minicom for debugging
+
+- sudo apt install minicom
+
+open minicom
+
+- sudo minicom
+
+Setup minicom port
+
+>CTRL-A Z //open help
+>o //configuration optioon
+>Serial port setup 
+>Serial Device : /dev/ttyACM0 //Where I put /dev/ttyACM0, put your serial port
+>Save setup as dfl
+>CTRL-A Z X //exit with reset
+
+reopen minicom
+- sudo minicom
+
+Notes:
+- I was running on a virtual machine and I had to forward the USB port to the virtual machine.
+
+

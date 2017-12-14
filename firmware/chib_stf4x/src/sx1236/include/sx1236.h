@@ -47,9 +47,17 @@
 #define SX1236_FIXED_PACKET          ((uint8_t)(0b0<<7))
 #define SX1236_VARIABLE_PACKET       ((uint8_t)(0b1<<7))
 
+#define SX1236_DCFREE_NONE       	 ((uint8_t)(0b00<<5))
+#define SX1236_DCFREE_MANCHESTER   	 ((uint8_t)(0b00<<5))
+#define SX1236_DCFREE_WHITENING      ((uint8_t)(0b00<<5))
+
+#define SX1236_CRC_OFF		         ((uint8_t)(0b0<<4))
+#define SX1236_CRC_ON      			 ((uint8_t)(0b1<<4))
+
 // Packet Config 2
 #define SX1236_CONTINUOUS_MODE       ((uint8_t)(0b0<<6))
 #define SX1236_PACKET_MODE           ((uint8_t)(0b1<<6))
+
 
 // PllLf
 #define SX1236_PLLBW_75KHZ           ((uint8_t)(0b00<<6))
@@ -62,8 +70,10 @@
 #define SX1236_SYNC_OFF              ((uint8_t)(0b0<<4))
 
 // RxConfig
+#define SX1236_RESTART_RX_WITH_PLL_LOCK  ((uint8_t)(0b1<<5))
 #define SX1236_AFC_AUTO_ON           ((uint8_t)(0b1<<4))
-
+#define SX1236_AGC_AUTO_ON           ((uint8_t)(0b1<<3))
+#define SX1236_RXTRIGGER_ALL         ((uint8_t)(0b111<<0))
 // AfcFei
 #define SX1236_AFC_AUTO_CLEAR_ON     ((uint8_t)(0b1<<0))
 
@@ -71,6 +81,9 @@
 #define SX1236_OSC_DIV_1             ((uint8_t)(0b000<<0))
 #define SX1236_OSC_DIV_8             ((uint8_t)(0b011<<0))
 #define SX1236_OSC_OFF               ((uint8_t)(0b111<<0))
+
+// OOk peak
+#define SX1236_BIT_SYNC_ON           ((uint8_t)(0b1<<5))
 
 /*
  * struct to hold transceiver register addresses
@@ -291,6 +304,8 @@ uint8_t sx1236_read_reg(SPIDriver * spip, uint8_t address) ;
 void sx1236_write(SPIDriver * spip, uint8_t address, uint8_t * tx_buf, uint8_t n);
 void sx1236_write_reg(SPIDriver * spip, uint8_t address, uint8_t newval);
 void sx1236_check_reg(SPIDriver * spip, uint8_t address, uint8_t checkval);
+void sx1236_write_FIFO(SPIDriver * spip, uint8_t value);
+uint8_t sx1236_read_FIFO(SPIDriver * spip);
 
 void sx1236_configure(SPIDriver * spip, config_sx1236 * c);
 

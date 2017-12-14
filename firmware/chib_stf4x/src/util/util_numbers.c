@@ -8,8 +8,11 @@
  */
 
 
+#include <stdint.h>
+
 #include "util_numbers.h"
 
+/* ===================================  NUMBERS ======================== */
 /*
  * Given a number d
  * An increment m
@@ -60,6 +63,33 @@ signed int sign_extend_13bit(signed int x)
 
     return r;
 }
+
+/* ===================================  BITS ======================== */
+/*
+ * input 8 bit unsigned byte
+ * output bit at position n
+ */
+uint8_t bits_get_bit_n(uint8_t byte, uint8_t n) {
+    return( (byte>>n) & 0b1 );
+}
+
+/*
+void test_bits_get_bit_n(void) {
+    uint8_t testnum;
+
+    srand (time (0));
+    for(int i=0; i<10; ++i) {
+        testnum = (uint8_t)(rand() % 256);
+
+        printf("num=0x%x:\r\n\t0b", testnum);
+        for(int i=7; i>=0; --i) {
+            printf("%d ",bits_get_bit_n(testnum, i));
+        }
+        printf("\r\n");
+    }
+}
+*/
+
 
 
 //! @}

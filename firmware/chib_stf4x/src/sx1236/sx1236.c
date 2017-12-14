@@ -231,7 +231,7 @@ void sx1236_reset(void)
 	palSetPad(GPIOA, GPIOA_SEMTECH_RST);
 	chThdSleepMilliseconds(10);
 	palClearPad(GPIOA, GPIOA_SEMTECH_RST);
-	chThdSleepMicroseconds(200);
+	chThdSleepMilliseconds(10);
 	palSetPad(GPIOA, GPIOA_SEMTECH_RST);
 	chThdSleepMilliseconds(10);  // Let chip reset - conservative
 }
@@ -284,7 +284,7 @@ void sx1236_check_reg(SPIDriver * spip, uint8_t address, uint8_t checkval)
 	{
 		chprintf(DEBUG_CHP, "%s:%d\tReg:\t0x%x\tGot:\t0x%x not 0x%x\r\n",  __FILE__, __LINE__, address,  sx_rxbuff[0], checkval);
 	}
-	// chprintf(DEBUG_CHP, "Reg:\t0x%x set to:\t0x%x\r\n",  address,  sx_rxbuff[0]);
+	chprintf(DEBUG_CHP, "Reg:\t0x%x set to:\t0x%x\r\n",  address,  sx_rxbuff[0]);
 }
 
 void sx1236_write_carrier_freq(SPIDriver * spip, config_sx1236 * c)
@@ -310,6 +310,7 @@ void sx1236_set_freq_deviation(SPIDriver * spip, config_sx1236 * c)
 
 	freqdev          = (uint32_t)incr_rnd((1.0 * c->freq_dev_hz / c->Fstep), 1);
 
+	chprintf(DEBUG_CHP, "freqdev: 0x%x\t%d\r\n", freqdev, freqdev);
 	c->sx1236_state.RegFdevMsb      = (freqdev >> 8) & 0x3f;
 	c->sx1236_state.RegFdevLsb      = freqdev        & 0xff;
 
@@ -327,7 +328,7 @@ void sx1236_set_bitrate(SPIDriver * spip, config_sx1236 * c)
 
 	rate             = (uint32_t)incr_rnd(((1.0 * c->Fxosc) / c->bitrate), 1);
 
-	c->sx1236_state.RegBitrateMsb = (rate >> 8) & 0x3f;
+	c->sx1236_state.RegBitrateMsb = (rate >> 8) & 0xff;
 	c->sx1236_state.RegBitrateLsb = rate        & 0xff;
 
 	sx_txbuff[0]     = c->sx1236_state.RegBitrateMsb;
@@ -422,6 +423,27 @@ void sx1236_init_state(struct SX1236 * s)
 };
 
 /*
+ * write FIFO
+ */
+void sx1236_write_FIFO(SPIDriver * spip, uint8_t value)
+{
+	sx1236_write_reg(spip, regaddrs.RegFifo,  value         );
+}
+
+
+/*
+ * Read FIFO
+ */
+uint8_t sx1236_read_FIFO(SPIDriver * spip)
+{
+	uint8_t value;
+	value = sx1236_read_reg(spip, regaddrs.RegFifo);
+	return value;
+}
+
+
+
+/*
  * Configure to a state given in a config_sx1236 structure
  *
  * Could have multiple state setups for tx, rx, tx_packet, rx_packet etc...
@@ -432,7 +454,7 @@ void sx1236_configure(SPIDriver * spip, config_sx1236 * c)
 	sx1236_set_freq_deviation(spip, c);
 	sx1236_set_bitrate(spip, c);
 
-	sx1236_write_reg(spip, regaddrs.RegFifo,  c->sx1236_state.RegFifo          );
+	//sx1236_write_reg(spip, regaddrs.RegFifo,  c->sx1236_state.RegFifo          );
 	sx1236_write_reg(spip, regaddrs.RegOpMode,  c->sx1236_state.RegOpMode        );
 	sx1236_write_reg(spip, regaddrs.RegBitrateMsb,  c->sx1236_state.RegBitrateMsb    );
 	sx1236_write_reg(spip, regaddrs.RegBitrateLsb,  c->sx1236_state.RegBitrateLsb    );
@@ -453,6 +475,7 @@ void sx1236_configure(SPIDriver * spip, config_sx1236 * c)
 	sx1236_write_reg(spip, regaddrs.RegRxBw,  c->sx1236_state.RegRxBw          );
 	sx1236_write_reg(spip, regaddrs.RegAfcBw,  c->sx1236_state.RegAfcBw         );
 	sx1236_write_reg(spip, regaddrs.RegOokPeak,  c->sx1236_state.RegOokPeak       );
+	sx1236_check_reg(spip, regaddrs.RegOokPeak, c->sx1236_state.RegOokPeak);
 	sx1236_write_reg(spip, regaddrs.RegOokFix,  c->sx1236_state.RegOokFix        );
 	sx1236_write_reg(spip, regaddrs.RegOokAvg,  c->sx1236_state.RegOokAvg        );
 	sx1236_write_reg(spip, regaddrs.RegAfcFei,  c->sx1236_state.RegAfcFei        );
@@ -507,6 +530,7 @@ void sx1236_configure(SPIDriver * spip, config_sx1236 * c)
 	sx1236_write_reg(spip, regaddrs.RegAgcThresh3,  c->sx1236_state.RegAgcThresh3    );
 	sx1236_write_reg(spip, regaddrs.RegPllLf,  c->sx1236_state.RegPllLf         );
 
+	sx1236_check_reg(spip, regaddrs.RegOpMode, c->sx1236_state.RegOpMode);
 	// Development only: Check register writes
 	// sx1236_check_reg(spip, regaddrs.RegOpMode,          c->sx1236_state.RegOpMode);
 }
