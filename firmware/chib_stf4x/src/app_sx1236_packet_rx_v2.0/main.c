@@ -307,7 +307,7 @@ static THD_FUNCTION(Thread_sx1236_rx, arg)
 	//gptStart(&GPTD3, &gpt3cfg);
 	//gptStartContinuous(&GPTD3, 2000);
 
-	
+
     while (true)
     {
 		value=0;
@@ -320,7 +320,7 @@ static THD_FUNCTION(Thread_sx1236_rx, arg)
 	  		chprintf(DEBUG_CHP, "FIFO Full\r\n");
 
     }
-	
+
 
 }
 

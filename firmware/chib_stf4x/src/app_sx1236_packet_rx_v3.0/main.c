@@ -108,7 +108,7 @@ static void init_rx_continuous(config_sx1236 * s)
     //s->sx1236_state.RegOsc             = 0x0 | SX1236_OSC_DIV_8 ;
     s->sx1236_state.RegPacketConfig1   	= 0x00 | SX1236_FIXED_PACKET | SX1236_CRC_ON ;
 	s->sx1236_state.RegPacketConfig2   	= 0x00 | SX1236_PACKET_MODE ;
-	s->sx1236_state.RegPayloadLength   	= 0x10;
+	s->sx1236_state.RegPayloadLength   	= 0x01;
 	//s->sx1236_state.RegOokPeak   		= 0x08;				//disable syncronizer bit
 
 	sx1236_configure(&SPID1, s);
@@ -191,82 +191,13 @@ static void app_init(void)
 
 }
 
-static void dio0_evt_handler(eventid_t id)
-{
-    (void)id;
-    chprintf(DEBUG_CHP, "dio0 event\r\n");
-}
-
-/* In continuous mode DIO1 is DCLK RX
-	See reference manual 4.1.12.3
-
-	Rising edge interrupt
-*/
-static void dio1_evt_handler(eventid_t id)
-{
-    (void)id;
-    /*uint8_t bit  = 0;
-
-    static uint8_t count = 0;
-    static uint8_t byte  = 0x0;
-
-    // Data Clock received, get bit from DIO2 
-    bit  = palReadPad(GPIOC, GPIOC_SX_DIO2);
-    byte = byte | (bit << count);
-
-    count += 1;
-
-    if(count == 8) {
-        chprintf(DEBUG_CHP, "RX Byte: 0x%x\r\n", byte );
-        count = 0;
-        byte  = 0x0;
-    }*/
-
-    //chprintf(DEBUG_CHP, "dio1 event\r\n");
-}
-
-/* In continuous mode DIO2 is DATA RX
-	See reference manual 4.1.12.3
-*/
-static void dio2_evt_handler(eventid_t id)
-{
-    (void)id;
-    //chprintf(DEBUG_CHP, "dio2 event\r\n");
-}
 
 
-static void dio3_evt_handler(eventid_t id)
-{
-    (void)id;
-    chprintf(DEBUG_CHP, "dio3 event\r\n");
-}
-
-static void dio4_evt_handler(eventid_t id)
-{
-    (void)id;
-    chprintf(DEBUG_CHP, "dio4 event\r\n");
-}
-
-static void dio5_evt_handler(eventid_t id)
-{
-    (void)id;
-    // chprintf(DEBUG_CHP, "dio5 event\r\n");
-}
-
-static THD_WORKING_AREA(waThread_sx1236_dio, 512);
-static THD_FUNCTION(Thread_sx1236_dio, arg)
+static THD_WORKING_AREA(waThread_sx1236_rx, 512);
+static THD_FUNCTION(Thread_sx1236_rx, arg)
 {
     (void) arg;
-    static const evhandler_t evhndl_sx1236_dio[] =
-    {
-        dio0_evt_handler,
-        dio1_evt_handler,
-        dio2_evt_handler,
-        dio3_evt_handler,
-        dio4_evt_handler,
-        dio5_evt_handler
-    };
-
+	uint8_t value=0;
     event_listener_t evl_dio0, evl_dio1, evl_dio2, evl_dio3, evl_dio4, evl_dio5;
 
     chRegSetThreadName("sx1236_dio");
@@ -281,53 +212,27 @@ static THD_FUNCTION(Thread_sx1236_dio, arg)
     chprintf(DEBUG_CHP, "Thread started: %s\r\n", "sx1236_dio");
     while (TRUE)
     {
-        chEvtDispatch(evhndl_sx1236_dio, chEvtWaitOneTimeout(EVENT_MASK(1), MS2ST(50)));
+        //chEvtDispatch(evhndl_sx1236_dio, chEvtWaitOneTimeout(EVENT_MASK(3), MS2ST(50)));
+		
+    	/* Waiting for any of the events we're registered on.*/
+    	eventmask_t evt = chEvtWaitAny(ALL_EVENTS);
 
-        /*
-         * Examples of different masking of events
-         */
-        // chEvtDispatch(evhndl_sx1236_dio, chEvtWaitOneTimeout(EVENT_MASK(0)| EVENT_MASK(1), MS2ST(50)));
-        // chEvtDispatch(evhndl_sx1236_dio, chEvtWaitOneTimeout(EVENT_MASK(2)| EVENT_MASK(3), MS2ST(50)));
-        // chEvtDispatch(evhndl_sx1236_dio, chEvtWaitOneTimeout(EVENT_MASK(4), MS2ST(50)));
-        // chEvtDispatch(evhndl_sx1236_dio, chEvtWaitOneTimeout(EVENT_MASK(5), MS2ST(50)));
+    	/* Serving events.*/
+    	if (evt & EVENT_MASK(3)) {
+			while ( !palReadPad(GPIOC, GPIOC_SX_DIO3)){			//fifo not empty
+	  			value = sx1236_read_FIFO(&SPID1);
+				chprintf(DEBUG_CHP, " %x \r\n", value);
+ 			}	
+    	}
+
     }
 }
 
-static THD_WORKING_AREA(waThread_sx1236_rx, 512);
-static THD_FUNCTION(Thread_sx1236_rx, arg)
-{
-	(void) arg;
-	uint8_t value=0;
 
-	palSetPadMode(GPIOC, 1, PAL_MODE_INPUT );
-	palSetPadMode(GPIOC, 2, PAL_MODE_INPUT );
-	palSetPadMode(GPIOC, 3, PAL_MODE_INPUT );
-	chThdSleepMilliseconds(2000);
-
-	//gptStart(&GPTD3, &gpt3cfg);
-	//gptStartContinuous(&GPTD3, 2000);
-
-	
-    while (true)
-    {
-		value=0;
-        chThdSleepMilliseconds(1);
-		if ( !palReadPad(GPIOC, GPIOC_SX_DIO3)){			//fifo not empty
-	  		value = sx1236_read_FIFO(&SPID1);
-			chprintf(DEBUG_CHP, " %x \r\n", value);
- 		}	
-		if ( palReadPad(GPIOC, GPIOC_SX_DIO2))
-	  		chprintf(DEBUG_CHP, "FIFO Full\r\n");
-
-    }
-	
-
-}
 
 static void start_threads(void)
 {
-    chThdCreateStatic(waThread_sx1236_dio,      sizeof(waThread_sx1236_dio),   NORMALPRIO, Thread_sx1236_dio, NULL);
-	chThdCreateStatic(waThread_sx1236_rx,      sizeof(waThread_sx1236_rx),   NORMALPRIO, Thread_sx1236_rx, NULL);
+    chThdCreateStatic(waThread_sx1236_rx,      sizeof(waThread_sx1236_rx),   NORMALPRIO, Thread_sx1236_rx, NULL);
 }
 
 
@@ -340,10 +245,20 @@ static void main_loop(void)
     //sx1236_check_reg(&SPID1, regaddrs.RegVersion, 0x12);
 
     init_rx_continuous(&dut_config);
-
-
+    chThdSleepMilliseconds(500);
+	uint8_t value=0;
     // chprintf(DEBUG_CHP, "**INFO**\r\n");
     // sx1236_print_regs(&SPID1);
+
+	palSetPadMode(GPIOC, 1, PAL_MODE_INPUT );
+	palSetPadMode(GPIOC, 2, PAL_MODE_INPUT );
+	palSetPadMode(GPIOC, 3, PAL_MODE_INPUT );
+	
+	//empty fifo
+	while ( !palReadPad(GPIOC, GPIOC_SX_DIO3)){			//fifo not empty
+		value = sx1236_read_FIFO(&SPID1);
+		chprintf(DEBUG_CHP, "empty fifo: %x \r\n", value);
+ 	}	
 
     while (true)
     {
