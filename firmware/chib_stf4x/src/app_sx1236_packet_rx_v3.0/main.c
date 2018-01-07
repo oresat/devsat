@@ -108,7 +108,7 @@ static void init_rx_continuous(config_sx1236 * s)
     //s->sx1236_state.RegOsc             = 0x0 | SX1236_OSC_DIV_8 ;
     s->sx1236_state.RegPacketConfig1   	= 0x00 | SX1236_FIXED_PACKET | SX1236_CRC_ON ;
 	s->sx1236_state.RegPacketConfig2   	= 0x00 | SX1236_PACKET_MODE ;
-	s->sx1236_state.RegPayloadLength   	= 0x01;
+	s->sx1236_state.RegPayloadLength   	= 0x20;
 	//s->sx1236_state.RegOokPeak   		= 0x08;				//disable syncronizer bit
 
 	sx1236_configure(&SPID1, s);

@@ -9,6 +9,9 @@
 #ifndef _SX1236_H
 #define _SX1236_H
 
+#define DEBUG_SERIAL  SD2
+#define DEBUG_CHP     ((BaseSequentialStream *) &DEBUG_SERIAL)
+
 #include <stdbool.h>
 #include <stdint.h>
 
@@ -170,6 +173,8 @@ struct SX1236
 
 };
 
+
+/*
 #define SEMTECH_REGISTERS\
 	X(RegFifo)\
 	X(RegOpMode)\
@@ -244,7 +249,7 @@ struct SX1236
 	X(RegAgcThresh3)\
 	X(RegPllLf)
 
-
+*/
 
 
 typedef struct _CONFIG_SX1236
@@ -258,9 +263,26 @@ typedef struct _CONFIG_SX1236
 	struct      SX1236 sx1236_state;
 } config_sx1236;
 
-extern struct SX1236 regaddrs;
-extern struct SX1236 POR_defaults;
-extern struct CONFIG_SX1236 config_rx;
+
+
+
+
+//extern struct SX1236 regaddrs;
+//extern struct SX1236 POR_defaults;
+//extern struct CONFIG_SX1236 config_rx;
+
+void sx1236_print_regs(SPIDriver * spip) ;
+
+
+typedef struct _sx1236_packet
+{
+	uint8_t PacType;                /* Packet Type */
+	uint8_t PacSequence;            /* Packet Sequence */
+	uint8_t PacSourceAddress;       /* Packet Source Address */
+	uint8_t PacDestAddress;         /* Packet Destination Address */
+	uint16_t PacInstruction;        /* Instruction contained in packet */
+	uint8_t PacData[26];            /* Packet data/response */
+} sx1236_packet;
 
 #define     MAX_SX_BUFF            2056
 
@@ -295,7 +317,25 @@ extern uint8_t sx_rxbuff[MAX_SX_BUFF];
 #define CrcOk            (1 << 1)
 #define LowBat           (1 << 0)
 
-void sx1236_print_regs(SPIDriver * spip) ;
+
+//define packet contents
+//packet type
+#define InstructionPacket	((uint8_t)(0x01))
+#define DataPacket			((uint8_t)(0x02))
+#define AckPacket			((uint8_t)(0x03))
+//address for packets
+#define BoradcastAddress	((uint8_t)(0x00))
+#define GroundStation1		((uint8_t)(0x01))
+#define GroundStation2		((uint8_t)(0x02))
+#define GroundStation3		((uint8_t)(0x03))
+#define Oresat1				((uint8_t)(0x10))
+#define Oresat2				((uint8_t)(0x20))
+#define Oresat3				((uint8_t)(0x30))
+
+//define packet content size
+#define PacketContentSize	((int)(26))
+
+
 void sx1236_init_state(struct SX1236 * s) ;
 void sx1236_reset(void) ;
 
@@ -312,6 +352,12 @@ void sx1236_configure(SPIDriver * spip, config_sx1236 * c);
 void sx1236_write_carrier_freq(SPIDriver * spip, config_sx1236 * c);
 void sx1236_set_freq_deviation(SPIDriver * spip, config_sx1236 * c);
 void sx1236_set_bitrate(SPIDriver * spip, config_sx1236 * c);
+
+
+
+void sx1236_packet_tx(SPIDriver * spip, sx1236_packet p);
+void sx1236_packet_rx(SPIDriver * spip, config_sx1236 * c);
+void sx1236_create_data_packet_tx(SPIDriver * spip, uint8_t data[], int data_size);
 
 #endif
 //! @}

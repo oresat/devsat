@@ -124,6 +124,8 @@ LDSCRIPT= $(STARTUPLD)/STM32F446xE.ld
 APP_SRCS = $(wildcard $(NUCLEO64_UTIL)/*.c)
 APP_SRCS += $(wildcard $(NUCLEO64_BOARDS)/*.c)
 APP_SRCS += $(wildcard $(NUCLEO64_SX1236)/*.c)
+APP_SRCS += $(wildcard $(NUCLEO64_LTC2990)/*.c)
+APP_SRCS += $(wildcard $(NUCLEO64_SOLARV1)/*.c)
 
 CSRC = $(STARTUPSRC) \
        $(KERNSRC) \
@@ -172,6 +174,8 @@ INCDIR = $(CHIBIOS)/os/license \
 	 $(CHIBIOS)/os/hal/lib/streams $(CHIBIOS)/os/various \
 	 $(CONF_DIR) \
 	 $(NUCLEO64_SX1236)/include \
+	 $(NUCLEO64_LTC2990)/include \
+	 $(NUCLEO64_SOLARV1)/include \
 	 $(NUCLEO64_UTIL)/include \
 	 $(NUCLEO64_BOARDS)/include \
 	 $(CHIBIOS)/os/various \
