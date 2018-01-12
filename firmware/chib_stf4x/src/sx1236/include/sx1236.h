@@ -273,7 +273,7 @@ typedef struct _CONFIG_SX1236
 
 void sx1236_print_regs(SPIDriver * spip) ;
 
-
+//define sx1236 packet structure
 typedef struct _sx1236_packet
 {
 	uint8_t PacType;                /* Packet Type */
@@ -281,8 +281,19 @@ typedef struct _sx1236_packet
 	uint8_t PacSourceAddress;       /* Packet Source Address */
 	uint8_t PacDestAddress;         /* Packet Destination Address */
 	uint16_t PacInstruction;        /* Instruction contained in packet */
-	uint8_t PacData[26];            /* Packet data/response */
+	uint8_t PacData[27];            /* Packet data/response */
 } sx1236_packet;
+
+//define packet content size
+#define PacketContentSize	((int)(27))
+
+//create a structure of raw packet data so that it can be passed around functions
+//C doesn't seem to handle passing array properly without fancy malloc funtions
+typedef struct _sx1236_raw_packet
+{
+	uint8_t RawPacData[32];         /* Packet data/response */
+} sx1236_raw_packet;
+
 
 #define     MAX_SX_BUFF            2056
 
@@ -332,8 +343,6 @@ extern uint8_t sx_rxbuff[MAX_SX_BUFF];
 #define Oresat2				((uint8_t)(0x20))
 #define Oresat3				((uint8_t)(0x30))
 
-//define packet content size
-#define PacketContentSize	((int)(26))
 
 
 void sx1236_init_state(struct SX1236 * s) ;
@@ -356,8 +365,10 @@ void sx1236_set_bitrate(SPIDriver * spip, config_sx1236 * c);
 
 
 void sx1236_packet_tx(SPIDriver * spip, sx1236_packet p);
-void sx1236_packet_rx(SPIDriver * spip, config_sx1236 * c);
+void sx1236_packet_rx(SPIDriver * spip, config_sx1236 * c, sx1236_raw_packet * r);
+void sx1236_packet_format(sx1236_packet * p, sx1236_raw_packet * r);
 void sx1236_create_data_packet_tx(SPIDriver * spip, uint8_t data[], int data_size);
+void sx1236_create_instruction_packet_tx(SPIDriver * spip, uint8_t inst);
 
 #endif
 //! @}

@@ -483,7 +483,7 @@ void sx1236_set_freq_deviation(SPIDriver * spip, config_sx1236 * c)
 
 	freqdev          = (uint32_t)incr_rnd((1.0 * c->freq_dev_hz / c->Fstep), 1);
 
-	chprintf(DEBUG_CHP, "freqdev: 0x%x\t%d\r\n", freqdev, freqdev);
+	//chprintf(DEBUG_CHP, "freqdev: 0x%x\t%d\r\n", freqdev, freqdev);
 	c->sx1236_state.RegFdevMsb      = (freqdev >> 8) & 0x3f;
 	c->sx1236_state.RegFdevLsb      = freqdev        & 0xff;
 
@@ -491,8 +491,8 @@ void sx1236_set_freq_deviation(SPIDriver * spip, config_sx1236 * c)
 	sx_txbuff[1] = c->sx1236_state.RegFdevLsb;
 
 	sx1236_write(    spip, regaddrs.RegFdevMsb, sx_txbuff,   2);
-	sx1236_check_reg(spip, regaddrs.RegFdevMsb, c->sx1236_state.RegFdevMsb);
-	sx1236_check_reg(spip, regaddrs.RegFdevLsb,  c->sx1236_state.RegFdevLsb);
+	//sx1236_check_reg(spip, regaddrs.RegFdevMsb, c->sx1236_state.RegFdevMsb);
+	//sx1236_check_reg(spip, regaddrs.RegFdevLsb,  c->sx1236_state.RegFdevLsb);
 }
 
 void sx1236_set_bitrate(SPIDriver * spip, config_sx1236 * c)
@@ -509,8 +509,8 @@ void sx1236_set_bitrate(SPIDriver * spip, config_sx1236 * c)
 
 	sx1236_write(spip, regaddrs.RegBitrateMsb, sx_txbuff, 2);
 
-	sx1236_check_reg(spip, regaddrs.RegBitrateMsb, c->sx1236_state.RegBitrateMsb);
-	sx1236_check_reg(spip, regaddrs.RegBitrateLsb, c->sx1236_state.RegBitrateLsb);
+	//sx1236_check_reg(spip, regaddrs.RegBitrateMsb, c->sx1236_state.RegBitrateMsb);
+	//sx1236_check_reg(spip, regaddrs.RegBitrateLsb, c->sx1236_state.RegBitrateLsb);
 }
 
 
@@ -525,6 +525,7 @@ void sx1236_write_FIFO(SPIDriver * spip, uint8_t value)
 			chThdSleepMilliseconds(1);
 	}	
 	sx1236_write_reg(spip, regaddrs.RegFifo,  value         );
+	chprintf(DEBUG_CHP, "\r\r-- 0x%x --\r\n", value);
 }
 
 
@@ -573,7 +574,7 @@ void sx1236_configure(SPIDriver * spip, config_sx1236 * c)
 	sx1236_write_reg(spip, regaddrs.RegRxBw,  c->sx1236_state.RegRxBw          );
 	sx1236_write_reg(spip, regaddrs.RegAfcBw,  c->sx1236_state.RegAfcBw         );
 	sx1236_write_reg(spip, regaddrs.RegOokPeak,  c->sx1236_state.RegOokPeak       );
-	sx1236_check_reg(spip, regaddrs.RegOokPeak, c->sx1236_state.RegOokPeak);
+	//sx1236_check_reg(spip, regaddrs.RegOokPeak, c->sx1236_state.RegOokPeak);
 	sx1236_write_reg(spip, regaddrs.RegOokFix,  c->sx1236_state.RegOokFix        );
 	sx1236_write_reg(spip, regaddrs.RegOokAvg,  c->sx1236_state.RegOokAvg        );
 	sx1236_write_reg(spip, regaddrs.RegAfcFei,  c->sx1236_state.RegAfcFei        );
@@ -649,27 +650,36 @@ void sx1236_packet_tx(SPIDriver * spip, sx1236_packet p)
 		sx1236_write_FIFO(spip, p.PacData[i] );
 		//chprintf(DEBUG_CHP, "\r\r-- 0x%x --\r\n", p.PacData[i]);
 	}
+	//sx1236_write_FIFO(spip, p.PacData[27] );
+	//sx1236_write_FIFO(spip, p.PacData[27] );
+	//sx1236_write_FIFO(spip, p.PacData[27] );
 }
 
-void sx1236_packet_rx(SPIDriver * spip, config_sx1236 * c)
+void sx1236_packet_rx(SPIDriver * spip, config_sx1236 * c, sx1236_raw_packet * r)
 {
-	uint8_t value=0;
-	uint32_t  pac_data_counter;
-	uint32_t  pac_size   = c->sx1236_state.RegPayloadLength;
-
 	
-	
+	for (int i=0; i<c->sx1236_state.RegPayloadLength; ){
 		while ( !palReadPad(GPIOC, GPIOC_SX_DIO3)){			//fifo not empty
-	  		value = sx1236_read_FIFO(spip);
-			chprintf(DEBUG_CHP, " %x \r\n", value);
-			pac_data_counter ++;
-
-			if (pac_data_counter > pac_size){
-				chprintf(DEBUG_CHP, " new Packet read \r\n");
-				pac_data_counter = 0;
-			}
- 		}
+			r->RawPacData[i] = sx1236_read_FIFO(spip);
+			chprintf(DEBUG_CHP, "\r\r## 0x%x ##\r\n", r->RawPacData[i]);
+			i++;
+		}
+	}
 	
+}
+
+
+void sx1236_packet_format(sx1236_packet * p, sx1236_raw_packet * r)
+{
+	
+	p->PacType=r->RawPacData[0];
+	p->PacSequence=r->RawPacData[1];
+	p->PacSourceAddress=r->RawPacData[2];
+	p->PacDestAddress=r->RawPacData[3];
+	p->PacInstruction=r->RawPacData[4];
+	for (int i=0; i<PacketContentSize; i++){
+		p->PacData[i] = r->RawPacData[i+5];
+	}
 }
 
 void sx1236_create_data_packet_tx(SPIDriver * spip, uint8_t data[], int data_size)
@@ -696,11 +706,35 @@ void sx1236_create_data_packet_tx(SPIDriver * spip, uint8_t data[], int data_siz
 			else{
 				p.PacData[i]=0x00;
 			}
+			
 		}
 	}
 	
 	sx1236_packet_tx(spip, p);
 	//chprintf(DEBUG_CHP, "\r\n 2 packet sequence 0x%x ..\r\n", packetSequence);
+	packetSequence = packetSequence + 1;
+	//chprintf(DEBUG_CHP, "\r\n 3 packet sequence 0x%x ..\r\n", packetSequence);
+}
+
+void sx1236_create_instruction_packet_tx(SPIDriver * spip, uint8_t inst)
+{
+	
+	static uint8_t packetSequence=0;
+	sx1236_packet p;
+	
+	p.PacType=InstructionPacket;
+	p.PacSequence=packetSequence;
+	p.PacSourceAddress=Oresat1;
+	p.PacDestAddress=BoradcastAddress;
+	p.PacInstruction=inst;
+
+	for (int i=0; i<PacketContentSize; i++){
+		p.PacData[i]=0x00;
+		p.PacData[i]=i;		//needs to be removed later
+	}
+	
+	sx1236_packet_tx(spip, p);
+	chprintf(DEBUG_CHP, "\r\n 2 packet sequence 0x%x ..\r\n", packetSequence);
 	packetSequence = packetSequence + 1;
 	//chprintf(DEBUG_CHP, "\r\n 3 packet sequence 0x%x ..\r\n", packetSequence);
 }

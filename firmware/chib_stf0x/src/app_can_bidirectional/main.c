@@ -72,46 +72,6 @@ static const CANConfig cancfg = {
     CAN_BTR_BRP(5)          //Bit Rate Prescaler
 };
 
-/*
- * Receiver thread.
- */
-static THD_WORKING_AREA(can_rx_wa, 256);
-static THD_FUNCTION(can_rx, p)
-{
-    event_listener_t        el;
-    CANRxFrame              rxmsg;
-
-    (void)p;
-    chRegSetThreadName("receiver");
-
-    // Configure Status LED (Green)
-    palSetLineMode(LINE_LED_GREEN, PAL_MODE_OUTPUT_PUSHPULL);
-    palClearLine(LINE_LED_GREEN);
-
-    // Register RX event
-    chEvtRegister(&CAND1.rxfull_event, &el, 0);
-
-    // Start RX Loop
-    while(!chThdShouldTerminateX())
-    {
-        if (chEvtWaitAnyTimeout(ALL_EVENTS, MS2ST(100)) == 0)
-        {
-            continue;
-        }
-        chprintf(DEBUG_CHP, "r");
-        while (canReceive(&CAND1, CAN_ANY_MAILBOX, &rxmsg, TIME_IMMEDIATE) == MSG_OK)
-        {
-            /* Process message.*/
-			if (rxmsg.data8[0]==0x01){
-            	palToggleLine(LINE_LED_GREEN);
-			}
-        }
-    }
-
-    //Unregister RX event before terminating thread
-    chEvtUnregister(&CAND1.rxfull_event, &el);
-}
-
 
 //Process Error Status Register
 void CAN_ESR_break(CANDriver *canp) {
@@ -151,44 +111,80 @@ void CAN_TSR_break(CANDriver *canp) {
 }
 
 /*
- * Transmitter thread.
+ * Transmitter function.
  */
-static THD_WORKING_AREA(can_tx_wa, 256);
-static THD_FUNCTION(can_tx, p)
+msg_t CAN_solar_tx(void)
 {
     CANTxFrame txmsg;
     msg_t msg;
 
-    (void)p;
-    chRegSetThreadName("transmitter");
     txmsg.IDE = CAN_IDE_EXT;
     txmsg.EID = 0x31;
     txmsg.RTR = CAN_RTR_DATA;
     txmsg.DLC = 8;
-    txmsg.data8[0] = 0x00;
-    txmsg.data8[1] = 0x01;
-    txmsg.data8[2] = 0x02;
-    txmsg.data8[3] = 0x03;
-    txmsg.data8[4] = 0x04;
-    txmsg.data8[5] = 0x05;
-    txmsg.data8[6] = 0x06;
-    txmsg.data8[7] = 0x07;
+    txmsg.data8[0] = 0x0A;
+    txmsg.data8[1] = 0x0B;
+    txmsg.data8[2] = 0x0C;
+    txmsg.data8[3] = 0x0D;
+    txmsg.data8[4] = 0x0E;
+    txmsg.data8[5] = 0x1A;
+    txmsg.data8[6] = 0x1B;
+    txmsg.data8[7] = 0x1C;
 
-    // Start TX Loop
-    while (!chThdShouldTerminateX())
-    {
-        //Process TSR and ESR
-        chprintf(DEBUG_CHP, "\n\rStatus:\n\r");
-        CAN_TSR_break(&CAND1);
-        chThdSleepMilliseconds(250);
-        CAN_ESR_break(&CAND1);
-        chThdSleepMilliseconds(750);
 
-        //Transmit message
-        msg = canTransmit(&CAND1, CAN_ANY_MAILBOX, &txmsg, MS2ST(100));
-        chprintf(DEBUG_CHP, "TX msg: %d\n\r", msg);
-    }
+    //Process TSR and ESR
+    chprintf(DEBUG_CHP, "\n\rStatus:\n\r");
+    CAN_TSR_break(&CAND1);
+    CAN_ESR_break(&CAND1);
+
+    //Transmit message
+    msg = canTransmit(&CAND1, CAN_ANY_MAILBOX, &txmsg, MS2ST(100));
+    chprintf(DEBUG_CHP, "TX msg: %d\n\r", msg);
+	return msg;
 }
+
+/*
+ * Receiver thread.
+ */
+static THD_WORKING_AREA(can_rx_wa, 256);
+static THD_FUNCTION(can_rx, p)
+{
+    event_listener_t        el;
+    CANRxFrame              rxmsg;
+
+    (void)p;
+    chRegSetThreadName("receiver");
+
+    // Configure Status LED (Green)
+    palSetLineMode(LINE_LED_GREEN, PAL_MODE_OUTPUT_PUSHPULL);
+    palClearLine(LINE_LED_GREEN);
+
+    // Register RX event
+    chEvtRegister(&CAND1.rxfull_event, &el, 0);
+
+    // Start RX Loop
+    while(!chThdShouldTerminateX())
+    {
+        if (chEvtWaitAnyTimeout(ALL_EVENTS, MS2ST(100)) == 0)
+        {
+            continue;
+        }
+        chprintf(DEBUG_CHP, "r");
+        while (canReceive(&CAND1, CAN_ANY_MAILBOX, &rxmsg, TIME_IMMEDIATE) == MSG_OK)
+        {
+            /* Process message.*/
+			if (rxmsg.data8[0]==0x01){
+            	palToggleLine(LINE_LED_GREEN);
+				CAN_solar_tx();
+			}
+        }
+    }
+
+    //Unregister RX event before terminating thread
+    chEvtUnregister(&CAND1.rxfull_event, &el);
+}
+
+
 
 static void app_init(void)
 {
@@ -224,7 +220,7 @@ static void main_app(void)
      */
     chprintf(DEBUG_CHP, "\r\nStarting RX/TX threads...\r\n");
     chThdCreateStatic(can_rx_wa, sizeof(can_rx_wa), NORMALPRIO + 7, can_rx, NULL);
-    chThdCreateStatic(can_tx_wa, sizeof(can_tx_wa), NORMALPRIO + 7, can_tx, NULL);
+    //chThdCreateStatic(can_tx_wa, sizeof(can_tx_wa), NORMALPRIO + 7, can_tx, NULL);
 
     /*
      * Begin main loop
