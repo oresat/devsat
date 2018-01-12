@@ -242,7 +242,7 @@ static THD_FUNCTION(can_rx, p)
                 packet_data[6] = rxmsg.data8[6];
                 packet_data[7] = rxmsg.data8[7];
 				init_tx_packet(&dut_config);
-				chThdSleepMilliseconds(50);
+				chThdSleepMilliseconds(200);
 				sx1236_create_data_packet_tx(&SPID1, packet_data, sizeof(packet_data));
 				chThdSleepMilliseconds(200);
 				sx1236_reset() ;

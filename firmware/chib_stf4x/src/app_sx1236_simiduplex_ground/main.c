@@ -286,7 +286,7 @@ static void main_loop(void)
 
     while (true)
     {
-        chThdSleepMilliseconds(1000);
+        chThdSleepMilliseconds(2000);
         chprintf(DEBUG_CHP, ".");
 		
 		if (!palReadPad(GPIOC, GPIOC_BUTTON)){
