@@ -277,6 +277,7 @@ void CAN_TSR_break(CANDriver *canp) {
 /*
  * Transmitter function.
  */
+// change msg_t to malay_msg_t
 msg_t CAN_tx(sx1236_packet p)
 {
     CANTxFrame txmsg;
@@ -298,6 +299,7 @@ msg_t CAN_tx(sx1236_packet p)
 
 	//chprintf(DEBUG_CHP, "sent CAN packet\r\n");
     msg = canTransmit(&CAND1, CAN_ANY_MAILBOX, &txmsg, MS2ST(100));
+	// check this message for semantics during debugging
 	return msg;
     
 }
@@ -307,8 +309,8 @@ static THD_WORKING_AREA(waThread_sx1236_rx, 512);
 static THD_FUNCTION(Thread_sx1236_rx, arg)
 {
     (void) arg;
-	sx1236_raw_packet raw_packet;
-	sx1236_packet formatted_packet;
+    sx1236_raw_packet raw_packet;
+    sx1236_packet formatted_packet;
     event_listener_t evl_dio0, evl_dio1, evl_dio2, evl_dio3, evl_dio4, evl_dio5;
 
     chRegSetThreadName("sx1236_dio");
@@ -324,20 +326,20 @@ static THD_FUNCTION(Thread_sx1236_rx, arg)
     while (TRUE)
     {
         //chEvtDispatch(evhndl_sx1236_dio, chEvtWaitOneTimeout(EVENT_MASK(3), MS2ST(50)));
-    	/* Waiting for any of the events we're registered on.*/
-    	eventmask_t evt = chEvtWaitAny(ALL_EVENTS);
+        /* Waiting for any of the events we're registered on.*/
+        eventmask_t evt = chEvtWaitAny(ALL_EVENTS);
 
-    	/* Serving events.*/
-    	if (evt & EVENT_MASK(3)) {
-			if (radio_mode==0x00){
-				while ( !palReadPad(GPIOC, GPIOC_SX_DIO3)){			//fifo not empty
-	  				sx1236_packet_rx(&SPID1, &dut_config, &raw_packet);
-					sx1236_packet_format(&formatted_packet, &raw_packet);
-					chprintf(DEBUG_CHP, "packet received\r\n");
-					CAN_tx(formatted_packet);
- 				}
-			}	
-    	}
+        /* Serving events.*/
+        if (evt & EVENT_MASK(3)) {
+            if (radio_mode==0x00) {
+                while ( !palReadPad(GPIOC, GPIOC_SX_DIO3)) {			//fifo not empty
+                    sx1236_packet_rx(&SPID1, &dut_config, &raw_packet);
+                    sx1236_packet_format(&formatted_packet, &raw_packet);
+                    chprintf(DEBUG_CHP, "packet received\r\n");
+                    CAN_tx(formatted_packet);
+                }
+            }
+        }
 
     }
 }

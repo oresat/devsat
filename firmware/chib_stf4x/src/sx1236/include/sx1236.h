@@ -274,6 +274,7 @@ typedef struct _CONFIG_SX1236
 void sx1236_print_regs(SPIDriver * spip) ;
 
 //define sx1236 packet structure
+// todo: Investigate attribute__(PACKED)__? 
 typedef struct _sx1236_packet
 {
 	uint8_t PacType;                /* Packet Type */

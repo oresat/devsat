@@ -297,6 +297,7 @@ static void main_loop(void)
 			chThdSleepMilliseconds(50);
 			sx1236_create_instruction_packet_tx(&SPID1, inst);
 			chThdSleepMilliseconds(200);
+			// check for fifo empty wait 5 ms...look for more conditions...
 			//clean up fifo
 			sx1236_reset() ;
 			while ( !palReadPad(GPIOC, GPIOC_SX_DIO3)){			//fifo not empty
