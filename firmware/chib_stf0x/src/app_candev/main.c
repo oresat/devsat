@@ -159,8 +159,8 @@ static THD_FUNCTION(can_tx, p)
 
     (void)p;
     chRegSetThreadName("transmitter");
-    txmsg.IDE = CAN_IDE_EXT;
-    txmsg.EID = 0x31;
+    txmsg.IDE = CAN_IDE_STD;
+    txmsg.SID = 0x000;
     txmsg.RTR = CAN_RTR_DATA;
     txmsg.DLC = 8;
     txmsg.data8[0] = 0x00;
