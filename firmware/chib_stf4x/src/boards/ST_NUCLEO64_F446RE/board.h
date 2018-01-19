@@ -107,7 +107,7 @@
 #define GPIOB_ARD_D6                10U
 #define GPIOB_PIN11                 11U
 #define GPIOB_PIN12                 12U
-#define GPIOB_NSS                   12U
+#define GPIOB_SPI2_NSS              12U
 #define GPIOB_PIN13                 13U
 #define GPIOB_SPI2_SCK              13U
 #define GPIOB_PIN14                 14U
@@ -450,10 +450,10 @@
  * PB9  - CAN1_TX                   (alternate 9).
  * PB10 - ARD_D6                    (input pullup).
  * PB11 - PIN11                     (input pullup).
- * PB12 - SPI2_NSS                  (input pullup).
- * PB13 - SPI2_SCK                  (input pullup).
- * PB14 - SPI2_MISO                 (input pullup).
- * PB15 - SPI2_MOSI                 (input pullup).
+ * PB12 - SPI2_NSS                  (alternate 5).
+ * PB13 - SPI2_SCK                  (alternate 5).
+ * PB14 - SPI2_MISO                 (alternate 5).
+ * PB15 - SPI2_MOSI                 (alternate 5).
  */
 #define VAL_GPIOB_MODER             (PIN_MODE_INPUT(GPIOB_ARD_A3) |         \
                                      PIN_MODE_INPUT(GPIOB_PIN1) |           \
