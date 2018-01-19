@@ -4,7 +4,7 @@
  */
 
 /*
-    ChibiOS - Copyright (C) 2006..2015 Giovanni Di Sirio
+   ChibiOS - Copyright (C) 2006..2016 Giovanni Di Sirio
 
     Licensed under the Apache License, Version 2.0 (the "License");
     you may not use this file except in compliance with the License.
@@ -98,7 +98,6 @@ static THD_FUNCTION(can_rx, p)
         {
             continue;
         }
-        chprintf(DEBUG_CHP, "r");
         while (canReceive(&CAND1, CAN_ANY_MAILBOX, &rxmsg, TIME_IMMEDIATE) == MSG_OK)
         {
             /* Process message.*/
@@ -110,44 +109,6 @@ static THD_FUNCTION(can_rx, p)
     chEvtUnregister(&CAND1.rxfull_event, &el);
 }
 
-
-//Process Error Status Register
-void CAN_ESR_break(CANDriver *canp) {
-    uint32_t esrval = canp->can->ESR;
-    chprintf(DEBUG_CHP, "ESR:0x%x\r\n", esrval);
-}
-
-//Process Transmit Status Register
-void CAN_TSR_break(CANDriver *canp) {
-    uint32_t tsrval = canp->can->TSR;
-    // uint8_t rqcp0 = (tsrval & CAN_TSR_RQCP0);
-    // uint8_t txok0 = (tsrval  & CAN_TSR_TXOK0)>>1;
-    // uint8_t alst0 = (tsrval  & CAN_TSR_ALST0)>>2;
-    // uint8_t terr0 = (tsrval  & CAN_TSR_TERR0)>>3;
-    // uint8_t abrq0 = (tsrval  & CAN_TSR_ABRQ0)>>7;
-    // uint8_t rqcp1 = (*tsr & CAN_TSR_RQCP1)>>8;
-    // uint8_t txok1 = (*tsr & CAN_TSR_TXOK1)>>9;
-    // uint8_t alst1 = (*tsr & CAN_TSR_ALST1)>>10;
-    // uint8_t terr1 = (*tsr & CAN_TSR_TERR1)>>11;
-    // uint8_t abrq1 = (*tsr & CAN_TSR_ABRQ1)>>15;
-    // uint8_t rqcp2 = (*tsr & CAN_TSR_RQCP2)>>16;
-    // uint8_t txok2 = (*tsr & CAN_TSR_TXOK2)>>17;
-    // uint8_t alst2 = (*tsr & CAN_TSR_ALST2)>>18;
-    // uint8_t terr2 = (*tsr & CAN_TSR_TERR2)>>19;
-    // uint8_t abrq2 = (*tsr & CAN_TSR_ABRQ2)>>23;
-    // uint8_t code  = (*tsr & CAN_TSR_ABRQ2)>>24;
-    // uint8_t tme0  = (*tsr & CAN_TSR_TME0)>>26;
-    // uint8_t tme1  = (*tsr & CAN_TSR_TME1)>>27;
-    // uint8_t tme2  = (*tsr & CAN_TSR_TME2)>>28;
-    // uint8_t low0  = (*tsr & CAN_TSR_LOW0)>>29;
-    // uint8_t low1  = (*tsr & CAN_TSR_LOW1)>>30;
-    // uint8_t low2  = (*tsr & CAN_TSR_LOW2)>>31;
-
-    chprintf(DEBUG_CHP, "TSR:0x%x\r\n", tsrval);
-    // chprintf(DEBUG_CHP, "rqcp0:0x%x\ttxok0:0x%x\talst0:0x%x\tterr0:0x%x\tabrq0:0x%x\r\n", rqcp0, txok0, alst0,terr0, abrq0 );
-
-}
-
 /*
  * Transmitter thread.
  */
@@ -155,10 +116,10 @@ static THD_WORKING_AREA(can_tx_wa, 256);
 static THD_FUNCTION(can_tx, p)
 {
     CANTxFrame txmsg;
-    msg_t msg;
 
     (void)p;
     chRegSetThreadName("transmitter");
+
     txmsg.IDE = CAN_IDE_STD;
     txmsg.SID = 0x000;
     txmsg.RTR = CAN_RTR_DATA;
@@ -175,16 +136,9 @@ static THD_FUNCTION(can_tx, p)
     // Start TX Loop
     while (!chThdShouldTerminateX())
     {
-        //Process TSR and ESR
-        chprintf(DEBUG_CHP, "\n\rStatus:\n\r");
-        CAN_TSR_break(&CAND1);
-        chThdSleepMilliseconds(250);
-        CAN_ESR_break(&CAND1);
-        chThdSleepMilliseconds(750);
-
         //Transmit message
-        msg = canTransmit(&CAND1, CAN_ANY_MAILBOX, &txmsg, MS2ST(100));
-        chprintf(DEBUG_CHP, "TX msg: %d\n\r", msg);
+        canTransmit(&CAND1, CAN_ANY_MAILBOX, &txmsg, MS2ST(100));
+        chThdSleepMilliseconds(500);
     }
 }
 
