@@ -281,7 +281,7 @@ typedef struct _sx1236_packet
 	uint8_t PacSequence;            /* Packet Sequence */
 	uint8_t PacSourceAddress;       /* Packet Source Address */
 	uint8_t PacDestAddress;         /* Packet Destination Address */
-	uint16_t PacInstruction;        /* Instruction contained in packet */
+	uint8_t PacInstruction;        /* Instruction contained in packet */
 	uint8_t PacData[27];            /* Packet data/response */
 } sx1236_packet;
 
@@ -367,6 +367,7 @@ void sx1236_set_bitrate(SPIDriver * spip, config_sx1236 * c);
 
 void sx1236_packet_tx(SPIDriver * spip, sx1236_packet p);
 void sx1236_packet_rx(SPIDriver * spip, config_sx1236 * c, sx1236_raw_packet * r);
+void sx1236_packet_rx2(SPIDriver * spip, config_sx1236 * c, sx1236_raw_packet * r);
 void sx1236_packet_format(sx1236_packet * p, sx1236_raw_packet * r);
 void sx1236_create_data_packet_tx(SPIDriver * spip, uint8_t data[], int data_size);
 void sx1236_create_instruction_packet_tx(SPIDriver * spip, uint8_t inst);

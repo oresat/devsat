@@ -668,6 +668,19 @@ void sx1236_packet_rx(SPIDriver * spip, config_sx1236 * c, sx1236_raw_packet * r
 	
 }
 
+void sx1236_packet_rx2(SPIDriver * spip, config_sx1236 * c, sx1236_raw_packet * r)
+{
+	
+	for (int i=0; i<c->sx1236_state.RegPayloadLength; ){
+		if ( !palReadPad(GPIOC, GPIOC_SX2_DIO3)){			//fifo not empty
+			r->RawPacData[i] = sx1236_read_FIFO(spip);
+			chprintf(DEBUG_CHP, "\r\r## 0x%x ##\r\n", r->RawPacData[i]);
+			i++;
+			chThdSleepMilliseconds(5);
+		}
+	}
+	
+}
 
 void sx1236_packet_format(sx1236_packet * p, sx1236_raw_packet * r)
 {
