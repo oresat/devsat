@@ -330,7 +330,7 @@ static THD_FUNCTION(Thread_sx1236_rx, arg)
     //chEvtRegister(&dio0_event_sx2,           &evl_dio0,         5);
     //chEvtRegister(&dio1_event_sx2,           &evl_dio1,         6);
     //chEvtRegister(&dio2_event_sx2,           &evl_dio2,         7);
-    chEvtRegister(&dio3_event_sx2,           &evl_dio3,         0);
+    chEvtRegister(&dio3_event,           &evl_dio3,         0);
     //chEvtRegister(&dio4_event_sx2,           &evl_dio4,         9);
     //chEvtRegister(&dio5_event_sx2,           &evl_dio5,         10);
 
@@ -354,13 +354,13 @@ static THD_FUNCTION(Thread_sx1236_rx, arg)
         //chEvtDispatch(evhndl_sx1236_dio, chEvtWaitOneTimeout(EVENT_MASK(3), MS2ST(50)));
         /* Waiting for any of the events we're registered on.*/
         eventmask_t evt = chEvtWaitAny(ALL_EVENTS);
-		//chprintf(DEBUG_CHP, "Interrupt happened %x and mask %x\r\n", evt,EVENT_MASK(3));
+		chprintf(DEBUG_CHP, "Interrupt happened %x and mask %x\r\n", evt,EVENT_MASK(3));
 
         /* Serving events.*/
         if (evt) {
 			 //chprintf(DEBUG_CHP, "I am in loop \r\n");
-             while ( !palReadPad(GPIOC, GPIOC_SX2_DIO3)) {			//fifo not empty
-                    sx1236_packet_rx2(&SPID1, &dut_config, &raw_packet);
+             while ( !palReadPad(GPIOC, GPIOC_SX_DIO3)) {			//fifo not empty
+                    sx1236_packet_rx(&SPID1, &dut_config, &raw_packet);
                     sx1236_packet_format(&formatted_packet, &raw_packet);
                     chprintf(DEBUG_CHP, "packet received\r\n");
                     CAN_tx(formatted_packet);
@@ -451,12 +451,12 @@ int main(void)
 
 	//empty fifo
 	while ( !palReadPad(GPIOC, GPIOC_SX_DIO3)){			//fifo not empty
-		value = sx1236_read_FIFO(&SPID2);
+		value = sx1236_read_FIFO(&SPID1);
 		chprintf(DEBUG_CHP, "empty fifo: %x \r\n", value);
  	}	
 
 	while ( !palReadPad(GPIOC, GPIOC_SX2_DIO3)){			//fifo not empty
-		value = sx1236_read_FIFO(&SPID1);
+		value = sx1236_read_FIFO(&SPID2);
 		chprintf(DEBUG_CHP, "empty fif2: %x \r\n", value);
  	}		
     

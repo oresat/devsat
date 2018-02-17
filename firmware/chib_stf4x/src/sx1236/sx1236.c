@@ -30,7 +30,6 @@
 #include "sx1236.h"
 
 
-
 #define SPI_MAKE_WRITE_ADDR(a) (a|0x80U)
 
 uint8_t       sx_txbuff[MAX_SX_BUFF];
@@ -114,7 +113,6 @@ struct SX1236 regaddrs =
 	.RegAgcThresh3      = 0x64,
 	.RegPllLf           = 0x70,
 };
-
 
 /*
  *  Default values set upon POR
@@ -206,105 +204,6 @@ struct SX1236 POR_defaults =
 	.RegPllLf           = 0xD0
 };
 
-
-
-/*
- * Set an SX1236 struct to POR state
- * (This is just a struct deep copy.)
- */
-void sx1236_init_state(struct SX1236 * s)
-{
-	s->RegFifo            = POR_defaults.RegFifo;
-	s->RegOpMode          = POR_defaults.RegOpMode;
-	s->RegBitrateMsb      = POR_defaults.RegBitrateMsb;
-	s->RegBitrateLsb      = POR_defaults.RegBitrateLsb;
-	s->RegFdevMsb         = POR_defaults.RegFdevMsb;
-	s->RegFdevLsb         = POR_defaults.RegFdevLsb;
-	s->RegFrfMsb          = POR_defaults.RegFrfMsb;
-	s->RegFrfMid          = POR_defaults.RegFrfMid;
-	s->RegFrfLsb          = POR_defaults.RegFrfLsb;
-	s->RegPaConfig        = POR_defaults.RegPaConfig;
-	s->RegPaRamp          = POR_defaults.RegPaRamp;
-	s->RegOcp             = POR_defaults.RegOcp;
-	s->RegLna             = POR_defaults.RegLna;
-	s->RegRxConfig        = POR_defaults.RegRxConfig;
-	s->RegRssiConfig      = POR_defaults.RegRssiConfig;
-	s->RegRssiCollision   = POR_defaults.RegRssiCollision;
-	s->RegRssiThresh      = POR_defaults.RegRssiThresh;
-	s->RegRssiValue       = POR_defaults.RegRssiValue;
-	s->RegRxBw            = POR_defaults.RegRxBw;
-	s->RegAfcBw           = POR_defaults.RegAfcBw;
-	s->RegOokPeak         = POR_defaults.RegOokPeak;
-	s->RegOokFix          = POR_defaults.RegOokFix;
-	s->RegOokAvg          = POR_defaults.RegOokAvg;
-	s->RegAfcFei          = POR_defaults.RegAfcFei;
-	s->RegAfcMsb          = POR_defaults.RegAfcMsb;
-	s->RegAfcLsb          = POR_defaults.RegAfcLsb;
-	s->RegFeiMsb          = POR_defaults.RegFeiMsb;
-	s->RegFeiLsb          = POR_defaults.RegFeiLsb;
-	s->RegPreambleDetect  = POR_defaults.RegPreambleDetect;
-	s->RegRxTimeout1      = POR_defaults.RegRxTimeout1;
-	s->RegRxTimeout2      = POR_defaults.RegRxTimeout2;
-	s->RegRxTimeout3      = POR_defaults.RegRxTimeout3;
-	s->RegRxDelay         = POR_defaults.RegRxDelay;
-	s->RegOsc             = POR_defaults.RegOsc;
-	s->RegPreambleMsb     = POR_defaults.RegPreambleMsb;
-	s->RegPreambleLsb     = POR_defaults.RegPreambleLsb;
-	s->RegSyncConfig      = POR_defaults.RegSyncConfig;
-	s->RegSyncValue1      = POR_defaults.RegSyncValue1;
-	s->RegSyncValue2      = POR_defaults.RegSyncValue2;
-	s->RegSyncValue3      = POR_defaults.RegSyncValue3;
-	s->RegSyncValue4      = POR_defaults.RegSyncValue4;
-	s->RegSyncValue5      = POR_defaults.RegSyncValue5;
-	s->RegSyncValue6      = POR_defaults.RegSyncValue6;
-	s->RegSyncValue7      = POR_defaults.RegSyncValue7;
-	s->RegSyncValue8      = POR_defaults.RegSyncValue8;
-	s->RegPacketConfig1   = POR_defaults.RegPacketConfig1;
-	s->RegPacketConfig2   = POR_defaults.RegPacketConfig2;
-	s->RegPayloadLength   = POR_defaults.RegPayloadLength;
-	s->RegNodeAdrs        = POR_defaults.RegNodeAdrs;
-	s->RegBroadcastAdrs   = POR_defaults.RegBroadcastAdrs;
-	s->RegFifoThresh      = POR_defaults.RegFifoThresh;
-	s->RegSeqConfig1      = POR_defaults.RegSeqConfig1;
-	s->RegSeqConfig2      = POR_defaults.RegSeqConfig2;
-	s->RegTimerResol      = POR_defaults.RegTimerResol;
-	s->RegTimer1Coef      = POR_defaults.RegTimer1Coef;
-	s->RegTimer2Coef      = POR_defaults.RegTimer2Coef;
-	s->RegImageCal        = POR_defaults.RegImageCal;
-	s->RegTemp            = POR_defaults.RegTemp;
-	s->RegLowBat          = POR_defaults.RegLowBat;
-	s->RegIrqFlags1       = POR_defaults.RegIrqFlags1;
-	s->RegIrqFlags2       = POR_defaults.RegIrqFlags2;
-	s->RegDioMapping1     = POR_defaults.RegDioMapping1;
-	s->RegDioMapping2     = POR_defaults.RegDioMapping2;
-	s->RegVersion         = POR_defaults.RegVersion;
-	s->RegPllHop          = POR_defaults.RegPllHop;
-	s->RegTcxo            = POR_defaults.RegTcxo;
-	s->RegPaDac           = POR_defaults.RegPaDac;
-	s->RegFormerTemp      = POR_defaults.RegFormerTemp;
-	s->RegBitRateFrac     = POR_defaults.RegBitRateFrac;
-	s->RegAgcRef          = POR_defaults.RegAgcRef;
-	s->RegAgcThresh1      = POR_defaults.RegAgcThresh1;
-	s->RegAgcThresh2      = POR_defaults.RegAgcThresh2;
-	s->RegAgcThresh3      = POR_defaults.RegAgcThresh3;
-	s->RegPllLf           = POR_defaults.RegPllLf;
-};
-
-/*
-void sx1236_print_regs(SPIDriver * spip)
-{
-	Dumps all registers to serial out
-
-#define X(SXreg) chprintf(DEBUG_CHP, "%s: \t\t\t %x\t Default:\t %x \r\n",\
-                          #SXreg, sx1236_read_reg(spip, regaddrs.SXreg), POR_defaults.SXreg);
-	SEMTECH_REGISTERS
-#undef X
-
-	chprintf(DEBUG_CHP, "\n\n\n");
-}
-*/
-
-
 void sx1236_print_regs(SPIDriver * spip)
 {
 	/* Dumps all registers to serial out */
@@ -389,7 +288,6 @@ void sx1236_print_regs(SPIDriver * spip)
 
 	chprintf(DEBUG_CHP, "\n\n\n");
 }
-
 
 
 /* sx1236 Manual reset spec
@@ -483,7 +381,7 @@ void sx1236_set_freq_deviation(SPIDriver * spip, config_sx1236 * c)
 
 	freqdev          = (uint32_t)incr_rnd((1.0 * c->freq_dev_hz / c->Fstep), 1);
 
-	//chprintf(DEBUG_CHP, "freqdev: 0x%x\t%d\r\n", freqdev, freqdev);
+	chprintf(DEBUG_CHP, "freqdev: 0x%x\t%d\r\n", freqdev, freqdev);
 	c->sx1236_state.RegFdevMsb      = (freqdev >> 8) & 0x3f;
 	c->sx1236_state.RegFdevLsb      = freqdev        & 0xff;
 
@@ -491,8 +389,8 @@ void sx1236_set_freq_deviation(SPIDriver * spip, config_sx1236 * c)
 	sx_txbuff[1] = c->sx1236_state.RegFdevLsb;
 
 	sx1236_write(    spip, regaddrs.RegFdevMsb, sx_txbuff,   2);
-	//sx1236_check_reg(spip, regaddrs.RegFdevMsb, c->sx1236_state.RegFdevMsb);
-	//sx1236_check_reg(spip, regaddrs.RegFdevLsb,  c->sx1236_state.RegFdevLsb);
+	sx1236_check_reg(spip, regaddrs.RegFdevMsb, c->sx1236_state.RegFdevMsb);
+	sx1236_check_reg(spip, regaddrs.RegFdevLsb,  c->sx1236_state.RegFdevLsb);
 }
 
 void sx1236_set_bitrate(SPIDriver * spip, config_sx1236 * c)
@@ -513,7 +411,87 @@ void sx1236_set_bitrate(SPIDriver * spip, config_sx1236 * c)
 	//sx1236_check_reg(spip, regaddrs.RegBitrateLsb, c->sx1236_state.RegBitrateLsb);
 }
 
-
+/*
+ * Set an SX1236 struct to POR state
+ * (This is just a struct deep copy.)
+ */
+void sx1236_init_state(struct SX1236 * s)
+{
+	s->RegFifo            = POR_defaults.RegFifo;
+	s->RegOpMode          = POR_defaults.RegOpMode;
+	s->RegBitrateMsb      = POR_defaults.RegBitrateMsb;
+	s->RegBitrateLsb      = POR_defaults.RegBitrateLsb;
+	s->RegFdevMsb         = POR_defaults.RegFdevMsb;
+	s->RegFdevLsb         = POR_defaults.RegFdevLsb;
+	s->RegFrfMsb          = POR_defaults.RegFrfMsb;
+	s->RegFrfMid          = POR_defaults.RegFrfMid;
+	s->RegFrfLsb          = POR_defaults.RegFrfLsb;
+	s->RegPaConfig        = POR_defaults.RegPaConfig;
+	s->RegPaRamp          = POR_defaults.RegPaRamp;
+	s->RegOcp             = POR_defaults.RegOcp;
+	s->RegLna             = POR_defaults.RegLna;
+	s->RegRxConfig        = POR_defaults.RegRxConfig;
+	s->RegRssiConfig      = POR_defaults.RegRssiConfig;
+	s->RegRssiCollision   = POR_defaults.RegRssiCollision;
+	s->RegRssiThresh      = POR_defaults.RegRssiThresh;
+	s->RegRssiValue       = POR_defaults.RegRssiValue;
+	s->RegRxBw            = POR_defaults.RegRxBw;
+	s->RegAfcBw           = POR_defaults.RegAfcBw;
+	s->RegOokPeak         = POR_defaults.RegOokPeak;
+	s->RegOokFix          = POR_defaults.RegOokFix;
+	s->RegOokAvg          = POR_defaults.RegOokAvg;
+	s->RegAfcFei          = POR_defaults.RegAfcFei;
+	s->RegAfcMsb          = POR_defaults.RegAfcMsb;
+	s->RegAfcLsb          = POR_defaults.RegAfcLsb;
+	s->RegFeiMsb          = POR_defaults.RegFeiMsb;
+	s->RegFeiLsb          = POR_defaults.RegFeiLsb;
+	s->RegPreambleDetect  = POR_defaults.RegPreambleDetect;
+	s->RegRxTimeout1      = POR_defaults.RegRxTimeout1;
+	s->RegRxTimeout2      = POR_defaults.RegRxTimeout2;
+	s->RegRxTimeout3      = POR_defaults.RegRxTimeout3;
+	s->RegRxDelay         = POR_defaults.RegRxDelay;
+	s->RegOsc             = POR_defaults.RegOsc;
+	s->RegPreambleMsb     = POR_defaults.RegPreambleMsb;
+	s->RegPreambleLsb     = POR_defaults.RegPreambleLsb;
+	s->RegSyncConfig      = POR_defaults.RegSyncConfig;
+	s->RegSyncValue1      = POR_defaults.RegSyncValue1;
+	s->RegSyncValue2      = POR_defaults.RegSyncValue2;
+	s->RegSyncValue3      = POR_defaults.RegSyncValue3;
+	s->RegSyncValue4      = POR_defaults.RegSyncValue4;
+	s->RegSyncValue5      = POR_defaults.RegSyncValue5;
+	s->RegSyncValue6      = POR_defaults.RegSyncValue6;
+	s->RegSyncValue7      = POR_defaults.RegSyncValue7;
+	s->RegSyncValue8      = POR_defaults.RegSyncValue8;
+	s->RegPacketConfig1   = POR_defaults.RegPacketConfig1;
+	s->RegPacketConfig2   = POR_defaults.RegPacketConfig2;
+	s->RegPayloadLength   = POR_defaults.RegPayloadLength;
+	s->RegNodeAdrs        = POR_defaults.RegNodeAdrs;
+	s->RegBroadcastAdrs   = POR_defaults.RegBroadcastAdrs;
+	s->RegFifoThresh      = POR_defaults.RegFifoThresh;
+	s->RegSeqConfig1      = POR_defaults.RegSeqConfig1;
+	s->RegSeqConfig2      = POR_defaults.RegSeqConfig2;
+	s->RegTimerResol      = POR_defaults.RegTimerResol;
+	s->RegTimer1Coef      = POR_defaults.RegTimer1Coef;
+	s->RegTimer2Coef      = POR_defaults.RegTimer2Coef;
+	s->RegImageCal        = POR_defaults.RegImageCal;
+	s->RegTemp            = POR_defaults.RegTemp;
+	s->RegLowBat          = POR_defaults.RegLowBat;
+	s->RegIrqFlags1       = POR_defaults.RegIrqFlags1;
+	s->RegIrqFlags2       = POR_defaults.RegIrqFlags2;
+	s->RegDioMapping1     = POR_defaults.RegDioMapping1;
+	s->RegDioMapping2     = POR_defaults.RegDioMapping2;
+	s->RegVersion         = POR_defaults.RegVersion;
+	s->RegPllHop          = POR_defaults.RegPllHop;
+	s->RegTcxo            = POR_defaults.RegTcxo;
+	s->RegPaDac           = POR_defaults.RegPaDac;
+	s->RegFormerTemp      = POR_defaults.RegFormerTemp;
+	s->RegBitRateFrac     = POR_defaults.RegBitRateFrac;
+	s->RegAgcRef          = POR_defaults.RegAgcRef;
+	s->RegAgcThresh1      = POR_defaults.RegAgcThresh1;
+	s->RegAgcThresh2      = POR_defaults.RegAgcThresh2;
+	s->RegAgcThresh3      = POR_defaults.RegAgcThresh3;
+	s->RegPllLf           = POR_defaults.RegPllLf;
+};
 
 /*
  * write FIFO
@@ -634,7 +612,7 @@ void sx1236_configure(SPIDriver * spip, config_sx1236 * c)
 	// sx1236_check_reg(spip, regaddrs.RegOpMode,          c->sx1236_state.RegOpMode);
 
 	//set to receive data from DIO2	
-	palSetPadMode(GPIOC, 2, PAL_MODE_INPUT );
+	//palSetPadMode(GPIOC, 2, PAL_MODE_INPUT );
 }
 
 void sx1236_packet_tx(SPIDriver * spip, sx1236_packet p)

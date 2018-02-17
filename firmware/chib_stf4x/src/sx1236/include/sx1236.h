@@ -23,6 +23,7 @@
  */
 #define SX1236_MODE_MASK             ((uint8_t)(0xF8))
 #define SX1236_FSK_MODE              ((uint8_t)(0b00<<5))
+#define SX1236_OOK_MODE              ((uint8_t)(0b01<<5))
 #define SX1236_LOW_FREQ_MODE         ((uint8_t)(0b01<<3))
 
 #define SX1236_SLEEP_MODE            ((uint8_t)(0b000<<0))
@@ -173,7 +174,6 @@ struct SX1236
 
 };
 
-
 /*
 #define SEMTECH_REGISTERS\
 	X(RegFifo)\
@@ -263,13 +263,9 @@ typedef struct _CONFIG_SX1236
 	struct      SX1236 sx1236_state;
 } config_sx1236;
 
-
-
-
-
-//extern struct SX1236 regaddrs;
-//extern struct SX1236 POR_defaults;
-//extern struct CONFIG_SX1236 config_rx;
+extern struct SX1236 regaddrs;
+extern struct SX1236 POR_defaults;
+extern struct CONFIG_SX1236 config_rx;
 
 void sx1236_print_regs(SPIDriver * spip) ;
 
@@ -294,7 +290,6 @@ typedef struct _sx1236_raw_packet
 {
 	uint8_t RawPacData[32];         /* Packet data/response */
 } sx1236_raw_packet;
-
 
 #define     MAX_SX_BUFF            2056
 
@@ -329,7 +324,6 @@ extern uint8_t sx_rxbuff[MAX_SX_BUFF];
 #define CrcOk            (1 << 1)
 #define LowBat           (1 << 0)
 
-
 //define packet contents
 //packet type
 #define InstructionPacket	((uint8_t)(0x01))
@@ -345,7 +339,7 @@ extern uint8_t sx_rxbuff[MAX_SX_BUFF];
 #define Oresat3				((uint8_t)(0x30))
 
 
-
+void sx1236_print_regs(SPIDriver * spip) ;
 void sx1236_init_state(struct SX1236 * s) ;
 void sx1236_reset(void) ;
 
@@ -362,8 +356,6 @@ void sx1236_configure(SPIDriver * spip, config_sx1236 * c);
 void sx1236_write_carrier_freq(SPIDriver * spip, config_sx1236 * c);
 void sx1236_set_freq_deviation(SPIDriver * spip, config_sx1236 * c);
 void sx1236_set_bitrate(SPIDriver * spip, config_sx1236 * c);
-
-
 
 void sx1236_packet_tx(SPIDriver * spip, sx1236_packet p);
 void sx1236_packet_rx(SPIDriver * spip, config_sx1236 * c, sx1236_raw_packet * r);
